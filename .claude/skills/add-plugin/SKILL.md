@@ -5,7 +5,7 @@ description: Scaffold a new Synoikia plugin under plugins/<id> with `pnpm new`, 
 
 # Add a plugin
 
-Background: Synoikia's plugin authoring guide (`https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md`). `plugins/seerr` is the OpenAPI example, `plugins/truenas` an introspection catalog over JSON-RPC, and `plugins/homeassistant` a WebSocket upstream with a registry, targets and declared commands.
+Write the code as the `plugin-development` skill says. Background: Synoikia's plugin authoring guide (`https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md`). `plugins/seerr` is the OpenAPI example, `plugins/truenas` an introspection catalog over JSON-RPC, and `plugins/homeassistant` a WebSocket upstream with a registry, targets and declared commands.
 
 ## 1. Settle the basics
 
