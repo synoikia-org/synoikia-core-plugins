@@ -28,4 +28,4 @@ A base URL (the admin UI, port 81 by default), and the email and password of a d
 
 ## Locked operations
 
-Proxy, redirection and stream creates and updates; 404 hosts with `advanced_config`; disabling any host; every delete; access-list updates; all user, password, permission and 2FA changes; settings. The list, with reasons and confirmation literals, is in the design note and `plugin.yaml`.
+Proxy, redirection and stream creates and updates; 404 hosts with `advanced_config`; disabling any host, and enabling a proxy, redirection or stream host; every delete; access-list updates; all user, password, permission and 2FA changes; settings. The list, with reasons and confirmation literals, is in the design note and `plugin.yaml`.

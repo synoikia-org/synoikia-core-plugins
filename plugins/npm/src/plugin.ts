@@ -53,14 +53,29 @@ export function buildCatalog(spec: string | Record<string, unknown>, rules: Comp
   return catalog;
 }
 
+/** A model-written string as one visible line: control, bidi and zero-width characters escaped. */
+function safe(value: unknown): string | undefined {
+  const text = stringOr(value);
+  if (text === undefined) return undefined;
+  return JSON.stringify(text)
+    .slice(1, -1)
+    .replace(
+      /[\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
+      (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
+    );
+}
+
+export const ADVANCED_NOTE = '(injects raw nginx config)';
+
 /** Where a host or stream body sends traffic, spelled out for the approver even when the body summary is cut. */
 export function destinations(body: unknown): string | undefined {
   if (!isPlainObject(body)) return undefined;
   const target = (scheme: unknown, host: unknown, port: unknown) =>
-    `${stringOr(scheme) ? `${stringOr(scheme)}://` : ''}${stringOr(host) ?? '?'}${stringOr(port) ? `:${stringOr(port)}` : ''}`;
+    `${safe(scheme) ? `${safe(scheme)}://` : ''}${safe(host) ?? '?'}${safe(port) ? `:${safe(port)}` : ''}`;
   const parts: string[] = [];
-  if (Array.isArray(body.domain_names)) parts.push(`domains ${body.domain_names.map(String).join(', ')}`);
-  if (body.incoming_port !== undefined) parts.push(`port ${String(body.incoming_port)}`);
+  if (Array.isArray(body.domain_names))
+    parts.push(`domains ${body.domain_names.map((d) => safe(d) ?? '?').join(', ')}`);
+  if (body.incoming_port !== undefined) parts.push(`port ${safe(body.incoming_port) ?? '?'}`);
   if (body.forward_host !== undefined)
     parts.push(`→ ${target(body.forward_scheme, body.forward_host, body.forward_port)}`);
   if (body.forwarding_host !== undefined)
@@ -70,7 +85,7 @@ export function destinations(body: unknown): string | undefined {
   if (Array.isArray(body.locations))
     for (const loc of body.locations.filter(isPlainObject))
       parts.push(
-        `location ${stringOr(loc.path) ?? '?'} → ${target(loc.forward_scheme, loc.forward_host, loc.forward_port)}`,
+        `location ${safe(loc.path) ?? '?'} → ${target(loc.forward_scheme, loc.forward_host, loc.forward_port)}`,
       );
   return parts.length ? `[${parts.join('; ')}]` : undefined;
 }
@@ -141,8 +156,8 @@ export function createNpmPlugin(): PluginHandlers {
         async summarize(params) {
           const summary = await binding.summarize(params);
           const body = isPlainObject(params.params) ? params.params.body : undefined;
-          const dest = destinations(body);
-          return dest ? { ...summary, text: `${summary.text} ${dest}` } : summary;
+          const notes = [hasAdvancedConfig(body) ? ADVANCED_NOTE : undefined, destinations(body)].filter(Boolean);
+          return notes.length ? { ...summary, text: `${summary.text} ${notes.join(' ')}` } : summary;
         },
         invoke: (params) => binding.invoke(params),
       };

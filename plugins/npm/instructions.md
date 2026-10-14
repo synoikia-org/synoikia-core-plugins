@@ -9,4 +9,4 @@ Workflows:
 - Renew a certificate: `GET /nginx/certificates` → `POST /nginx/certificates/{certID}/renew`.
 - Add an access list: `POST /nginx/access-lists` with `{ name, satisfy_any, items: [{ username, password }], clients: [{ address, directive: "allow" }] }` → `PUT /nginx/proxy-hosts/{hostID}` with `access_list_id`.
 
-Locked (a person types a confirmation): proxy, redirection and stream creates and updates, every delete, disabling a host, 404 hosts with `advanced_config`, access-list updates, all user and 2FA changes, and settings.
+Locked (a person types a confirmation): proxy, redirection and stream creates and updates, every delete, disabling a host, enabling a proxy, redirection or stream host, 404 hosts with `advanced_config`, access-list updates, all user and 2FA changes, and settings.

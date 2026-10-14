@@ -19,23 +19,26 @@ exclude:
   - 'POST /nginx/certificates/validate'
 
 rules:
-  # Irreversible, credential or access changes, and anything that decides where live traffic goes: always a
-  # human with a typed confirmation.
+  # Irreversible, credential or access changes, and anything that decides where live traffic goes (enabling a
+  # host re-exposes it): always a human with a typed confirmation.
   - match:
       - 'POST /nginx/proxy-hosts'
       - 'PUT /nginx/proxy-hosts/{hostID}'
       - 'DELETE /nginx/proxy-hosts/{hostID}'
       - 'POST /nginx/proxy-hosts/{hostID}/disable'
+      - 'POST /nginx/proxy-hosts/{hostID}/enable'
       - 'POST /nginx/redirection-hosts'
       - 'PUT /nginx/redirection-hosts/{hostID}'
       - 'DELETE /nginx/redirection-hosts/{hostID}'
       - 'POST /nginx/redirection-hosts/{hostID}/disable'
+      - 'POST /nginx/redirection-hosts/{hostID}/enable'
       - 'DELETE /nginx/dead-hosts/{hostID}'
       - 'POST /nginx/dead-hosts/{hostID}/disable'
       - 'POST /nginx/streams'
       - 'PUT /nginx/streams/{streamID}'
       - 'DELETE /nginx/streams/{streamID}'
       - 'POST /nginx/streams/{streamID}/disable'
+      - 'POST /nginx/streams/{streamID}/enable'
       - 'DELETE /nginx/certificates/{certID}'
       # Clearing its users or clients opens every host behind the list.
       - 'PUT /nginx/access-lists/{listID}'
@@ -52,8 +55,8 @@ rules:
       # The default site can redirect every unknown host to any URL, or serve custom HTML.
       - 'PUT /settings/{settingID}'
     locked: true
-  # A delete a newer version adds stays locked until reviewed.
-  - match: 'DELETE *'
+  # A delete, or a user or settings write, that a newer version adds stays locked until reviewed.
+  - match: ['DELETE *', 'POST /users/*', 'PUT /users/*', 'PUT /settings/*']
     locked: true
 
   # 404 hosts take a write, except with raw nginx config (`advanced_config`), which takes the locked twin.
@@ -61,7 +64,6 @@ rules:
     split: advanced
   - match: '*#advanced'
     description: '{base} with raw nginx config (advanced_config): locked.'
-    summaryNote: '(injects raw nginx config)'
 
   # The literal an approver types: the stored host's first domain, never a body field the model writes about it.
   - match: ['POST /nginx/proxy-hosts', 'POST /nginx/redirection-hosts', 'POST /nginx/dead-hosts#advanced']

@@ -39,6 +39,11 @@ export const LOCK_CASES: LockCase[] = [
     confirm: 'app.home.example',
   },
   {
+    key: 'POST /nginx/proxy-hosts/{hostID}/enable',
+    request: { method: 'POST', path: '/nginx/proxy-hosts/1/enable' },
+    confirm: 'app.home.example',
+  },
+  {
     key: 'DELETE /nginx/proxy-hosts/{hostID}',
     request: { method: 'DELETE', path: '/nginx/proxy-hosts/1' },
     confirm: 'app.home.example',
@@ -65,6 +70,11 @@ export const LOCK_CASES: LockCase[] = [
   {
     key: 'POST /nginx/redirection-hosts/{hostID}/disable',
     request: { method: 'POST', path: '/nginx/redirection-hosts/1/disable' },
+    confirm: 'old.home.example',
+  },
+  {
+    key: 'POST /nginx/redirection-hosts/{hostID}/enable',
+    request: { method: 'POST', path: '/nginx/redirection-hosts/1/enable' },
     confirm: 'old.home.example',
   },
   {
@@ -113,6 +123,11 @@ export const LOCK_CASES: LockCase[] = [
   {
     key: 'POST /nginx/streams/{streamID}/disable',
     request: { method: 'POST', path: '/nginx/streams/1/disable' },
+    confirm: '2222',
+  },
+  {
+    key: 'POST /nginx/streams/{streamID}/enable',
+    request: { method: 'POST', path: '/nginx/streams/1/enable' },
     confirm: '2222',
   },
   {

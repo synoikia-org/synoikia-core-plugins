@@ -7,8 +7,32 @@ import type { FakeNpm } from './fake-npm.js';
 import { LOCK_CASES } from './locks.js';
 import type { LockCase } from './locks.js';
 
-/** Everyday writes whose summaries carry a secret or a destination. */
-const UNLOCKED_CASES: Omit<LockCase, 'confirm'>[] = [
+/** Writes whose summaries carry a secret, a destination or raw nginx config. */
+const EXTRA_CASES: (Omit<LockCase, 'confirm'> & { label?: string })[] = [
+  {
+    label: 'POST /nginx/proxy-hosts (advanced_config)',
+    key: 'POST /nginx/proxy-hosts',
+    request: {
+      method: 'POST',
+      path: '/nginx/proxy-hosts',
+      body: {
+        domain_names: ['raw.home.example'],
+        forward_scheme: 'http',
+        forward_host: '10.0.0.8',
+        forward_port: 80,
+        advanced_config: 'location /admin { proxy_pass http://10.9.9.9; }',
+      },
+    },
+  },
+  {
+    label: 'PUT /nginx/proxy-hosts/{hostID} (location advanced_config)',
+    key: 'PUT /nginx/proxy-hosts/{hostID}',
+    request: {
+      method: 'PUT',
+      path: '/nginx/proxy-hosts/1',
+      body: { locations: [{ path: '/x', forward_host: '10.0.0.9', forward_port: 81, advanced_config: 'allow all;' }] },
+    },
+  },
   {
     key: 'POST /nginx/certificates',
     request: {
@@ -89,11 +113,14 @@ describe('Nginx Proxy Manager golden record', () => {
 
   it('summaries and confirm literals of locked operations, and of writes with secrets', async () => {
     const out: Record<string, unknown> = {};
-    for (const c of [...LOCK_CASES, ...UNLOCKED_CASES]) {
+    for (const c of [...LOCK_CASES, ...EXTRA_CASES]) {
       const { key, params } = await plugin.resolveOperation({ fn: 'request', args: [c.request] });
       const declared = operations.find((o) => o.key === key)?.sensitiveParams ?? [];
       const shown = redactPaths(params, declared);
-      out[c.key] = { resolved: key, ...(await plugin.summarize({ key, params: shown, targets: [] })) };
+      out['label' in c && c.label ? c.label : c.key] = {
+        resolved: key,
+        ...(await plugin.summarize({ key, params: shown, targets: [] })),
+      };
     }
     await expect(stable(out)).toMatchFileSnapshot('__golden__/summaries.json');
   });

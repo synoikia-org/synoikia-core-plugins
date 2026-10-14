@@ -62,10 +62,20 @@
     "resolved": "POST /nginx/proxy-hosts",
     "text": "Nginx Proxy Manager POST /nginx/proxy-hosts {\"domain_names\":[\"media.home.example\"],\"forward_scheme\":\"http\",\"forward_host\":\"10.0.0.7\",\"forward_port\":8096,\"certificate_id\":\"new\",\"ssl_forced\":true} [domains media.home.example; → http://10.0.0.7:8096]"
   },
+  "POST /nginx/proxy-hosts (advanced_config)": {
+    "confirmLiteral": "raw.home.example",
+    "resolved": "POST /nginx/proxy-hosts",
+    "text": "Nginx Proxy Manager POST /nginx/proxy-hosts {\"domain_names\":[\"raw.home.example\"],\"forward_scheme\":\"http\",\"forward_host\":\"10.0.0.8\",\"forward_port\":80,\"advanced_config\":\"location /admin { proxy_pass http://10.9.9.9; }\"} (injects raw nginx config) [domains raw.home.example; → http://10.0.0.8:80]"
+  },
   "POST /nginx/proxy-hosts/{hostID}/disable": {
     "confirmLiteral": "app.home.example",
     "resolved": "POST /nginx/proxy-hosts/{hostID}/disable",
     "text": "Nginx Proxy Manager POST /nginx/proxy-hosts/1/disable"
+  },
+  "POST /nginx/proxy-hosts/{hostID}/enable": {
+    "confirmLiteral": "app.home.example",
+    "resolved": "POST /nginx/proxy-hosts/{hostID}/enable",
+    "text": "Nginx Proxy Manager POST /nginx/proxy-hosts/1/enable"
   },
   "POST /nginx/redirection-hosts": {
     "confirmLiteral": "go.home.example",
@@ -77,6 +87,11 @@
     "resolved": "POST /nginx/redirection-hosts/{hostID}/disable",
     "text": "Nginx Proxy Manager POST /nginx/redirection-hosts/1/disable"
   },
+  "POST /nginx/redirection-hosts/{hostID}/enable": {
+    "confirmLiteral": "old.home.example",
+    "resolved": "POST /nginx/redirection-hosts/{hostID}/enable",
+    "text": "Nginx Proxy Manager POST /nginx/redirection-hosts/1/enable"
+  },
   "POST /nginx/streams": {
     "confirmLiteral": "3333",
     "resolved": "POST /nginx/streams",
@@ -86,6 +101,11 @@
     "confirmLiteral": "2222",
     "resolved": "POST /nginx/streams/{streamID}/disable",
     "text": "Nginx Proxy Manager POST /nginx/streams/1/disable"
+  },
+  "POST /nginx/streams/{streamID}/enable": {
+    "confirmLiteral": "2222",
+    "resolved": "POST /nginx/streams/{streamID}/enable",
+    "text": "Nginx Proxy Manager POST /nginx/streams/1/enable"
   },
   "POST /users": {
     "confirmLiteral": "sam@home.example",
@@ -121,6 +141,11 @@
     "confirmLiteral": "app.home.example",
     "resolved": "PUT /nginx/proxy-hosts/{hostID}",
     "text": "Nginx Proxy Manager PUT /nginx/proxy-hosts/1 {\"forward_host\":\"10.6.6.6\",\"forward_port\":80} [→ 10.6.6.6:80]"
+  },
+  "PUT /nginx/proxy-hosts/{hostID} (location advanced_config)": {
+    "confirmLiteral": "app.home.example",
+    "resolved": "PUT /nginx/proxy-hosts/{hostID}",
+    "text": "Nginx Proxy Manager PUT /nginx/proxy-hosts/1 {\"locations\":[{\"path\":\"/x\",\"forward_host\":\"10.0.0.9\",\"forward_port\":81,\"advanced_config\":\"allow all;\"}]} (injects raw nginx config) [location /x → 10.0.0.9:81]"
   },
   "PUT /nginx/redirection-hosts/{hostID}": {
     "confirmLiteral": "old.home.example",

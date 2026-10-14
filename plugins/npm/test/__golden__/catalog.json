@@ -694,11 +694,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "proxy-hosts",
     "key": "POST /nginx/proxy-hosts/{hostID}/enable",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveResult": {
       "deep": true,
@@ -708,7 +708,7 @@
         "password"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -748,11 +748,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "redirection-hosts",
     "key": "POST /nginx/redirection-hosts/{hostID}/enable",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveResult": {
       "deep": true,
@@ -762,7 +762,7 @@
         "password"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -802,11 +802,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "streams",
     "key": "POST /nginx/streams/{streamID}/enable",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveResult": {
       "deep": true,
@@ -816,7 +816,7 @@
         "password"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",

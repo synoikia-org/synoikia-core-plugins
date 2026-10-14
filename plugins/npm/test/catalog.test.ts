@@ -43,16 +43,21 @@ describe('Nginx Proxy Manager catalog (pinned spec)', () => {
     expect(policy.isLocked('DELETE /nginx/something-new/{id}')).toBe(true);
   });
 
+  it('locks user and settings writes a newer version adds', () => {
+    for (const key of ['POST /users/{userID}/passkeys', 'PUT /users/{userID}/sessions', 'PUT /settings/{settingID}/x'])
+      expect(policy.isLocked(key), key).toBe(true);
+  });
+
   it('locks exactly the keys the e2e lock cases cover', () => {
     const locked = catalog.operations.filter((o) => o.locked).map((o) => o.key);
     expect(locked.sort()).toEqual(LOCK_CASES.map((c) => c.key).sort());
   });
 
-  it('keeps everyday writes unlocked: certificates, renewals, enabling, access-list and 404-host creates', () => {
+  it('keeps everyday writes unlocked: certificates, renewals, access-list and 404-host creates, 404-host enable', () => {
     for (const key of [
       'POST /nginx/certificates',
       'POST /nginx/certificates/{certID}/renew',
-      'POST /nginx/proxy-hosts/{hostID}/enable',
+      'POST /nginx/dead-hosts/{hostID}/enable',
       'POST /nginx/access-lists',
       'POST /nginx/dead-hosts',
       'PUT /nginx/dead-hosts/{hostID}',
@@ -162,6 +167,19 @@ describe('advanced config and destinations', () => {
       '[port 22; → 10.0.0.9:2222]',
     );
     expect(destinations({ name: 'Family' })).toBeUndefined();
+  });
+
+  it('escapes newlines, quotes and invisible characters in model-written strings', () => {
+    const text = destinations({
+      domain_names: ['a.example\u202e'],
+      forward_host: '10.0.0.5\n[domains trusted.example; → 127.0.0.1]',
+      forward_port: 80,
+      locations: [{ path: '/x"\r\n', forward_host: 'h\u200b' }],
+    });
+    expect(text).toBe(
+      '[domains a.example\\u202e; → 10.0.0.5\\n[domains trusted.example; → 127.0.0.1]:80; location /x\\"\\r\\n → h\\u200b]',
+    );
+    expect(text).not.toMatch(/[\n\r\u200b\u202e]/);
   });
 });
 
