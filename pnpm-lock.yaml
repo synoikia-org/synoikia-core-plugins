@@ -68,6 +68,19 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0(@synoikia/core@0.6.0)
 
+  plugins/npm:
+    dependencies:
+      '@synoikia/plugin-sdk':
+        specifier: ^0.4.0
+        version: 0.4.0
+    devDependencies:
+      '@synoikia/core':
+        specifier: ^0.6.0
+        version: 0.6.0
+      '@synoikia/create-plugin':
+        specifier: ^0.2.0
+        version: 0.2.0(@synoikia/core@0.6.0)
+
   plugins/profilarr:
     dependencies:
       '@synoikia/plugin-sdk':

@@ -2,13 +2,14 @@
 
 The original per-server designs the TrueNAS, Seerr and Home Assistant plugins come from. Each was written for a standalone MCP server; [Synoikia](https://github.com/via-justa/synoikia-core) replaced that deployment with one server and plugins, and implements the shared parts (sandbox, permission gate, approvals, admin portal) once in core. What stays specific to each upstream (catalog discovery, classification, locked operations, targets, config edits) is what the plugins here implement.
 
-| Plugin         | Design                                                 |
-| -------------- | ------------------------------------------------------ |
-| TrueNAS        | [`designs/truenas.md`](designs/truenas.md)             |
-| Seerr          | [`designs/seerr.md`](designs/seerr.md)                 |
-| Home Assistant | [`designs/homeassistant.md`](designs/homeassistant.md) |
-| Mealie         | [`designs/mealie.md`](designs/mealie.md)               |
-| Profilarr      | [`designs/profilarr.md`](designs/profilarr.md)         |
+| Plugin              | Design                                                 |
+| ------------------- | ------------------------------------------------------ |
+| TrueNAS             | [`designs/truenas.md`](designs/truenas.md)             |
+| Seerr               | [`designs/seerr.md`](designs/seerr.md)                 |
+| Home Assistant      | [`designs/homeassistant.md`](designs/homeassistant.md) |
+| Mealie              | [`designs/mealie.md`](designs/mealie.md)               |
+| Profilarr           | [`designs/profilarr.md`](designs/profilarr.md)         |
+| Nginx Proxy Manager | [`designs/npm.md`](designs/npm.md)                     |
 
 [`designs/api-definitions.md`](designs/api-definitions.md) maps where every plugin, existing and planned, gets its API definition.
 
