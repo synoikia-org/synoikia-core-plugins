@@ -1,10 +1,13 @@
 # Grafana runbook
 
-A manual checklist against a real Grafana before a release.
+The plugin is tested against a fake Grafana. This checklist confirms it against a real instance before a release. It takes about 15 minutes.
 
-1. Add an instance with a dedicated user; **Test connection** reports the version.
-2. Sync: the catalog appears, and every group starts at the default level.
-3. Run a read at Read. Check that secrets in its result show as `[REDACTED]`.
-4. A write stays refused until its group is raised.
-5. A locked operation asks for approval and requires the typed confirmation literal.
-6. Check the audit log lists each call.
+**Before you start:** a Grafana 12 test instance (or a Cloud test stack) with a Prometheus data source, one dashboard in a folder and one contact point. Add a service account with the Admin role and a token.
+
+1. **Connect.** New endpoint → **Grafana**, base URL and token. **Test connection** reports the version (e.g. `12.4.13`). A wrong token fails the test. Against a Grafana 11 instance the test fails with "needs Grafana 12 or later".
+2. **Sync.** About 310 operations appear, grouped by tag (`dashboards`, `datasources`, `provisioning`, …). No `/datasources/proxy/…`, `/saml/…` or `/public/dashboards/…` operation is listed.
+3. **Reads.** With `search`, `dashboards` and `datasources` at Read, ask for a dashboard by title and a Prometheus query: `GET /search`, `GET /dashboards/uid/{uid}`, `POST /ds/query`, no prompt. `GET /datasources` shows `url` but no secret values.
+4. **A write.** With `annotations` at Ask, add an annotation: a prompt shows `POST /annotations` with the text; approve, and it appears on the dashboard.
+5. **Locks.** Change the test data source's URL with `PUT /datasources/uid/{uid}`: the prompt shows the stored name, type and URL and the new URL, and asks to type the data source name. A wrong value is refused. Create a service account token (`POST /serviceaccounts/{id}/tokens`, type the account name): the result shows `key` as `[REDACTED]`. Delete the token afterwards (locked, account name).
+6. **Destinations.** Update the contact point with `PUT /v1/provisioning/contact-points/{UID}`: the prompt shows its settings (the webhook URL or recipient) and asks for the contact point name; a `secureSettings` value shows as `[REDACTED]`.
+7. **Audit.** The audit log lists each call; the token from step 5 and any secure setting from step 6 appear nowhere.

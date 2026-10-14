@@ -23,6 +23,7 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 | `mealie`        | [Mealie](https://github.com/mealie-recipes/mealie)                              | the OpenAPI spec the instance serves        | [`docs/designs/mealie.md`](docs/designs/mealie.md)               |
 | `profilarr`     | [Profilarr](https://github.com/Dictionarry-Hub/profilarr) v2                    | the OpenAPI spec the instance serves        | [`docs/designs/profilarr.md`](docs/designs/profilarr.md)         |
 | `npm`           | [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager) | the OpenAPI spec the instance serves        | [`docs/designs/npm.md`](docs/designs/npm.md)                     |
+| `grafana`       | [Grafana](https://github.com/grafana/grafana) 12+, self-hosted or a Cloud stack | the OpenAPI spec the instance serves        | [`docs/designs/grafana.md`](docs/designs/grafana.md)             |
 
 ## Layout
 
