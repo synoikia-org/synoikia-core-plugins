@@ -55,7 +55,10 @@ export interface FakeBackstage extends FakeHttp {
 }
 
 const ok = (body: unknown = {}): FakeResponse => ({ body });
-const notFound = (what: string): FakeResponse => ({ status: 404, body: { error: { name: 'NotFoundError', message: what } } });
+const notFound = (what: string): FakeResponse => ({
+  status: 404,
+  body: { error: { name: 'NotFoundError', message: what } },
+});
 
 export async function startFakeBackstage(): Promise<FakeBackstage> {
   const specs = new Map<string, unknown>(PLUGIN_IDS.map((id) => [id, JSON.parse(SPECS[id]!)]));
@@ -125,7 +128,11 @@ export async function startFakeBackstage(): Promise<FakeBackstage> {
         const limit = Number(req.query.get('limit') ?? items.length);
         const start = Number(req.query.get('cursor') ?? 0);
         const next = start + limit < items.length ? String(start + limit) : undefined;
-        return ok({ items: items.slice(start, start + limit), totalItems: items.length, pageInfo: { nextCursor: next } });
+        return ok({
+          items: items.slice(start, start + limit),
+          totalItems: items.length,
+          pageInfo: { nextCursor: next },
+        });
       },
       'GET /api/catalog/entities/by-uid/{uid}': (req) => {
         const e = byUid(req.params.uid);

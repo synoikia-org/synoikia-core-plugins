@@ -46,7 +46,10 @@ export async function loadSpecs(
       spec = await client.request('GET', `/api/${id}${specPath}`);
     } catch (err) {
       if (err instanceof PluginError && isPlainObject(err.data) && err.data.status === 404) {
-        notify({ method: 'log', params: { level: 'warn', message: `${service} plugin "${id}" serves no spec; skipped` } });
+        notify({
+          method: 'log',
+          params: { level: 'warn', message: `${service} plugin "${id}" serves no spec; skipped` },
+        });
         continue;
       }
       throw err;

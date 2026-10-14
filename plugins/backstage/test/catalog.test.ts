@@ -96,9 +96,7 @@ describe('Backstage catalog (pinned specs)', () => {
     ])
       expect(op(key)?.sensitiveParams, key).toEqual(['/body/secrets']);
     expect(op('POST /api/catalog/refresh')?.sensitiveParams).toEqual(['/body/authorizationToken']);
-    expect(op('POST /api/scaffolder/v2/autocomplete/{provider}/{resource}')?.sensitiveParams).toEqual([
-      '/body/token',
-    ]);
+    expect(op('POST /api/scaffolder/v2/autocomplete/{provider}/{resource}')?.sensitiveParams).toEqual(['/body/token']);
     expect(op('GET /api/scaffolder/v2/tasks/{taskId}')?.sensitiveResult).toEqual({ keys: ['secrets'], deep: true });
   });
 
@@ -135,7 +133,6 @@ describe('Backstage catalog (pinned specs)', () => {
     expect(some.operations.every((o) => /^\S+ \/api\/(catalog|search)\//.test(o.key))).toBe(true);
     expect(some.operations.filter((o) => o.locked)).toHaveLength(4);
   });
-
 });
 
 describe('instructions.md', () => {

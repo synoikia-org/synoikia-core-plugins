@@ -47,7 +47,11 @@ const LOCKED_KEYS = lockedKeys(settings.rules);
 /** The merged catalog; each loaded plugin must keep the keys plugin.yaml locks under its own path. */
 export function buildCatalog(specs: readonly PluginSpec[], rules: CompiledRules<unknown> = policy) {
   const merged = mergeSpecs(specs, SERVICE);
-  const catalog = buildOpenApiCatalog(merged, { service: SERVICE, rules, minOperations: settings.plugin.minOperations });
+  const catalog = buildOpenApiCatalog(merged, {
+    service: SERVICE,
+    rules,
+    minOperations: settings.plugin.minOperations,
+  });
   const loaded = specs.map((s) => `/api/${s.id}/`);
   const locked = LOCKED_KEYS.filter((key) => loaded.some((prefix) => key.split(' ')[1]!.startsWith(prefix)));
   requireLockedKeys(catalog.operations, locked, SERVICE);

@@ -6,13 +6,13 @@ The sandbox calls `backstage.request(…)`. Every call goes through Synoikia's p
 
 ## Files
 
-| File            | What                                                                                     |
-| --------------- | ---------------------------------------------------------------------------------------- |
-| `manifest.json` | Binding, connection form, `sensitiveKeys` and network hosts                              |
-| `plugin.yaml`   | Locked operations, split twins, sensitive params and results, confirmation literals      |
-| `src/plugin.ts` | Discovery and anything that needs logic                                                  |
-| `src/auth.ts`   | How requests authenticate                                                                |
-| `test/`         | A fake Backstage, unit tests, and e2e tests on Synoikia's harness                         |
+| File            | What                                                                                |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `manifest.json` | Binding, connection form, `sensitiveKeys` and network hosts                         |
+| `plugin.yaml`   | Locked operations, split twins, sensitive params and results, confirmation literals |
+| `src/plugin.ts` | Discovery and anything that needs logic                                             |
+| `src/auth.ts`   | How requests authenticate                                                           |
+| `test/`         | A fake Backstage, unit tests, and e2e tests on Synoikia's harness                   |
 
 ## Connection
 

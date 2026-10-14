@@ -44,7 +44,8 @@ rules:
   # The literal an approver types: the stored entity, location or task's template, never a body field.
   - match: 'DELETE /api/catalog/entities/by-uid/{uid}'
     confirm:
-      lookup: { op: 'GET /api/catalog/entities/by-uid/{uid}', args: [{ uid: { $param: /path/uid } }], field: /metadata/name }
+      lookup:
+        { op: 'GET /api/catalog/entities/by-uid/{uid}', args: [{ uid: { $param: /path/uid } }], field: /metadata/name }
   - match: ['PUT /api/catalog/locations/{id}', 'DELETE /api/catalog/locations/{id}']
     confirm:
       lookup: { op: 'GET /api/catalog/locations/{id}', args: [{ id: { $param: /path/id } }], field: target }
@@ -93,7 +94,12 @@ rules:
     needsReview: false
 
   # Secrets in requests: template secrets, a user token for the refresh check and an SCM token.
-  - match: ['POST /api/scaffolder/v2/dry-run', 'POST /api/scaffolder/v2/tasks', 'POST /api/scaffolder/v2/tasks/{taskId}/retry']
+  - match:
+      [
+        'POST /api/scaffolder/v2/dry-run',
+        'POST /api/scaffolder/v2/tasks',
+        'POST /api/scaffolder/v2/tasks/{taskId}/retry',
+      ]
     sensitiveParams: [/body/secrets]
   - match: 'POST /api/catalog/refresh'
     sensitiveParams: [/body/authorizationToken]
