@@ -132,7 +132,7 @@ export const LOCK_CASES: LockCase[] = [
   {
     key: 'DELETE /api/users/api-tokens/{token_id}',
     request: { method: 'DELETE', path: '/api/users/api-tokens/7' },
-    confirm: '7',
+    confirm: 'admin',
   },
   {
     key: 'PUT /api/users/password',

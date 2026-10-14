@@ -95,9 +95,8 @@ rules:
     confirm: { param: /path/file_name }
   - match: 'POST /api/admin/backups/{file_name}/restore'
     summaryNote: '(replaces every group, user and recipe with the backup)'
-  - match: 'DELETE /api/users/api-tokens/{token_id}'
-    confirm: { param: /path/token_id }
-  - match: 'PUT /api/users/password'
+  # Core redacts `token_id` (it names a token) before summarizing, so the literal is the token's owner.
+  - match: ['DELETE /api/users/api-tokens/{token_id}', 'PUT /api/users/password']
     confirm: [{ lookup: { op: 'GET /api/users/self', field: username } }, instance]
   - match: 'POST /api/users/reset-password'
     confirm: { param: /body/email }

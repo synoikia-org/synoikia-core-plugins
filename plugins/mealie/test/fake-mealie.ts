@@ -24,12 +24,14 @@ export interface FakeMealie extends FakeHttp {
   recipes: Map<string, { id: string; slug: string; name: string }>;
   /** Paths answered 403, as for a user without the permission. */
   denied: Set<string>;
+  /** Replaces what /openapi.json serves (to test validation). */
+  serveSpec(spec: unknown): void;
 }
 
 const ok = (body: unknown = { message: 'ok' }): FakeResponse => ({ body });
 
 export async function startFakeMealie(): Promise<FakeMealie> {
-  const spec: unknown = JSON.parse(SPEC_TEXT);
+  let spec: unknown = JSON.parse(SPEC_TEXT);
   const users = new Map([
     ['u-1', { id: 'u-1', username: 'admin', email: 'admin@example.com' }],
     ['u-2', { id: 'u-2', username: 'alex', email: 'alex@example.com' }],
@@ -122,5 +124,13 @@ export async function startFakeMealie(): Promise<FakeMealie> {
       'POST /api/households/invitations/email': () => ok({ success: true }),
     },
   });
-  return { ...fake, users, recipes, denied };
+  return {
+    ...fake,
+    users,
+    recipes,
+    denied,
+    serveSpec: (next) => {
+      spec = next;
+    },
+  };
 }
