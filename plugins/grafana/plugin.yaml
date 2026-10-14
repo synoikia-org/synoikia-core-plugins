@@ -88,6 +88,8 @@ rules:
       - 'PUT /datasources/uid/{uid}/lbac/teams'
       - 'DELETE /folders/{folder_uid}'
       - 'POST /folders/{folder_uid}/permissions'
+      # Moving a folder changes the permissions it inherits.
+      - 'POST /folders/{folder_uid}/move'
       - 'DELETE /dashboards/uid/{uid}'
       - 'POST /dashboards/uid/{uid}/permissions'
       # Public dashboards are reachable by anyone with the link, without signing in.
@@ -122,6 +124,7 @@ rules:
       - 'POST /reports'
       - 'PUT /reports/{id}'
       - 'POST /reports/email'
+      - 'POST /reports/test-email'
       # Cloud migration uploads this instance's resources to the Grafana Cloud stack its token names.
       - 'POST /cloudmigration/migration'
       - 'POST /cloudmigration/migration/{uid}/snapshot/{snapshotUid}/upload'
@@ -178,7 +181,7 @@ rules:
       lookup: { op: 'GET /datasources/uid/{uid}', args: [{ uid: { $param: /path/uid } }], field: name }
   - match: 'DELETE /datasources/name/{name}'
     confirm: { param: /path/name }
-  - match: ['DELETE /folders/{folder_uid}', 'POST /folders/{folder_uid}/permissions']
+  - match: ['DELETE /folders/{folder_uid}', 'POST /folders/{folder_uid}/permissions', 'POST /folders/{folder_uid}/move']
     confirm:
       lookup: { op: 'GET /folders/{folder_uid}', args: [{ folder_uid: { $param: /path/folder_uid } }], field: title }
   - match: ['DELETE /dashboards/uid/{uid}', 'POST /dashboards/uid/{uid}/permissions']
@@ -225,9 +228,8 @@ rules:
   - match: 'POST /cloudmigration/migration/{uid}/snapshot/{snapshotUid}/upload'
     summaryNote: "(uploads this instance's dashboards, folders, data sources and alerting to the session's Cloud stack)"
 
-  # POSTs that only read: data-source queries and searches.
+  # POSTs that only read. Not `POST /ds/query`: a SQL data source runs its rawSql, writes too, as the stored user.
   - match:
-      - 'POST /ds/query'
       - 'POST /access-control/assignments/search'
       - 'POST /access-control/teams/roles/search'
       - 'POST /access-control/users/roles/search'
@@ -267,10 +269,14 @@ rules:
     sensitiveParams: [/body/secureJsonData, /body/basicAuthPassword, /body/password]
   - match: ['* /datasources', '* /datasources/{id}', '* /datasources/uid/{uid}', '* /datasources/name/{name}']
     sensitiveResult: { keys: [secureJsonData, basicAuthPassword, password], deep: true }
+  # Slack, Discord, Teams and webhook URLs embed their token; the approval shows the host as a target.
   - match: ['POST /v1/provisioning/contact-points', 'PUT /v1/provisioning/contact-points/{UID}']
-    sensitiveParams: [/body/secureSettings]
+    sensitiveParams: [/body/settings/url, /body/settings/password]
   - match: ['* /v1/provisioning/contact-points', '* /v1/provisioning/contact-points/{UID}']
-    sensitiveResult: { keys: [secureSettings], deep: true }
+    sensitiveResult: { keys: [url], deep: true }
+  # An invite's code and URL let anyone join the organization with the invited role.
+  - match: '* /org/invites'
+    sensitiveResult: { keys: [code, url], deep: true }
   - match: ['POST /admin/users', 'PUT /admin/users/{user_id}/password']
     sensitiveParams: [/body/password]
   - match: 'PUT /user/password'
@@ -293,6 +299,8 @@ plugin:
   versionSources:
     - { path: /health, field: version }
     - { path: /frontend/settings, field: /buildInfo/version }
+  # Body fields that say where data goes, shown ahead of the truncated body in approvals.
+  destinationFields: [/url, /settings/addresses, /recipients, /emails, /external, /receiver]
   # Oldest Grafana major the plugin supports.
   minMajor: 12
   # Refuse a spec with fewer operations: a truncated one must not replace the catalog.

@@ -81,7 +81,6 @@ describe('Grafana catalog (pinned spec)', () => {
 
   it('reads with GET and writes with every other verb, but for reviewed exceptions; nothing left for review', () => {
     const postReads = [
-      'POST /ds/query',
       'POST /access-control/assignments/search',
       'POST /access-control/teams/roles/search',
       'POST /access-control/users/roles/search',
@@ -109,9 +108,14 @@ describe('Grafana catalog (pinned spec)', () => {
       keys: ['secureJsonData', 'basicAuthPassword', 'password'],
       deep: true,
     });
-    expect(op('PUT /v1/provisioning/contact-points/{UID}')?.sensitiveParams).toEqual(['/body/secureSettings']);
+    expect(op('PUT /v1/provisioning/contact-points/{UID}')?.sensitiveParams).toEqual([
+      '/body/settings/url',
+      '/body/settings/password',
+    ]);
+    expect(op('GET /org/invites')?.sensitiveResult).toEqual({ keys: ['code', 'url'], deep: true });
+    expect(op('POST /ds/query')).toMatchObject({ classification: 'write', locked: false });
     expect(op('GET /v1/provisioning/contact-points')?.sensitiveResult).toEqual({
-      keys: ['secureSettings'],
+      keys: ['url'],
       deep: true,
     });
     expect(op('POST /serviceaccounts/{serviceAccountId}/tokens')?.sensitiveResult).toEqual({

@@ -18,7 +18,9 @@ const SENT_SECRETS = [
   'cloud-migration-token-888888',
   'new-ds-password-666666',
   'license-jwt-999999',
-  'webhook-password-121212',
+  'webhook-password-171717',
+  'T0KEN-121212',
+  'T0KEN-181818',
   'reset-password-131313',
   'old-password-141414',
   'new-password-151515',
@@ -29,8 +31,9 @@ const DESTINATIONS: Record<string, string> = {
   'POST /datasources': 'http://loki.example.net:3100',
   'PUT /datasources/{id}': 'http://elsewhere.example.net:9090',
   'PUT /datasources/uid/{uid}': 'http://elsewhere.example.net:9090',
-  'POST /v1/provisioning/contact-points': 'https://hooks.example.net/grafana',
-  'PUT /v1/provisioning/contact-points/{UID}': 'https://elsewhere.example.net/hook',
+  'POST /v1/provisioning/contact-points': 'hooks.example.net (contact point URL)',
+  'PUT /v1/provisioning/contact-points/{UID}': 'elsewhere.example.net (contact point URL)',
+  'POST /reports/test-email': 'test@example.org',
   'PUT /reports/{id}': 'outside@example.net',
   'POST /reports/email': 'someone@example.com',
 };
@@ -62,17 +65,41 @@ describe('Grafana end to end (fake Grafana)', () => {
     });
   });
 
-  it('finds a dashboard and queries a data source at Read', async () => {
+  it('finds a dashboard at Read', async () => {
     allow('GET /search', 'read');
     allow('GET /dashboards/uid/{uid}', 'read');
-    allow('POST /ds/query', 'read');
     const r = await h.execute(
       `const [hit] = await grafana.request({ path: '/search', query: { query: 'home', type: 'dash-db' } });
-       const d = await grafana.request({ path: '/api/dashboards/uid/' + hit.uid });
-       const q = await grafana.request({ method: 'POST', path: '/ds/query', body: { queries: [{ refId: 'A', datasource: { uid: 'prom' }, expr: 'up' }], from: 'now-1h', to: 'now' } });
-       return d.dashboard.title + ' ' + q.results.A.status;`,
+       return (await grafana.request({ path: '/api/dashboards/uid/' + hit.uid })).dashboard.title;`,
     );
-    expect(r).toMatchObject({ ok: true, value: 'Home Lab 200' });
+    expect(r).toMatchObject({ ok: true, value: 'Home Lab' });
+  });
+
+  it('queries data sources only after approval, naming each one it hits', async () => {
+    const query = {
+      method: 'POST',
+      path: '/ds/query',
+      body: {
+        queries: [
+          { refId: 'A', datasource: { uid: 'prom' }, expr: 'up' },
+          { refId: 'B', datasource: { uid: 'mysql-prod' }, rawSql: 'DELETE FROM users' },
+        ],
+        from: 'now-1h',
+        to: 'now',
+      },
+    };
+    allow('POST /ds/query', 'read');
+    await expect(h.execute(call(query))).resolves.toMatchObject({ ok: false });
+    allow('POST /ds/query', 'ask');
+    const shown: string[] = [];
+    const r = await h.execute(`return (await grafana.request(${JSON.stringify(query)})).results.A.status;`, {
+      onApproval: (a) => {
+        shown.push(a.message, JSON.stringify(a.pending));
+        a.approve();
+      },
+    });
+    expect(r).toMatchObject({ ok: true, value: 200 });
+    expect(shown[0]).toContain('on Prometheus (prometheus, http://prometheus:9090), mysql-prod');
   });
 
   it('creates an annotation once a human approves it at Ask', async () => {
@@ -129,7 +156,8 @@ describe('Grafana end to end (fake Grafana)', () => {
     it.each([
       ['GET /datasources', { path: '/datasources' }, SECRETS.dsPassword],
       ['GET /datasources/uid/{uid}', { path: '/datasources/uid/prom' }, SECRETS.dsPassword],
-      ['GET /v1/provisioning/contact-points', { path: '/v1/provisioning/contact-points' }, SECRETS.slackToken],
+      ['GET /v1/provisioning/contact-points', { path: '/v1/provisioning/contact-points' }, SECRETS.slackUrl],
+      ['GET /org/invites', { path: '/org/invites' }, SECRETS.inviteCode],
     ])('%s', async (key, request, secret) => {
       allow(key, 'read');
       const r = await h.execute(call(request));

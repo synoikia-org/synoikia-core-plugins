@@ -18,7 +18,8 @@ export const SECRETS = {
   saToken: 'glsa_new-service-account-key-111111',
   deleteKey: 'snapshot-delete-key-222222',
   dsPassword: 'ds-basic-auth-password-333333',
-  slackToken: 'xoxb-contact-point-token-444444',
+  slackUrl: 'https://hooks.slack.com/services/T0000/B0000/slack-webhook-secret-444444',
+  inviteCode: 'invite-code-161616',
 };
 
 export const DATASOURCE = {
@@ -97,8 +98,18 @@ export async function startFakeGrafana(): Promise<FakeGrafana> {
           uid: 'cp-1',
           name: 'Ops Slack',
           type: 'slack',
-          settings: { recipient: '#ops' },
-          secureSettings: { token: SECRETS.slackToken },
+          settings: { url: SECRETS.slackUrl, recipient: '#ops' },
+          disableResolveMessage: false,
+          provenance: '',
+        },
+      ]),
+    'GET /api/org/invites': () =>
+      ok([
+        {
+          email: 'pat@example.com',
+          role: 'Editor',
+          code: SECRETS.inviteCode,
+          url: `http://grafana/invite/${SECRETS.inviteCode}`,
         },
       ]),
     'GET /api/v1/provisioning/alert-rules/{UID}': byId('UID', { 'r-1': { uid: 'r-1', title: 'High CPU' } }),

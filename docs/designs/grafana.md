@@ -27,7 +27,8 @@ A service account token (`glsa_…`), sent as `Authorization: Bearer`. The accou
 
 GET reads, every other verb writes, and anything the rules don't settle stays a write.
 
-- Reads by review: `POST /ds/query` (a data source query; a SQL data source runs whatever SQL its stored user is allowed, so give SQL data sources a read-only user) and the three `/access-control/*/search` POSTs.
+- Reads by review: the three `/access-control/*/search` POSTs.
+- `POST /ds/query` stays a write. A SQL data source runs the query's `rawSql` as its stored database user, so a query can change data. Its targets are the data sources it names (`queries[].datasource.uid`, each resolved to `<name> (<type>, <url>)`, an unknown uid shown as itself, more than 20 refused), so approvers and pre-approval rules see what it hits.
 - GETs the action heuristic flagged and that only read: `GET /search`, `/folders`, `/annotations`, `/users`, dashboard versions, and others listed in `plugin.yaml`.
 - GETs that write: `GET /licensing/refresh-stats`, `GET /user/helpflags/clear`, and `GET /snapshots-delete/{deleteKey}` (deletes a snapshot; locked).
 
@@ -54,17 +55,17 @@ Each is locked with a typed confirmation. Literals come from the stored object (
 | Roles (RBAC) | custom role create, update, delete and assignments; team and user role grants; resource permissions (`/access-control/{resource}/{resourceID}…`); `/groupsync/groups/{group_id}` | role display name, team name or user login (lookup); resource id; group id |
 | Service accounts | create, update (role), delete; token create and delete | account name (lookup) |
 | Data sources | create, update (by id and uid), delete (by id, uid, name), LBAC rules | data source name (lookup) |
-| Sharing | folder and dashboard permissions, public dashboard create and update, `POST /snapshots` (`external: true` uploads to the snapshot server) | folder or dashboard title (lookup) |
+| Sharing | folder and dashboard permissions, folder move (changes inherited permissions), public dashboard create and update, `POST /snapshots` (`external: true` uploads to the snapshot server) | folder or dashboard title (lookup) |
 | Alerting | contact point create, update, delete; notification policy tree replace and reset; alert rule create, update, delete; rule group replace and delete; Prometheus rule imports (`/convert/*`); mute timings create and update | contact point name (lookup by uid), rule title (lookup), group, namespace or timing name |
-| Unattended or outbound | recording rules create and update, recording rule writer, reports create, update and email, cloud migration session, upload and token | report name (lookup) or org |
+| Unattended or outbound | recording rules create and update, recording rule writer, reports create, update, email and test email, cloud migration session, upload and token | report name (lookup) or org |
 | Bulk | `POST /annotations/mass-delete` | org |
 
 A `DELETE *` rule locks every delete, including any a newer spec adds (the locked-key check covers exact keys only).
 
-**Destinations.** Approvals show the call's body up to 1000 characters, so a data source `url`, a contact point's `settings`, a report's recipients and a policy's receiver stay visible; only the secret fields below are redacted. Non-GET calls on `/datasources/{id}` and `/datasources/uid/{uid}` also resolve the stored data source as a core target (`capabilities.targets`), named `<name> (<type>, <url>)`, so an approver sees where its queries go now and where the body moves them.
+**Destinations.** Approvals put the body's destination fields first, ahead of the body cut at 1000 characters, so padding cannot hide them: `url`, `settings.addresses`, `recipients`, `emails`, `external`, `receiver` (`plugin.destinationFields`). Targets (`capabilities.targets`) add the rest: a non-GET call on `/datasources/{id}` or `/datasources/uid/{uid}` names the stored data source as `<name> (<type>, <url>)`; `POST /ds/query` names each data source it queries; a contact point create or update names only the host of `settings.url` (`hooks.slack.com (contact point URL)`), since Slack, Discord, Teams and webhook URLs carry their token in the path.
 
 ## Secrets
 
-- Manifest `sensitiveKeys`: `token`, `key`, `apiKey`, `api_key`, `password`, `basicAuthPassword`, `secret`, `secureJsonData`, `secureSettings`. Core masks these by name in params, results and the audit log (`key` also covers `deleteKey`; `token` covers `authToken` and `accessToken`).
-- `sensitiveParams`: data source `secureJsonData`, `basicAuthPassword`, `password`; contact point `secureSettings`; user passwords; SSO `clientSecret` and `privateKey`; the cloud migration `authToken`; the license `token`.
-- `sensitiveResult`: data source credentials (deep); contact point `secureSettings`; `key`, `token`, `deleteKey` and `deleteUrl` on service account token creation, cloud migration token creation and snapshot creation. A snapshot's view `url` stays visible, since sharing it is the point.
+- Manifest `sensitiveKeys`: `token`, `key`, `apiKey`, `api_key`, `password`, `basicAuthPassword`, `secret`, `secureJsonData`. Core masks these by name in params, results and the audit log (`key` also covers `deleteKey`; `token` covers `authToken` and `accessToken`).
+- `sensitiveParams`: data source `secureJsonData`, `basicAuthPassword`, `password`; contact point `settings.url` and `settings.password`; user passwords; SSO `clientSecret` and `privateKey`; the cloud migration `authToken`; the license `token`.
+- `sensitiveResult`: data source credentials (deep); `url` (deep) on contact points, whose provisioning API keeps integration secrets in `settings`; `code` and `url` on org invites (join links); `key`, `token`, `deleteKey` and `deleteUrl` on service account token creation, cloud migration token creation and snapshot creation. A snapshot's view `url` stays visible, since sharing it is the point.

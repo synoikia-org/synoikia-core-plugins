@@ -108,6 +108,47 @@ describe('Grafana plugin', () => {
     await expect(targets('DELETE /folders/{folder_uid}', { folder_uid: 'f-ops' })).resolves.toEqual([]);
   });
 
+  it('names every data source a query hits, and refuses a query naming too many', async () => {
+    const targets = (queries: unknown[]) =>
+      plugin.resolveTargets!({ key: 'POST /ds/query', params: { body: { queries } } });
+    await expect(
+      targets([{ datasource: { uid: 'prom' } }, { datasource: { uid: 'prom' } }, { datasource: { uid: 'gone' } }, {}]),
+    ).resolves.toEqual([
+      { kind: 'datasource', id: 'prom', name: 'Prometheus (prometheus, http://prometheus:9090)' },
+      { kind: 'datasource', id: 'gone', name: 'gone' },
+    ]);
+    const many = Array.from({ length: 21 }, (_, i) => ({ datasource: { uid: `ds-${i}` } }));
+    await expect(targets(many)).rejects.toMatchObject({ code: ErrorCodes.TargetResolutionFailed });
+  });
+
+  it("names only a contact point URL's host as its destination", async () => {
+    const targets = (url: unknown) =>
+      plugin.resolveTargets!({ key: 'POST /v1/provisioning/contact-points', params: { body: { settings: { url } } } });
+    await expect(targets('https://hooks.slack.com/services/T0/B0/secret')).resolves.toEqual([
+      { kind: 'destination', id: 'hooks.slack.com', name: 'hooks.slack.com (contact point URL)' },
+    ]);
+    await expect(targets('not a url <b>')).resolves.toEqual([
+      { kind: 'destination', id: 'an invalid URL', name: 'an invalid URL (contact point URL)' },
+    ]);
+    await expect(targets(undefined)).resolves.toEqual([]);
+  });
+
+  it('shows destination fields ahead of a padded body', async () => {
+    const body = { padding: 'x'.repeat(5000), url: 'http://loki.example.net:3100', recipients: 'a@example.net' };
+    const { text } = await plugin.summarize({ key: 'POST /datasources', params: { body }, targets: [] });
+    expect(text).toMatch(
+      /^Grafana POST \/datasources \[to url="http:\/\/loki\.example\.net:3100", recipients="a@example\.net"\] \{/,
+    );
+    const report = await plugin.summarize({
+      key: 'PUT /reports/{id}',
+      params: { path: { id: '7' }, body },
+      targets: [],
+    });
+    expect(report.text).toContain(
+      'Grafana PUT /reports/7 [to url="http://loki.example.net:3100", recipients="a@example.net"]',
+    );
+  });
+
   it('reports a rejected token without throwing', async () => {
     const bad = createGrafanaPlugin();
     await bad.init({ ...connection(), secrets: { token: 'wrong' }, sdkVersion: '1' });

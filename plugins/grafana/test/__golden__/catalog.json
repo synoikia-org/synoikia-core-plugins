@@ -424,7 +424,7 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "secureSettings"
+        "url"
       ]
     },
     "typedConfirmation": true
@@ -1229,6 +1229,13 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveResult": {
+      "deep": true,
+      "keys": [
+        "code",
+        "url"
+      ]
+    },
     "typedConfirmation": false
   },
   {
@@ -1762,7 +1769,7 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "secureSettings"
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -2480,8 +2487,8 @@
     "typedConfirmation": false
   },
   {
-    "classification": "read",
-    "classificationReason": "reviewed:read",
+    "classification": "write",
+    "classificationReason": "verb:POST",
     "group": "datasources",
     "key": "POST /ds/query",
     "kind": "rest",
@@ -2501,13 +2508,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "folders",
     "key": "POST /folders/{folder_uid}/move",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2570,6 +2577,13 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveResult": {
+      "deep": true,
+      "keys": [
+        "code",
+        "url"
+      ]
+    },
     "typedConfirmation": true
   },
   {
@@ -2694,13 +2708,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "reports",
     "key": "POST /reports/test-email",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2829,12 +2843,13 @@
     "locked": true,
     "needsReview": false,
     "sensitiveParams": [
-      "/body/secureSettings"
+      "/body/settings/url",
+      "/body/settings/password"
     ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "secureSettings"
+        "url"
       ]
     },
     "typedConfirmation": true
@@ -3211,12 +3226,13 @@
     "locked": true,
     "needsReview": false,
     "sensitiveParams": [
-      "/body/secureSettings"
+      "/body/settings/url",
+      "/body/settings/password"
     ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "secureSettings"
+        "url"
       ]
     },
     "typedConfirmation": true

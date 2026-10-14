@@ -163,6 +163,7 @@ export const LOCK_CASES: LockCase[] = [
     basicAuth: true,
     basicAuthPassword: 'new-ds-password-666666',
   }),
+  lock('POST /folders/{folder_uid}/move', '/folders/f-ops/move', 'Ops', { parentUid: 'f-public' }),
   lock('POST /folders/{folder_uid}/permissions', '/folders/f-ops/permissions', 'Ops', {
     items: [{ role: 'Viewer', permission: 2 }],
   }),
@@ -175,6 +176,7 @@ export const LOCK_CASES: LockCase[] = [
   lock('POST /recording-rules', '/recording-rules', ORG, { name: 'cpu:rate5m', prom_name: 'cpu_rate5m' }),
   lock('POST /recording-rules/writer', '/recording-rules/writer', ORG, { data_source_uid: 'prom' }),
   lock('POST /reports', '/reports', ORG, { name: 'Daily', recipients: 'boss@example.com' }),
+  lock('POST /reports/test-email', '/reports/test-email', ORG, { name: 'Weekly', recipients: 'test@example.org' }),
   lock('POST /reports/email', '/reports/email', ORG, { id: '7', emails: 'someone@example.com' }),
   lock('POST /serviceaccounts', '/serviceaccounts', ORG, { name: 'ci', role: 'Admin' }),
   lock('POST /serviceaccounts/{serviceAccountId}/tokens', '/serviceaccounts/4/tokens', 'synoikia-bot', { name: 'ci' }),
@@ -188,8 +190,11 @@ export const LOCK_CASES: LockCase[] = [
   lock('POST /v1/provisioning/contact-points', '/v1/provisioning/contact-points', ORG, {
     name: 'Pager',
     type: 'webhook',
-    settings: { url: 'https://hooks.example.net/grafana' },
-    secureSettings: { password: 'webhook-password-121212' },
+    settings: {
+      url: 'https://hooks.example.net/grafana/T0KEN-121212',
+      username: 'grafana',
+      password: 'webhook-password-171717',
+    },
   }),
   lock('POST /v1/provisioning/mute-timings', '/v1/provisioning/mute-timings', ORG, {
     name: 'always',
@@ -241,7 +246,7 @@ export const LOCK_CASES: LockCase[] = [
   lock('PUT /v1/provisioning/contact-points/{UID}', '/v1/provisioning/contact-points/cp-1', 'Ops Slack', {
     name: 'Ops Slack',
     type: 'webhook',
-    settings: { url: 'https://elsewhere.example.net/hook' },
+    settings: { url: 'https://elsewhere.example.net/hook/T0KEN-181818', addresses: 'oncall@example.net' },
   }),
   lock(
     'PUT /v1/provisioning/folder/{FolderUID}/rule-groups/{Group}',

@@ -78,11 +78,35 @@ describe('Grafana golden record', () => {
     await expect(stable(out)).toMatchFileSnapshot('__golden__/summaries.json');
   });
 
+  it('destinations stay ahead of a padded body', async () => {
+    const padding = 'x'.repeat(2000);
+    const calls = [
+      { method: 'POST', path: '/datasources', body: { padding, name: 'Loki', url: 'http://loki.example.net:3100' } },
+      {
+        method: 'PUT',
+        path: '/v1/provisioning/contact-points/cp-1',
+        body: { padding, settings: { url: 'https://hooks.example.net/T0KEN', addresses: 'oncall@example.net' } },
+      },
+      { method: 'POST', path: '/reports/email', body: { padding, id: '7', emails: 'someone@example.com' } },
+      { method: 'PUT', path: '/v1/provisioning/policies', body: { padding, receiver: 'Pager' } },
+      { method: 'POST', path: '/snapshots', body: { padding, external: true } },
+    ];
+    const out: Record<string, unknown> = {};
+    for (const request of calls) {
+      const { key, params } = await plugin.resolveOperation({ fn: 'request', args: [request] });
+      const declared = operations.find((o) => o.key === key)?.sensitiveParams ?? [];
+      const targets = (await plugin.resolveTargets?.({ key, params })) ?? [];
+      out[key] = { targets, ...(await plugin.summarize({ key, params: redactPaths(params, declared), targets })) };
+    }
+    await expect(stable(out)).toMatchFileSnapshot('__golden__/destinations.json');
+  });
+
   it('results with secrets, as core masks them by descriptor', async () => {
     const calls = [
       { method: 'GET', path: '/datasources' },
       { method: 'GET', path: '/datasources/uid/prom' },
       { method: 'GET', path: '/v1/provisioning/contact-points' },
+      { method: 'GET', path: '/org/invites' },
       { method: 'POST', path: '/serviceaccounts/4/tokens', body: { name: 'ci' } },
       { method: 'POST', path: '/snapshots', body: { dashboard: { title: 'Home Lab' } } },
       {

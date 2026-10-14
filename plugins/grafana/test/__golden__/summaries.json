@@ -489,7 +489,13 @@
     "confirmLiteral": "Main Org.",
     "resolved": "POST /datasources",
     "targets": [],
-    "text": "Grafana POST /datasources {\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.example.net:3100\",\"basicAuth\":true,\"basicAuthPassword\":\"[REDACTED]\"} (queries from this data source go to its url with the stored credentials)"
+    "text": "Grafana POST /datasources [to url=\"http://loki.example.net:3100\"] {\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.example.net:3100\",\"basicAuth\":true,\"basicAuthPassword\":\"[REDACTED]\"} (queries from this data source go to its url with the stored credentials)"
+  },
+  "POST /folders/{folder_uid}/move": {
+    "confirmLiteral": "Ops",
+    "resolved": "POST /folders/{folder_uid}/move",
+    "targets": [],
+    "text": "Grafana POST /folders/f-ops/move {\"parentUid\":\"f-public\"}"
   },
   "POST /folders/{folder_uid}/permissions": {
     "confirmLiteral": "Ops",
@@ -549,13 +555,19 @@
     "confirmLiteral": "Main Org.",
     "resolved": "POST /reports",
     "targets": [],
-    "text": "Grafana POST /reports {\"name\":\"Daily\",\"recipients\":\"boss@example.com\"}"
+    "text": "Grafana POST /reports [to recipients=\"boss@example.com\"] {\"name\":\"Daily\",\"recipients\":\"boss@example.com\"}"
   },
   "POST /reports/email": {
     "confirmLiteral": "Main Org.",
     "resolved": "POST /reports/email",
     "targets": [],
-    "text": "Grafana POST /reports/email {\"id\":\"7\",\"emails\":\"someone@example.com\"}"
+    "text": "Grafana POST /reports/email [to emails=\"someone@example.com\"] {\"id\":\"7\",\"emails\":\"someone@example.com\"}"
+  },
+  "POST /reports/test-email": {
+    "confirmLiteral": "Main Org.",
+    "resolved": "POST /reports/test-email",
+    "targets": [],
+    "text": "Grafana POST /reports/test-email [to recipients=\"test@example.org\"] {\"name\":\"Weekly\",\"recipients\":\"test@example.org\"}"
   },
   "POST /serviceaccounts": {
     "confirmLiteral": "Main Org.",
@@ -573,7 +585,7 @@
     "confirmLiteral": "Main Org.",
     "resolved": "POST /snapshots",
     "targets": [],
-    "text": "Grafana POST /snapshots {\"dashboard\":{\"title\":\"Home Lab\"},\"external\":true} (with external: true the dashboard data is uploaded to the external snapshot server)"
+    "text": "Grafana POST /snapshots [to external=true] {\"dashboard\":{\"title\":\"Home Lab\"},\"external\":true} (with external: true the dashboard data is uploaded to the external snapshot server)"
   },
   "POST /teams/{teamId}/groups": {
     "confirmLiteral": "SRE",
@@ -596,8 +608,14 @@
   "POST /v1/provisioning/contact-points": {
     "confirmLiteral": "Main Org.",
     "resolved": "POST /v1/provisioning/contact-points",
-    "targets": [],
-    "text": "Grafana POST /v1/provisioning/contact-points {\"name\":\"Pager\",\"type\":\"webhook\",\"settings\":{\"url\":\"https://hooks.example.net/grafana\"},\"secureSettings\":\"[REDACTED]\"}"
+    "targets": [
+      {
+        "id": "hooks.example.net",
+        "kind": "destination",
+        "name": "hooks.example.net (contact point URL)"
+      }
+    ],
+    "text": "Grafana POST /v1/provisioning/contact-points {\"name\":\"Pager\",\"type\":\"webhook\",\"settings\":{\"url\":\"[REDACTED]\",\"username\":\"grafana\",\"password\":\"[REDACTED]\"}} on hooks.example.net (contact point URL)"
   },
   "POST /v1/provisioning/mute-timings": {
     "confirmLiteral": "Main Org.",
@@ -651,7 +669,7 @@
         "name": "Prometheus (prometheus, http://prometheus:9090)"
       }
     ],
-    "text": "Grafana PUT /datasources/uid/prom {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
+    "text": "Grafana PUT /datasources/uid/prom [to url=\"http://elsewhere.example.net:9090\"] {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
   },
   "PUT /datasources/uid/{uid}/lbac/teams": {
     "confirmLiteral": "Prometheus",
@@ -675,7 +693,7 @@
         "name": "Prometheus (prometheus, http://prometheus:9090)"
       }
     ],
-    "text": "Grafana PUT /datasources/5 {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
+    "text": "Grafana PUT /datasources/5 [to url=\"http://elsewhere.example.net:9090\"] {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
   },
   "PUT /groupsync/groups/{group_id}": {
     "confirmLiteral": "ldap-admins",
@@ -693,7 +711,7 @@
     "confirmLiteral": "Weekly",
     "resolved": "PUT /reports/{id}",
     "targets": [],
-    "text": "Grafana PUT /reports/7 {\"name\":\"Weekly\",\"recipients\":\"outside@example.net\"}"
+    "text": "Grafana PUT /reports/7 [to recipients=\"outside@example.net\"] {\"name\":\"Weekly\",\"recipients\":\"outside@example.net\"}"
   },
   "PUT /teams/{team_id}/members": {
     "confirmLiteral": "SRE",
@@ -728,8 +746,14 @@
   "PUT /v1/provisioning/contact-points/{UID}": {
     "confirmLiteral": "Ops Slack",
     "resolved": "PUT /v1/provisioning/contact-points/{UID}",
-    "targets": [],
-    "text": "Grafana PUT /v1/provisioning/contact-points/cp-1 {\"name\":\"Ops Slack\",\"type\":\"webhook\",\"settings\":{\"url\":\"https://elsewhere.example.net/hook\"}}"
+    "targets": [
+      {
+        "id": "elsewhere.example.net",
+        "kind": "destination",
+        "name": "elsewhere.example.net (contact point URL)"
+      }
+    ],
+    "text": "Grafana PUT /v1/provisioning/contact-points/cp-1 [to settings/addresses=\"oncall@example.net\"] {\"name\":\"Ops Slack\",\"type\":\"webhook\",\"settings\":{\"url\":\"[REDACTED]\",\"addresses\":\"oncall@example.net\"}} on elsewhere.example.net (contact point URL)"
   },
   "PUT /v1/provisioning/folder/{FolderUID}/rule-groups/{Group}": {
     "confirmLiteral": "cpu",
@@ -747,7 +771,7 @@
     "confirmLiteral": "Main Org.",
     "resolved": "PUT /v1/provisioning/policies",
     "targets": [],
-    "text": "Grafana PUT /v1/provisioning/policies {\"receiver\":\"Pager\"}"
+    "text": "Grafana PUT /v1/provisioning/policies [to receiver=\"Pager\"] {\"receiver\":\"Pager\"}"
   },
   "PUT /v1/sso-settings/{key}": {
     "confirmLiteral": "Main Org.",

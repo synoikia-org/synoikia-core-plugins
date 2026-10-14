@@ -17,7 +17,8 @@ import type { CompiledRules, InitParams, PluginHandlers } from '@synoikia/plugin
 import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
-import { dataSourceTargets, withTargets } from './targets.js';
+import { withDestinations } from './summary.js';
+import { resolveTargets, withTargets } from './targets.js';
 import { grafanaVersion } from './version.js';
 
 /** The Grafana plugin: catalog from the HTTP API spec Grafana 12+ serves at /public/openapi3.json, keyed by
@@ -37,6 +38,11 @@ export const settings = parsePluginSettings(raw, {
       if (typeof v !== 'number' || v < 1) throw new Error(`plugin.yaml plugin.${name} must be a positive number`);
       return v;
     };
+    if (
+      !Array.isArray(p.destinationFields) ||
+      !p.destinationFields.every((f) => typeof f === 'string' && f.startsWith('/'))
+    )
+      throw new Error('plugin.yaml plugin.destinationFields must be a list of JSON pointers');
     if (!Array.isArray(p.versionSources) || !p.versionSources.length)
       throw new Error('plugin.yaml plugin.versionSources must be a non-empty list');
     return {
@@ -48,6 +54,7 @@ export const settings = parsePluginSettings(raw, {
       }),
       minMajor: positive('minMajor'),
       minOperations: positive('minOperations'),
+      destinationFields: p.destinationFields as string[],
     };
   },
 });
@@ -108,7 +115,6 @@ export function createGrafanaPlugin(): PluginHandlers {
         catalog: catalog.get,
         client: api,
         stripPrefix: settings.plugin.apiPath,
-        // Room for a data source's url or a contact point's settings ahead of the cut.
         maxSummaryBody: 1000,
       });
       return {
@@ -117,10 +123,17 @@ export function createGrafanaPlugin(): PluginHandlers {
           return { upstreamVersion, operations: (await catalog.reload()).operations };
         },
         resolveOperation: binding.resolveOperation,
-        resolveTargets: ({ key, params }) => dataSourceTargets(api(), key, params, settings.defaults.timeouts.lookup),
+        resolveTargets: ({ key, params }) => resolveTargets(api(), key, params, settings.defaults.timeouts.lookup),
         async summarize(params) {
           const summary = await binding.summarize(params);
-          return { ...summary, text: withTargets(summary.text, params.targets) };
+          const text = withDestinations(
+            summary.text,
+            SERVICE,
+            params.key,
+            params.params,
+            settings.plugin.destinationFields,
+          );
+          return { ...summary, text: withTargets(text, params.targets) };
         },
         invoke: (params) => binding.invoke(params),
       };

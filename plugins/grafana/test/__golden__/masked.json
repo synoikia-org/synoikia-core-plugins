@@ -33,13 +33,26 @@
     },
     "sensitiveParams": []
   },
+  "GET /org/invites": {
+    "masked": [
+      {
+        "code": "[REDACTED]",
+        "email": "pat@example.com",
+        "role": "Editor",
+        "url": "[REDACTED]"
+      }
+    ],
+    "sensitiveParams": []
+  },
   "GET /v1/provisioning/contact-points": {
     "masked": [
       {
+        "disableResolveMessage": false,
         "name": "Ops Slack",
-        "secureSettings": "[REDACTED]",
+        "provenance": "",
         "settings": {
-          "recipient": "#ops"
+          "recipient": "#ops",
+          "url": "[REDACTED]"
         },
         "type": "slack",
         "uid": "cp-1"
