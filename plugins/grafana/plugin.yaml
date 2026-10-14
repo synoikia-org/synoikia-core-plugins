@@ -281,6 +281,8 @@ rules:
     sensitiveResult: { keys: [key, token, deleteKey, deleteUrl], deep: true }
   - match: 'POST /cloudmigration/migration'
     sensitiveParams: [/body/authToken]
+  - match: 'POST /licensing/token'
+    sensitiveParams: [/body/token]
 
 plugin:
   # Path of the HTTP API under the base URL; operation keys are relative to it.

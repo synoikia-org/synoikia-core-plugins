@@ -1,0 +1,77 @@
+{
+  "GET /datasources": {
+    "masked": [
+      {
+        "basicAuth": true,
+        "basicAuthUser": "grafana",
+        "id": 5,
+        "name": "Prometheus",
+        "secureJsonData": "[REDACTED]",
+        "secureJsonFields": {
+          "basicAuthPassword": "[REDACTED]"
+        },
+        "type": "prometheus",
+        "uid": "prom",
+        "url": "http://prometheus:9090"
+      }
+    ],
+    "sensitiveParams": []
+  },
+  "GET /datasources/uid/{uid}": {
+    "masked": {
+      "basicAuth": true,
+      "basicAuthUser": "grafana",
+      "id": 5,
+      "name": "Prometheus",
+      "secureJsonData": "[REDACTED]",
+      "secureJsonFields": {
+        "basicAuthPassword": "[REDACTED]"
+      },
+      "type": "prometheus",
+      "uid": "prom",
+      "url": "http://prometheus:9090"
+    },
+    "sensitiveParams": []
+  },
+  "GET /v1/provisioning/contact-points": {
+    "masked": [
+      {
+        "name": "Ops Slack",
+        "secureSettings": "[REDACTED]",
+        "settings": {
+          "recipient": "#ops"
+        },
+        "type": "slack",
+        "uid": "cp-1"
+      }
+    ],
+    "sensitiveParams": []
+  },
+  "POST /datasources": {
+    "masked": {
+      "message": "ok"
+    },
+    "sensitiveParams": [
+      "/body/secureJsonData",
+      "/body/basicAuthPassword",
+      "/body/password"
+    ]
+  },
+  "POST /serviceaccounts/{serviceAccountId}/tokens": {
+    "masked": {
+      "id": 11,
+      "key": "[REDACTED]",
+      "name": "ci"
+    },
+    "sensitiveParams": []
+  },
+  "POST /snapshots": {
+    "masked": {
+      "deleteKey": "[REDACTED]",
+      "deleteUrl": "[REDACTED]",
+      "key": "[REDACTED]",
+      "url": "http://grafana/dashboard/snapshot/snapshot-view-key"
+    },
+    "sensitiveParams": []
+  }
+}
