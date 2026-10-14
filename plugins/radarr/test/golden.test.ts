@@ -82,7 +82,7 @@ describe('Radarr golden record', () => {
     const calls = [
       { method: 'GET', path: '/api/v3/config/host' },
       { method: 'GET', path: '/api/v3/downloadclient' },
-      { method: 'GET', path: '/api/v3/indexer/7' },
+      { method: 'GET', path: '/api/v3/indexer' },
       { method: 'GET', path: '/api/v3/notification' },
       { method: 'GET', path: '/api/v3/release', query: { movieId: 1 } },
       {

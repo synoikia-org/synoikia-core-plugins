@@ -62,7 +62,7 @@ describe('Radarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 229,
+      count: 228,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -207,24 +207,38 @@ describe('Radarr plugin', () => {
 });
 
 describe('provider fields', () => {
-  it('keeps hosts and plain URLs, hides credentials, queries and secret-named values', () => {
+  it('keeps hosts, cuts every URL to its origin, hides secret-named values and key/value entries', () => {
     const fields = [
       { name: 'baseUrl', value: 'https://user:pw@idx.example/api?apikey=k', privacy: 'normal' },
+      { name: 'url', value: 'https://tracker.example/rss/0123-passkey-uuid', privacy: 'normal' },
+      { name: 'plain', value: 'https://idx.example/', privacy: 'normal' },
       { name: 'apiPath', value: '/api', privacy: 'normal' },
       { name: 'botToken', value: 'abc', privacy: 'normal' },
-      { name: 'seedCriteria', value: { nested: 1 } },
+      { name: 'cookie', value: 'uid=1; pass=2', privacy: 'normal' },
+      { name: 'authUser', value: 'me', privacy: 'normal' },
+      { name: 'seedKey', value: 'k', privacy: 'normal' },
+      { name: 'headers', value: [{ key: 'Authorization', value: 'Bearer hdr-secret' }], privacy: 'normal' },
+      { name: 'extra', value: { token: 'obj-secret', note: 'x' }, privacy: 'normal' },
+      { name: 'categories', value: [2000, 2010], privacy: 'normal' },
     ];
-    expect(maskProviderFields({ fields }, false)).toEqual({
+    expect(maskProviderFields({ fields })).toEqual({
       fields: [
-        { name: 'baseUrl', value: 'https://idx.example/api/[REDACTED]', privacy: 'normal' },
+        { name: 'baseUrl', value: 'https://idx.example/[REDACTED]', privacy: 'normal' },
+        { name: 'url', value: 'https://tracker.example/[REDACTED]', privacy: 'normal' },
+        { name: 'plain', value: 'https://idx.example/', privacy: 'normal' },
         { name: 'apiPath', value: '/api', privacy: 'normal' },
         { name: 'botToken', value: '[REDACTED]', privacy: 'normal' },
-        { name: 'seedCriteria', value: { nested: 1 } },
+        { name: 'cookie', value: '[REDACTED]', privacy: 'normal' },
+        { name: 'authUser', value: '[REDACTED]', privacy: 'normal' },
+        { name: 'seedKey', value: '[REDACTED]', privacy: 'normal' },
+        { name: 'headers', value: [{ key: 'Authorization', value: '[REDACTED]' }], privacy: 'normal' },
+        { name: 'extra', value: { token: '[REDACTED]', note: '[REDACTED]' }, privacy: 'normal' },
+        { name: 'categories', value: [2000, 2010], privacy: 'normal' },
       ],
     });
   });
 
-  it('lists hosts, URL origins and recipients, never a secret field', () => {
+  it('lists hosts, URL origins and recipients by exact name, first match first, never a secret field', () => {
     expect(
       destinations({
         fields: [
@@ -235,5 +249,78 @@ describe('provider fields', () => {
         ],
       }),
     ).toEqual(['smtp.example', 'a@example.com', 'b@example.com', 'https://hooks.example']);
+    expect(destinations({ fields: [{ name: 'Host', value: 'decoy.example' }] })).toEqual([]);
+    expect(
+      destinations({
+        fields: [
+          { name: 'host', value: 'real.example' },
+          { name: 'host', value: 'decoy.example' },
+        ],
+      }),
+    ).toEqual(['http://real.example']);
+  });
+});
+
+describe('case-insensitive binding', () => {
+  const key = async (request: object) => (await resolve(request)).key;
+  const refused = (request: object) =>
+    expect(resolve(request)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+
+  it('takes the locked twin whatever the case of the flag or id', async () => {
+    const moved = await resolve({ method: 'PUT', path: '/api/v3/movie/1', query: { MoveFiles: 'true' }, body: {} });
+    expect(moved).toMatchObject({ key: 'PUT /api/v3/movie/{id}#move-files', params: { query: { moveFiles: 'true' } } });
+    expect(await key({ method: 'DELETE', path: '/api/v3/movie/1', query: { DELETEFILES: 'True' } })).toBe(
+      'DELETE /api/v3/movie/{id}#delete-files',
+    );
+    expect(
+      await key({ method: 'DELETE', path: '/api/v3/movie/editor', body: { MovieIds: [1], DeleteFiles: true } }),
+    ).toBe('DELETE /api/v3/movie/editor#delete-files');
+    const stored = await resolve({
+      method: 'POST',
+      path: '/api/v3/downloadclient/test',
+      body: { Id: 5, Name: 'x', Fields: [] },
+    });
+    expect(stored).toMatchObject({
+      key: 'POST /api/v3/downloadclient/test#stored',
+      params: { body: { id: 5, name: 'x', fields: [] } },
+    });
+  });
+
+  it('checks the command name whatever its case, and refuses two spellings', async () => {
+    expect(await key({ method: 'POST', path: '/api/v3/command', body: { Name: 'RenameMovie' } })).toBe(
+      'POST /api/v3/command#heavy',
+    );
+    expect(await key({ method: 'POST', path: '/api/v3/command', body: { NAME: 'rsssync' } })).toBe(
+      'POST /api/v3/command',
+    );
+    await refused({ method: 'POST', path: '/api/v3/command', body: { name: 'RssSync', Name: 'RenameMovie' } });
+  });
+
+  it('refuses keys that differ only in case in the query, the body, body lists and provider fields', async () => {
+    await refused({ method: 'DELETE', path: '/api/v3/movie/1', query: { deleteFiles: false, DeleteFiles: true } });
+    await refused({ method: 'POST', path: '/api/v3/movie/import', body: [{ tmdbId: 1, TmdbId: 2 }] });
+    const fields = (f: unknown[]) => ({
+      method: 'POST',
+      path: '/api/v3/downloadclient',
+      body: { name: 'x', fields: f },
+    });
+    await refused(
+      fields([
+        { name: 'host', value: 'a' },
+        { name: 'Host', value: 'b' },
+      ]),
+    );
+    await refused(fields([{ name: 'host', value: 'a', Value: 'b' }]));
+  });
+
+  it('spells provider field keys as Radarr does, so pointers and destinations see them', async () => {
+    const { params } = await resolve({
+      method: 'POST',
+      path: '/api/v3/downloadclient',
+      body: { Name: 'x', Fields: [{ Name: 'host', Value: 'sab.lan' }] },
+    });
+    const { body } = params as { body: unknown };
+    expect(body).toEqual({ name: 'x', fields: [{ name: 'host', value: 'sab.lan' }] });
+    expect(destinations(body)).toEqual(['http://sab.lan']);
   });
 });

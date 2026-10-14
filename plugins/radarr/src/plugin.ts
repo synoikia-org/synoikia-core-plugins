@@ -16,6 +16,7 @@ import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import { authHeaders } from './auth.js';
 import { buildCatalog, custom, SERVICE, settings, splitWhen } from './catalog.js';
 import { maskProviderFields, refuseMaskedValues } from './fields.js';
+import { normalizeRequest } from './request.js';
 import { fetchServarrSpec } from './spec.js';
 import { resolveTargets, withTargets } from './targets.js';
 
@@ -64,8 +65,9 @@ export function createRadarrPlugin(): PluginHandlers {
         catalog: async () => (await current.get()).catalog,
         client: http,
         adjust: ({ params }) => {
-          refuseMaskedValues(params.body);
-          return params;
+          const normalized = normalizeRequest(params, settings.plugin.canonicalKeys);
+          refuseMaskedValues(normalized.body);
+          return normalized;
         },
         splitWhen,
       });
@@ -81,8 +83,8 @@ export function createRadarrPlugin(): PluginHandlers {
           return { ...summary, text: withTargets(summary.text, params.targets) };
         },
         async invoke(params) {
-          // Provider fields wherever they appear; notification URLs (webhooks) keep only their origin.
-          return maskProviderFields(await binding.invoke(params), params.key.includes(' /api/v3/notification'));
+          // Provider fields wherever they appear.
+          return maskProviderFields(await binding.invoke(params));
         },
       };
     },

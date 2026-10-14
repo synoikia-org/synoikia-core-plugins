@@ -21,12 +21,15 @@ export const settings = parsePluginSettings(raw, {
       throw new Error('plugin.yaml plugin.minOperations must be a positive number');
     if (!Array.isArray(p.quickCommands) || !p.quickCommands.every((c) => typeof c === 'string' && /^\w+$/.test(c)))
       throw new Error('plugin.yaml plugin.quickCommands must be a list of command names');
+    if (!Array.isArray(p.canonicalKeys) || !p.canonicalKeys.every((c) => typeof c === 'string' && /^\w+$/.test(c)))
+      throw new Error('plugin.yaml plugin.canonicalKeys must be a list of keys');
     return {
       spec: parseSpecSource(p.spec),
       versionPath: text('versionPath'),
       versionField: text('versionField'),
       minOperations: p.minOperations,
       quickCommands: new Set((p.quickCommands as string[]).map((c) => c.toLowerCase())),
+      canonicalKeys: p.canonicalKeys as string[],
     };
   },
 });

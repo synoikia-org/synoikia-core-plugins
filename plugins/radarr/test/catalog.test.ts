@@ -18,7 +18,7 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Radarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v3 included', () => {
-    expect(catalog.operations).toHaveLength(229);
+    expect(catalog.operations).toHaveLength(228);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v3\//);
   });
 
@@ -69,6 +69,7 @@ describe('Radarr catalog (pinned spec)', () => {
       'GET /api/v3/mediacover/{movieId}/{filename}',
       'GET /api/v3/filesystem',
       'GET /api/v3/filesystem/mediafiles',
+      'GET /api/v3/manualimport',
       'POST /api/v3/system/backup/restore/upload',
     ])
       expect(keys.has(key), key).toBe(false);
@@ -78,7 +79,7 @@ describe('Radarr catalog (pinned spec)', () => {
         .map((verb) => `${verb.toUpperCase()} ${path}`),
     );
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
-    expect(specKeys.length - (keys.size - twins)).toBe(18);
+    expect(specKeys.length - (keys.size - twins)).toBe(19);
   });
 
   it('reads with GET and writes with every other verb; no GET is left for review', () => {

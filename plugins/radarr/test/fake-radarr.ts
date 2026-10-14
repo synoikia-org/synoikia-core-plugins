@@ -23,6 +23,9 @@ export const SECRETS = {
   proxyPassword: 'proxy-password-555555',
   releaseApiKey: 'release-url-apikey-666666',
   listApiKey: 'other-radarr-api-key-777777',
+  headerToken: 'webhook-header-token-888888',
+  trackerPasskey: 'tracker-passkey-999999',
+  trackerCookie: 'tracker-cookie-101010',
 };
 
 type Row = Record<string, unknown> & { id: number };
@@ -61,6 +64,15 @@ export function seed(): Record<string, Row[]> {
         implementation: 'Newznab',
         fields: [field('baseUrl', 'https://api.nzbgeek.info'), field('apiKey', SECRETS.indexerApiKey, 'apiKey')],
       },
+      {
+        id: 15,
+        name: 'Tracker',
+        implementation: 'TorrentRssIndexer',
+        fields: [
+          field('baseUrl', `https://tracker.example/rss/${SECRETS.trackerPasskey}`),
+          field('cookie', SECRETS.trackerCookie),
+        ],
+      },
     ],
     importlist: [
       {
@@ -76,6 +88,15 @@ export function seed(): Record<string, Row[]> {
         name: 'Discord',
         implementation: 'Discord',
         fields: [field('webHookUrl', `https://discord.com/api/webhooks/42/${SECRETS.webhookToken}`)],
+      },
+      {
+        id: 14,
+        name: 'Hook',
+        implementation: 'Webhook',
+        fields: [
+          field('url', 'https://hooks.example.com/radarr'),
+          field('headers', [{ key: 'Authorization', value: `Bearer ${SECRETS.headerToken}` }]),
+        ],
       },
     ],
     metadata: [{ id: 10, name: 'Kodi (XBMC) / Emby', implementation: 'XbmcMetadata', fields: [] }],

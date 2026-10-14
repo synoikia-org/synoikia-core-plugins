@@ -1,6 +1,6 @@
 # Radarr
 
-Exposes a Radarr instance's v3 REST API (229 operations: movies, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Radarr release builds don't serve their spec, so the catalog comes from `src/Radarr.Api.V3/openapi.json` in Radarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/radarr.md`](../../docs/designs/radarr.md).
+Exposes a Radarr instance's v3 REST API (228 operations: movies, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Radarr release builds don't serve their spec, so the catalog comes from `src/Radarr.Api.V3/openapi.json` in Radarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/radarr.md`](../../docs/designs/radarr.md).
 
 The sandbox calls `radarr.request({ method, path, query, body })` with the full `/api/v3` path:
 
@@ -30,6 +30,7 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 | `src/catalog.ts`  | Settings, split predicates, custom confirmation sources, catalog build                                   |
 | `src/fields.ts`   | Provider `fields[]`: secret masking in results, destinations, refusing masked values in writes           |
 | `src/targets.ts`  | Movies and provider connections a call acts on, shown to the approver                                    |
+| `src/request.ts`  | Case-insensitive keys: refuses case duplicates, renames the keys the rules read                          |
 | `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                             |
 | `test/`           | A fake Radarr serving the pinned v6.4.4.10685 spec, unit, golden and e2e tests                           |
 

@@ -10,7 +10,7 @@ defaults:
 instanceName: { op: 'GET /api/v3/system/status', field: instanceName, fallback: Radarr }
 
 # The web UI and its sign-in, the iCal feed, binary downloads, the multipart backup upload, and host filesystem
-# browsing (it lists any directory the Radarr process can read; root folders and manual import take a path).
+# browsing and the manual-import scan (they list any directory the Radarr process can read).
 exclude:
   - 'GET /'
   - 'GET /{path}'
@@ -23,6 +23,7 @@ exclude:
   - 'GET /api/v3/log/file*'
   - 'GET /api/v3/mediacover/*'
   - 'GET /api/v3/filesystem*'
+  - 'GET /api/v3/manualimport'
   - 'POST /api/v3/system/backup/restore/upload'
 
 rules:
@@ -231,3 +232,27 @@ plugin:
     - RefreshMovie
     - RescanMovie
     - RssSync
+  # Request keys the rules, targets and pointers read, in Radarr's spelling. Radarr binds query and body keys
+  # case-insensitively, so `MoveFiles` or `Id` is renamed to this spelling, and two keys that differ only in case
+  # are refused (src/request.ts).
+  canonicalKeys:
+    - id
+    - name
+    - fields
+    - implementation
+    - title
+    - path
+    - rootFolderPath
+    - movieIds
+    - ids
+    - movieFileIds
+    - deleteFiles
+    - moveFiles
+    - addImportExclusion
+    - downloadUrl
+    - magnetUrl
+    - apiKey
+    - password
+    - passwordConfirmation
+    - proxyPassword
+    - sslCertPassword

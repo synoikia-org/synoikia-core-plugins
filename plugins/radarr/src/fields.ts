@@ -7,7 +7,7 @@ import { ErrorCodes, isPlainObject, PluginError, stringOr } from '@synoikia/plug
 export const PRIVATE_VALUE = '********';
 const REDACTED = '[REDACTED]';
 const PRIVATE = new Set(['password', 'apikey']);
-const SECRET_NAME = /pass|secret|token|apikey|api_key/i;
+const SECRET_NAME = /pass|secret|token|apikey|api_key|cookie|auth|key$/i;
 const MAX_DEPTH = 16;
 
 /** A model-written string as one visible line: control, bidi and zero-width characters escaped. */
@@ -38,43 +38,57 @@ export function originOf(value: unknown): string | undefined {
   return url ? `${url.protocol}//${url.host}` : undefined;
 }
 
-/** Hides a URL's credentials, query and (for notifications, whose webhook paths hold tokens) its path. */
-function maskUrl(value: string, hidePath: boolean): string {
+/** Keeps only a URL's origin: webhook, feed and indexer URLs carry tokens, passkeys and UUIDs in the path or query. */
+function maskUrl(value: string): string {
   const url = asUrl(value);
   if (!url) return value;
-  const path = url.pathname.replace(/\/+$/, '');
-  const hides = url.username || url.password || url.search || url.hash || (hidePath && path);
-  if (!hides) return value;
-  return `${url.protocol}//${url.host}${hidePath ? '' : path}/${REDACTED}`;
+  const rest = url.pathname.replace(/\/+$/, '') || url.username || url.password || url.search || url.hash;
+  return rest ? `${url.protocol}//${url.host}/${REDACTED}` : value;
+}
+
+/** Key/value lists (webhook `headers`) and objects inside a field value: every entry's value hidden. */
+function maskEntries(value: unknown): unknown {
+  if (Array.isArray(value))
+    return value.map((v) =>
+      typeof v === 'string' ? maskUrl(v) : isPlainObject(v) || Array.isArray(v) ? maskEntries(v) : v,
+    );
+  if (!isPlainObject(value)) return value;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value))
+    Object.defineProperty(out, k, {
+      value: k === 'key' || k === 'name' ? v : REDACTED,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  return out;
 }
 
 const isField = (v: unknown): v is Record<string, unknown> => isPlainObject(v) && 'value' in v && 'name' in v;
 
-function maskField(field: Record<string, unknown>, hidePath: boolean): Record<string, unknown> {
+function maskField(field: Record<string, unknown>): Record<string, unknown> {
   const { value } = field;
   if (value === null || value === undefined || value === '') return field;
   const privacy = typeof field.privacy === 'string' ? field.privacy.toLowerCase() : '';
   if (PRIVATE.has(privacy)) return { ...field, value: PRIVATE_VALUE };
   // Not marked private, so Servarr would store its mask as is: the write guard refuses `[REDACTED]` instead.
   if (typeof field.name === 'string' && SECRET_NAME.test(field.name)) return { ...field, value: REDACTED };
-  if (typeof value === 'string') return { ...field, value: maskUrl(value, hidePath) };
-  if (Array.isArray(value))
-    return { ...field, value: value.map((v) => (typeof v === 'string' ? maskUrl(v, hidePath) : v)) };
-  return field;
+  if (typeof value === 'string') return { ...field, value: maskUrl(value) };
+  return { ...field, value: maskEntries(value) };
 }
 
-/** A result with every provider field's password or API key replaced by Servarr's mask, and URLs cut to what
- * doesn't carry a token; `hidePath` for notifications. Anything nested too deep is hidden. */
-export function maskProviderFields(value: unknown, hidePath: boolean, depth = 0): unknown {
+/** A result with every provider field's password or API key replaced by Servarr's mask, URLs cut to their origin
+ * and key/value entries hidden. Anything nested too deep is hidden. */
+export function maskProviderFields(value: unknown, depth = 0): unknown {
   if (depth > MAX_DEPTH) return REDACTED;
-  if (Array.isArray(value)) return value.map((v) => maskProviderFields(v, hidePath, depth + 1));
+  if (Array.isArray(value)) return value.map((v) => maskProviderFields(v, depth + 1));
   if (!isPlainObject(value)) return value;
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value)) {
     const masked =
       k === 'fields' && Array.isArray(v)
-        ? v.map((f) => (isField(f) ? maskField(f, hidePath) : maskProviderFields(f, hidePath, depth + 1)))
-        : maskProviderFields(v, hidePath, depth + 1);
+        ? v.map((f) => (isField(f) ? maskField(f) : maskProviderFields(f, depth + 1)))
+        : maskProviderFields(v, depth + 1);
     Object.defineProperty(out, k, { value: masked, enumerable: true, writable: true, configurable: true });
   }
   return out;
@@ -98,19 +112,21 @@ export function refuseMaskedValues(body: unknown): void {
     );
 }
 
-/** Where a provider body sends data: hosts and URL origins, and the recipients of a notification. */
+/** Where a provider body sends data: hosts and URL origins, and the recipients of a notification. Field names match
+ * exactly and the first one wins, as Servarr reads them (`SchemaBuilder.ReadFromSchema`). */
 export function destinations(body: unknown): string[] {
   if (!isPlainObject(body) || !Array.isArray(body.fields)) return [];
   const byName = new Map<string, unknown>();
-  for (const f of body.fields) if (isField(f) && typeof f.name === 'string') byName.set(f.name.toLowerCase(), f.value);
+  for (const f of body.fields)
+    if (isField(f) && typeof f.name === 'string' && !byName.has(f.name)) byName.set(f.name, f.value);
   const out = new Set<string>();
   const host = safe(byName.get('host'));
   if (host) {
     const port = safe(byName.get('port'));
-    out.add(`${byName.get('usessl') === true ? 'https' : 'http'}://${host}${port ? `:${port}` : ''}`);
+    out.add(`${byName.get('useSsl') === true ? 'https' : 'http'}://${host}${port ? `:${port}` : ''}`);
   }
   for (const [name, value] of byName) {
-    if (PRIVATE.has(name) || SECRET_NAME.test(name)) continue;
+    if (PRIVATE.has(name.toLowerCase()) || SECRET_NAME.test(name)) continue;
     for (const v of Array.isArray(value) ? value : [value]) {
       const origin = originOf(v);
       if (origin) out.add(safe(origin) ?? origin);

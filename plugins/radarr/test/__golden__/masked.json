@@ -54,24 +54,43 @@
       "/body/fields"
     ]
   },
-  "GET /api/v3/indexer/{id}": {
-    "masked": {
-      "fields": [
-        {
-          "name": "baseUrl",
-          "privacy": "normal",
-          "value": "https://api.nzbgeek.info"
-        },
-        {
-          "name": "apiKey",
-          "privacy": "apiKey",
-          "value": "********"
-        }
-      ],
-      "id": 7,
-      "implementation": "Newznab",
-      "name": "NZBgeek"
-    },
+  "GET /api/v3/indexer": {
+    "masked": [
+      {
+        "fields": [
+          {
+            "name": "baseUrl",
+            "privacy": "normal",
+            "value": "https://api.nzbgeek.info"
+          },
+          {
+            "name": "apiKey",
+            "privacy": "apiKey",
+            "value": "********"
+          }
+        ],
+        "id": 7,
+        "implementation": "Newznab",
+        "name": "NZBgeek"
+      },
+      {
+        "fields": [
+          {
+            "name": "baseUrl",
+            "privacy": "normal",
+            "value": "https://tracker.example/[REDACTED]"
+          },
+          {
+            "name": "cookie",
+            "privacy": "normal",
+            "value": "[REDACTED]"
+          }
+        ],
+        "id": 15,
+        "implementation": "TorrentRssIndexer",
+        "name": "Tracker"
+      }
+    ],
     "sensitiveParams": [
       "/body/fields"
     ]
@@ -89,6 +108,28 @@
         "id": 9,
         "implementation": "Discord",
         "name": "Discord"
+      },
+      {
+        "fields": [
+          {
+            "name": "url",
+            "privacy": "normal",
+            "value": "https://hooks.example.com/[REDACTED]"
+          },
+          {
+            "name": "headers",
+            "privacy": "normal",
+            "value": [
+              {
+                "key": "Authorization",
+                "value": "[REDACTED]"
+              }
+            ]
+          }
+        ],
+        "id": 14,
+        "implementation": "Webhook",
+        "name": "Hook"
       }
     ],
     "sensitiveParams": [

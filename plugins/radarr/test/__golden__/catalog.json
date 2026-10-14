@@ -1053,16 +1053,6 @@
   {
     "classification": "read",
     "classificationReason": "verb:GET",
-    "group": "manualimport",
-    "key": "GET /api/v3/manualimport",
-    "kind": "rest",
-    "locked": false,
-    "needsReview": false,
-    "typedConfirmation": false
-  },
-  {
-    "classification": "read",
-    "classificationReason": "verb:GET",
     "group": "metadata",
     "key": "GET /api/v3/metadata",
     "kind": "rest",

@@ -12,4 +12,4 @@ Workflows:
 - Upcoming: `GET /api/v3/calendar` (`start`, `end`).
 - Health: `GET /api/v3/system/status`, `GET /api/v3/health`, `GET /api/v3/diskspace`.
 
-Locked (a person types a confirmation): deletes, bulk movie edits, deleting or moving files, file-changing commands, host settings, restart, backups, and creating or changing download clients, indexers, import lists and notifications. Filesystem browsing and log downloads are not available.
+Locked (a person types a confirmation): deletes, bulk movie edits, deleting or moving files, file-changing commands, host settings, restart, backups, and creating or changing download clients, indexers, import lists and notifications. Filesystem browsing, manual-import folder scans and log downloads are not available.

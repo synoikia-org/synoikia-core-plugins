@@ -36,7 +36,7 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Radarr end to end (fake Radarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(229);
+    expect(h.operations()).toHaveLength(228);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
     expect(h.operation('DELETE /api/v3/movie/{id}#delete-files')).toMatchObject({
@@ -115,8 +115,12 @@ describe('Radarr end to end (fake Radarr)', () => {
     it.each([
       ['GET /api/v3/config/host', { path: '/api/v3/config/host' }, [SECRETS.hostApiKey, SECRETS.proxyPassword]],
       ['GET /api/v3/downloadclient', { path: '/api/v3/downloadclient' }, [SECRETS.clientPassword]],
-      ['GET /api/v3/indexer', { path: '/api/v3/indexer' }, [SECRETS.indexerApiKey]],
-      ['GET /api/v3/notification', { path: '/api/v3/notification' }, [SECRETS.webhookToken]],
+      [
+        'GET /api/v3/indexer',
+        { path: '/api/v3/indexer' },
+        [SECRETS.indexerApiKey, SECRETS.trackerPasskey, SECRETS.trackerCookie],
+      ],
+      ['GET /api/v3/notification', { path: '/api/v3/notification' }, [SECRETS.webhookToken, SECRETS.headerToken]],
       ['GET /api/v3/release', { path: '/api/v3/release', query: { movieId: 1 } }, [SECRETS.releaseApiKey]],
     ])('%s', async (key, request, secrets) => {
       allow(key, 'read');
