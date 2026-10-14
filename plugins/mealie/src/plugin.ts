@@ -17,6 +17,7 @@ import {
 import type { CompiledRules, PluginHandlers } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
+import { requireLockedKeys } from './locked-keys.js';
 
 /** The Mealie plugin: catalog from the OpenAPI spec the instance serves, keyed by the spec's own `/api/…`
  * paths; the sandbox calls `mealie.request({ method, path, query, body })`. */
@@ -46,7 +47,9 @@ export const settings = parsePluginSettings(raw, {
 export const policy = compileRules(settings);
 
 export function buildCatalog(spec: string | Record<string, unknown>, rules: CompiledRules<unknown> = policy) {
-  return buildOpenApiCatalog(spec, { service: SERVICE, rules, minOperations: settings.plugin.minOperations });
+  const catalog = buildOpenApiCatalog(spec, { service: SERVICE, rules, minOperations: settings.plugin.minOperations });
+  requireLockedKeys(SERVICE, settings.rules, catalog.operations);
+  return catalog;
 }
 
 export function createMealiePlugin(): PluginHandlers {

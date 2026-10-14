@@ -92,6 +92,25 @@ describe('Mealie catalog (pinned spec)', () => {
     expect(op('POST /api/households/events/notifications')?.sensitiveParams).toEqual(['/body/appriseUrl']);
   });
 
+  it('refuses a live spec missing a key plugin.yaml locks by name, instead of dropping the lock', () => {
+    const spec = JSON.parse(SPEC_TEXT) as { paths: Record<string, Record<string, unknown>> };
+    const restore = spec.paths['/api/admin/backups/{file_name}/restore']!;
+    spec.paths['/api/admin/backups/{file_name}/restore-v2'] = restore;
+    delete spec.paths['/api/admin/backups/{file_name}/restore'];
+    expect(() => buildCatalog(spec)).toThrow(
+      'The Mealie API spec lacks 1 locked operation(s) (POST /api/admin/backups/{file_name}/restore); refusing a catalog that would drop their locks',
+    );
+  });
+
+  it('shows webhook and AI provider destinations to the approver, masking webhook urls only in results', () => {
+    expect(op('PUT /api/households/webhooks/{item_id}')).toMatchObject({
+      locked: true,
+      sensitiveResult: { keys: ['url'] },
+    });
+    expect(op('PUT /api/households/webhooks/{item_id}')?.sensitiveParams).toBeUndefined();
+    expect(op('PUT /api/groups/ai-providers/providers/{provider_id}')?.sensitiveParams).not.toContain('/body/baseUrl');
+  });
+
   it('refuses a truncated spec', () => {
     const spec = JSON.parse(SPEC_TEXT) as { paths: Record<string, unknown> };
     const small = { ...spec, paths: Object.fromEntries(Object.entries(spec.paths).slice(0, 10)) };

@@ -92,6 +92,9 @@ describe('Mealie end to end (fake Mealie)', () => {
       expect(r.ok, JSON.stringify(r)).toBe(true);
       expect(wrongRefused).toBe(true);
       expect(literal).toBe(confirm);
+      // Where a provider or webhook sends data stays visible to the approver.
+      const body = request.body as { baseUrl?: string; url?: string } | undefined;
+      for (const dest of [body?.baseUrl, body?.url]) if (dest) expect(shown[0]).toContain(dest);
       // Passwords, keys and tokens in the call never reach the approver.
       for (const secret of [
         'pw-123456',

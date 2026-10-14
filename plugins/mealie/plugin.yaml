@@ -64,17 +64,26 @@ rules:
       - 'PUT /api/households/permissions'
       - 'POST /api/households/invitations'
       - 'POST /api/households/invitations/email'
+      # A provider's baseUrl and headers decide where its stored key and the group's recipes are sent.
+      - 'POST /api/groups/ai-providers/providers'
+      - 'PUT /api/groups/ai-providers/providers/{provider_id}'
+      - 'DELETE /api/groups/ai-providers/providers/{provider_id}'
+      # A webhook posts household data to its url.
+      - 'POST /api/households/webhooks'
+      - 'PUT /api/households/webhooks/{item_id}'
+      # Privacy flags here make the group's or household's recipes public without sign-in.
+      - 'PUT /api/groups/preferences'
+      - 'PUT /api/households/preferences'
     locked: true
 
   # The literal an approver types: the thing the operation affects.
-  - match: ['PUT /api/admin/users/{item_id}', 'DELETE /api/admin/users/{item_id}']
+  # The stored user, never the body's username: the model writes the body.
+  - match: ['PUT /api/admin/users/{item_id}', 'DELETE /api/admin/users/{item_id}', 'PUT /api/users/{item_id}']
     confirm:
       lookup:
         op: 'GET /api/admin/users/{item_id}'
         args: [{ item_id: { $param: /path/item_id } }]
         field: [username, email]
-  - match: 'PUT /api/users/{item_id}'
-    confirm: [{ param: /body/username }, { param: /path/item_id }]
   - match: 'POST /api/admin/users'
     confirm: { param: /body/username }
   - match:
@@ -135,6 +144,7 @@ rules:
     sensitiveParams: [/body/apiKey, /body/requestHeaders, /body/requestParams]
     sensitiveResult: { keys: [requestHeaders, requestParams], deep: true }
   # Webhook URLs often carry their own secret (a Home Assistant webhook id); groups and households embed them.
+  # Masked in results only: the approver of a locked webhook write must see where it posts.
   - match:
       - '* /api/households/webhooks*'
       - 'GET /api/households/self'
@@ -142,7 +152,6 @@ rules:
       - '* /api/admin/groups/{item_id}'
       - '* /api/admin/households'
       - '* /api/admin/households/{item_id}'
-    sensitiveParams: [/body/url]
     sensitiveResult: { keys: [url], deep: true }
 
 plugin:

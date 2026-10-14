@@ -27,9 +27,7 @@
       ],
       "page": 1
     },
-    "sensitiveParams": [
-      "/body/url"
-    ]
+    "sensitiveParams": []
   },
   "POST /api/admin/users/password-reset-token": {
     "masked": {

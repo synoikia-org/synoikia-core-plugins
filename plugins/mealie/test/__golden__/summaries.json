@@ -24,6 +24,11 @@
     "resolved": "DELETE /api/admin/users/{item_id}",
     "text": "Mealie DELETE /api/admin/users/u-2"
   },
+  "DELETE /api/groups/ai-providers/providers/{provider_id}": {
+    "confirmLiteral": "Home",
+    "resolved": "DELETE /api/groups/ai-providers/providers/{provider_id}",
+    "text": "Mealie DELETE /api/groups/ai-providers/providers/p-1"
+  },
   "DELETE /api/recipes/bulk-actions/export/purge": {
     "confirmLiteral": "Home",
     "resolved": "DELETE /api/recipes/bulk-actions/export/purge",
@@ -89,6 +94,11 @@
     "resolved": "POST /api/admin/users/unlock",
     "text": "Mealie POST /api/admin/users/unlock"
   },
+  "POST /api/groups/ai-providers/providers": {
+    "confirmLiteral": "Home",
+    "resolved": "POST /api/groups/ai-providers/providers",
+    "text": "Mealie POST /api/groups/ai-providers/providers {\"name\":\"OpenAI\",\"baseUrl\":\"https://llm.example/v1\",\"apiKey\":\"[REDACTED]\"}"
+  },
   "POST /api/households/invitations": {
     "confirmLiteral": "Home",
     "resolved": "POST /api/households/invitations",
@@ -98,6 +108,11 @@
     "confirmLiteral": "guest@example.com",
     "resolved": "POST /api/households/invitations/email",
     "text": "Mealie POST /api/households/invitations/email {\"email\":\"guest@example.com\",\"token\":\"[REDACTED]\"}"
+  },
+  "POST /api/households/webhooks": {
+    "confirmLiteral": "Home",
+    "resolved": "POST /api/households/webhooks",
+    "text": "Mealie POST /api/households/webhooks {\"name\":\"HA\",\"url\":\"https://ha.example/api/webhook/new-hook\",\"enabled\":true}"
   },
   "POST /api/recipes/bulk-actions/delete": {
     "confirmLiteral": "Home",
@@ -134,10 +149,30 @@
     "resolved": "PUT /api/admin/users/{item_id}",
     "text": "Mealie PUT /api/admin/users/u-2 {\"admin\":true}"
   },
+  "PUT /api/groups/ai-providers/providers/{provider_id}": {
+    "confirmLiteral": "Home",
+    "resolved": "PUT /api/groups/ai-providers/providers/{provider_id}",
+    "text": "Mealie PUT /api/groups/ai-providers/providers/p-1 {\"name\":\"OpenAI\",\"baseUrl\":\"https://llm.example/v1\",\"requestHeaders\":\"[REDACTED]\"}"
+  },
+  "PUT /api/groups/preferences": {
+    "confirmLiteral": "Home",
+    "resolved": "PUT /api/groups/preferences",
+    "text": "Mealie PUT /api/groups/preferences {\"privateGroup\":false}"
+  },
   "PUT /api/households/permissions": {
     "confirmLiteral": "alex",
     "resolved": "PUT /api/households/permissions",
     "text": "Mealie PUT /api/households/permissions {\"userId\":\"u-2\",\"canManage\":true}"
+  },
+  "PUT /api/households/preferences": {
+    "confirmLiteral": "Home",
+    "resolved": "PUT /api/households/preferences",
+    "text": "Mealie PUT /api/households/preferences {\"privateHousehold\":false}"
+  },
+  "PUT /api/households/webhooks/{item_id}": {
+    "confirmLiteral": "Home",
+    "resolved": "PUT /api/households/webhooks/{item_id}",
+    "text": "Mealie PUT /api/households/webhooks/w-1 {\"name\":\"HA\",\"url\":\"https://elsewhere.example/collect\",\"enabled\":true}"
   },
   "PUT /api/users/password": {
     "confirmLiteral": "admin",
@@ -147,6 +182,6 @@
   "PUT /api/users/{item_id}": {
     "confirmLiteral": "alex",
     "resolved": "PUT /api/users/{item_id}",
-    "text": "Mealie PUT /api/users/u-2 {\"username\":\"alex\",\"admin\":true}"
+    "text": "Mealie PUT /api/users/u-2 {\"username\":\"mallory\",\"admin\":true}"
   }
 }

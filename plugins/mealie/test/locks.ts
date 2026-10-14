@@ -154,7 +154,7 @@ export const LOCK_CASES: LockCase[] = [
   },
   {
     key: 'PUT /api/users/{item_id}',
-    request: { method: 'PUT', path: '/api/users/u-2', body: { username: 'alex', admin: true } },
+    request: { method: 'PUT', path: '/api/users/u-2', body: { username: 'mallory', admin: true } },
     confirm: 'alex',
   },
   {
@@ -175,5 +175,61 @@ export const LOCK_CASES: LockCase[] = [
       body: { email: 'guest@example.com', token: 'invite-token-555555' },
     },
     confirm: 'guest@example.com',
+  },
+  // The approver sees where a provider or webhook sends data: baseUrl and url stay in the summary.
+  {
+    key: 'POST /api/groups/ai-providers/providers',
+    request: {
+      method: 'POST',
+      path: '/api/groups/ai-providers/providers',
+      body: { name: 'OpenAI', baseUrl: 'https://llm.example/v1', apiKey: 'sk-ai-key-666666' },
+    },
+    confirm: 'Home',
+  },
+  {
+    key: 'PUT /api/groups/ai-providers/providers/{provider_id}',
+    request: {
+      method: 'PUT',
+      path: '/api/groups/ai-providers/providers/p-1',
+      body: {
+        name: 'OpenAI',
+        baseUrl: 'https://llm.example/v1',
+        requestHeaders: { Authorization: 'Bearer sk-ai-key-666666' },
+      },
+    },
+    confirm: 'Home',
+  },
+  {
+    key: 'DELETE /api/groups/ai-providers/providers/{provider_id}',
+    request: { method: 'DELETE', path: '/api/groups/ai-providers/providers/p-1' },
+    confirm: 'Home',
+  },
+  {
+    key: 'POST /api/households/webhooks',
+    request: {
+      method: 'POST',
+      path: '/api/households/webhooks',
+      body: { name: 'HA', url: 'https://ha.example/api/webhook/new-hook', enabled: true },
+    },
+    confirm: 'Home',
+  },
+  {
+    key: 'PUT /api/households/webhooks/{item_id}',
+    request: {
+      method: 'PUT',
+      path: '/api/households/webhooks/w-1',
+      body: { name: 'HA', url: 'https://elsewhere.example/collect', enabled: true },
+    },
+    confirm: 'Home',
+  },
+  {
+    key: 'PUT /api/groups/preferences',
+    request: { method: 'PUT', path: '/api/groups/preferences', body: { privateGroup: false } },
+    confirm: 'Home',
+  },
+  {
+    key: 'PUT /api/households/preferences',
+    request: { method: 'PUT', path: '/api/households/preferences', body: { privateHousehold: false } },
+    confirm: 'Home',
   },
 ];

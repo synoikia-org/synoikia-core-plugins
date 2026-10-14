@@ -88,8 +88,14 @@ describe('Mealie plugin', () => {
     await bad.shutdown?.();
   });
 
-  it('refuses a served spec that is not an OpenAPI document, or a truncated one', async () => {
-    for (const bad of [{ detail: 'Not Found' }, { openapi: '3.1.0', paths: { '/api/app/about': { get: {} } } }]) {
+  it('refuses a served spec that is not OpenAPI, truncated, or missing a locked operation', async () => {
+    const renamed = JSON.parse(SPEC_TEXT) as { paths: Record<string, unknown> };
+    delete renamed.paths['/api/recipes/bulk-actions/delete'];
+    for (const bad of [
+      { detail: 'Not Found' },
+      { openapi: '3.1.0', paths: { '/api/app/about': { get: {} } } },
+      renamed,
+    ]) {
       fake.serveSpec(bad);
       await expect(plugin.syncCatalog()).rejects.toMatchObject({ code: ErrorCodes.UpstreamError });
     }

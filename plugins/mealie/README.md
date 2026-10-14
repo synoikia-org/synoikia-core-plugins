@@ -28,4 +28,4 @@ A base URL and a long-lived API token (User Profile → API Tokens) of a dedicat
 
 ## Locked operations
 
-Admin user, group, household and AI-provider changes; backup restore and delete; maintenance cleanup; the admin test email; bulk recipe delete and export purge; API token creation and deletion; password change and reset; user and household permission updates; invitations. The list, with reasons and confirmation literals, is in the design note and `plugin.yaml`.
+Admin user, group and household changes; AI providers (group and admin); webhook create and update; group and household preferences; backup restore and delete; maintenance cleanup; the admin test email; bulk recipe delete and export purge; API token creation and deletion; password change and reset; user and household permission updates; invitations. The list, with reasons and confirmation literals, is in the design note and `plugin.yaml`.

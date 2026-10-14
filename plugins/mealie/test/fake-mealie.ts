@@ -122,6 +122,13 @@ export async function startFakeMealie(): Promise<FakeMealie> {
       'PUT /api/households/permissions': () => ok(users.get('u-2')),
       'POST /api/households/invitations': () => ok({ token: SECRETS.inviteToken, usesLeft: 1 }),
       'POST /api/households/invitations/email': () => ok({ success: true }),
+      'POST /api/groups/ai-providers/providers': () => ok({ id: 'p-1', name: 'OpenAI' }),
+      'PUT /api/groups/ai-providers/providers/{provider_id}': () => ok({ id: 'p-1', name: 'OpenAI' }),
+      'DELETE /api/groups/ai-providers/providers/{provider_id}': () => ok({ id: 'p-1' }),
+      'POST /api/households/webhooks': (req) => ok({ id: 'w-2', ...(req.body as object) }),
+      'PUT /api/households/webhooks/{item_id}': (req) => ok({ id: req.params.item_id, ...(req.body as object) }),
+      'PUT /api/groups/preferences': (req) => ok(req.body),
+      'PUT /api/households/preferences': (req) => ok(req.body),
     },
   });
   return {

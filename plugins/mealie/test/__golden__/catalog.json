@@ -39,9 +39,6 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -58,9 +55,6 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -101,11 +95,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "groups__ai_providers",
     "key": "DELETE /api/groups/ai-providers/providers/{provider_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/body/apiKey",
@@ -119,7 +113,7 @@
         "requestParams"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -229,9 +223,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -414,9 +405,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -455,9 +443,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -474,9 +459,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -493,9 +475,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1060,9 +1039,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1139,9 +1115,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1158,9 +1131,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1537,9 +1507,6 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1578,9 +1545,6 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1680,11 +1644,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "groups__ai_providers",
     "key": "POST /api/groups/ai-providers/providers",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/body/apiKey",
@@ -1698,7 +1662,7 @@
         "requestParams"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1948,22 +1912,19 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "households__webhooks",
     "key": "POST /api/households/webhooks",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
         "url"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1973,9 +1934,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -1992,9 +1950,6 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -2314,9 +2269,6 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -2333,9 +2285,6 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
@@ -2386,11 +2335,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "groups__ai_providers",
     "key": "PUT /api/groups/ai-providers/providers/{provider_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/body/apiKey",
@@ -2404,7 +2353,7 @@
         "requestParams"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2428,13 +2377,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "groups__self_service",
     "key": "PUT /api/groups/preferences",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2501,13 +2450,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "households__self_service",
     "key": "PUT /api/households/preferences",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2561,22 +2510,19 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "households__webhooks",
     "key": "PUT /api/households/webhooks/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "sensitiveParams": [
-      "/body/url"
-    ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
         "url"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
