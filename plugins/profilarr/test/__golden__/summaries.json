@@ -1,0 +1,27 @@
+{
+  "DELETE /backups/{filename}": {
+    "confirmLiteral": "backup-2026-10-14-100005.tar.gz",
+    "resolved": "DELETE /backups/{filename}",
+    "text": "Profilarr DELETE /backups/backup-2026-10-14-100005.tar.gz"
+  },
+  "DELETE /databases/{id}": {
+    "confirmLiteral": "Dictionarry",
+    "resolved": "DELETE /databases/{id}",
+    "text": "Profilarr DELETE /databases/1"
+  },
+  "PATCH /backups/settings": {
+    "confirmLiteral": "Profilarr",
+    "resolved": "PATCH /backups/settings",
+    "text": "Profilarr PATCH /backups/settings {\"retentionDays\":1} (a shorter retention deletes older backups at the next cleanup)"
+  },
+  "PATCH /databases/{id}": {
+    "confirmLiteral": "Dictionarry",
+    "resolved": "PATCH /databases/{id}",
+    "text": "Profilarr PATCH /databases/1 {\"name\":\"Renamed\",\"auto_pull\":true,\"personal_access_token\":\"[REDACTED]\"}"
+  },
+  "POST /databases/{id}/sync": {
+    "confirmLiteral": "Dictionarry",
+    "resolved": "POST /databases/{id}/sync",
+    "text": "Profilarr POST /databases/1/sync (with auto-pull on, pulled changes are pushed to the Radarr/Sonarr instances synced on pull)"
+  }
+}
