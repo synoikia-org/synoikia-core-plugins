@@ -10,6 +10,7 @@ The original per-server designs the TrueNAS, Seerr and Home Assistant plugins co
 | Mealie              | [`designs/mealie.md`](designs/mealie.md)               |
 | Profilarr           | [`designs/profilarr.md`](designs/profilarr.md)         |
 | Nginx Proxy Manager | [`designs/npm.md`](designs/npm.md)                     |
+| Grafana             | [`designs/grafana.md`](designs/grafana.md)             |
 
 [`designs/api-definitions.md`](designs/api-definitions.md) maps where every plugin, existing and planned, gets its API definition.
 
