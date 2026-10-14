@@ -15,12 +15,13 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 
 ## Plugins
 
-| Plugin          | Upstream                                           | Catalog from                                | Design                                                           |
-| --------------- | -------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
-| `truenas`       | [TrueNAS](https://www.truenas.com/)                | the instance's JSON-RPC introspection       | [`docs/designs/truenas.md`](docs/designs/truenas.md)             |
-| `seerr`         | [Seerr](https://github.com/seerr-team/seerr)       | `seerr-api.yml` for the instance's release  | [`docs/designs/seerr.md`](docs/designs/seerr.md)                 |
-| `homeassistant` | [Home Assistant](https://www.home-assistant.io/)   | the WebSocket API's services and registries | [`docs/designs/homeassistant.md`](docs/designs/homeassistant.md) |
-| `mealie`        | [Mealie](https://github.com/mealie-recipes/mealie) | the OpenAPI spec the instance serves        | [`docs/designs/mealie.md`](docs/designs/mealie.md)               |
+| Plugin          | Upstream                                                     | Catalog from                                | Design                                                           |
+| --------------- | ------------------------------------------------------------ | ------------------------------------------- | ---------------------------------------------------------------- |
+| `truenas`       | [TrueNAS](https://www.truenas.com/)                          | the instance's JSON-RPC introspection       | [`docs/designs/truenas.md`](docs/designs/truenas.md)             |
+| `seerr`         | [Seerr](https://github.com/seerr-team/seerr)                 | `seerr-api.yml` for the instance's release  | [`docs/designs/seerr.md`](docs/designs/seerr.md)                 |
+| `homeassistant` | [Home Assistant](https://www.home-assistant.io/)             | the WebSocket API's services and registries | [`docs/designs/homeassistant.md`](docs/designs/homeassistant.md) |
+| `mealie`        | [Mealie](https://github.com/mealie-recipes/mealie)           | the OpenAPI spec the instance serves        | [`docs/designs/mealie.md`](docs/designs/mealie.md)               |
+| `profilarr`     | [Profilarr](https://github.com/Dictionarry-Hub/profilarr) v2 | the OpenAPI spec the instance serves        | [`docs/designs/profilarr.md`](docs/designs/profilarr.md)         |
 
 ## Layout
 
