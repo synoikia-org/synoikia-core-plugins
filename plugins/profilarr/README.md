@@ -29,4 +29,4 @@ A base URL and the API key from Settings → Security (sent as `X-Api-Key`).
 
 ## Locked operations
 
-Database sync (pushes profiles into Radarr/Sonarr when auto-pull is on), update and unlink; backup delete; backup settings. Reasons and literals are in the design note and `plugin.yaml`.
+Database link, sync (pushes profiles into Radarr/Sonarr when auto-pull is on), update and unlink; any delete; backup delete; backup settings. Reasons and literals are in the design note and `plugin.yaml`.

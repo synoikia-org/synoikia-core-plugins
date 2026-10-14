@@ -72,7 +72,8 @@ describe('Profilarr golden record', () => {
       const { key, params } = await plugin.resolveOperation({ fn: 'request', args: [c.request] });
       const declared = operations.find((o) => o.key === key)?.sensitiveParams ?? [];
       const shown = redactPaths(params, declared);
-      out[c.key] = { resolved: key, ...(await plugin.summarize({ key, params: shown, targets: [] })) };
+      const targets = (await plugin.resolveTargets?.({ key, params })) ?? [];
+      out[c.key] = { resolved: key, targets, ...(await plugin.summarize({ key, params: shown, targets })) };
     }
     await expect(stable(out)).toMatchFileSnapshot('__golden__/summaries.json');
   });

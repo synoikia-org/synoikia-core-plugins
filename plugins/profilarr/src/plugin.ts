@@ -18,6 +18,7 @@ import type { CompiledRules, PluginHandlers } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
+import { databaseTargets, withTargets } from './targets.js';
 
 /** The Profilarr plugin: catalog from the OpenAPI spec the instance serves, keyed by the spec's paths under
  * `/api/v1`; the sandbox calls `profilarr.request({ method, path, query, body })`. */
@@ -101,7 +102,12 @@ export function createProfilarrPlugin(): PluginHandlers {
           return { upstreamVersion, operations: (await catalog.reload()).operations };
         },
         resolveOperation: binding.resolveOperation,
-        summarize: binding.summarize,
+        resolveTargets: ({ key, params }) =>
+          databaseTargets(kit.client(), key, params, settings.defaults.timeouts.lookup),
+        async summarize(params) {
+          const summary = await binding.summarize(params);
+          return { ...summary, text: withTargets(summary.text, params.targets) };
+        },
         invoke: (params) => binding.invoke(params),
       };
     },

@@ -22,7 +22,7 @@ describe('Profilarr catalog (pinned spec)', () => {
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(5);
+    expect(locked).toHaveLength(6);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
@@ -66,6 +66,15 @@ describe('Profilarr catalog (pinned spec)', () => {
     expect(op('PATCH /databases/{id}')?.sensitiveParams).toEqual(['/body/personal_access_token']);
     expect(op('GET /databases/{id}')?.sensitiveResult).toEqual({ keys: ['personal_access_token'], deep: true });
     expect(op('GET /arr')?.sensitiveResult).toEqual({ keys: ['api_key'], deep: true });
+  });
+
+  it('locks a delete a newer spec adds', () => {
+    const spec = specOf();
+    const newer = { ...spec, paths: { ...spec.paths, '/arr/{id}': { delete: { summary: 'Delete Arr Instance' } } } };
+    expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /arr/{id}')).toMatchObject({
+      locked: true,
+      typedConfirmation: true,
+    });
   });
 
   it('refuses a truncated spec', () => {

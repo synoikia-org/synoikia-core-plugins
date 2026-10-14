@@ -9,6 +9,12 @@
     "namespace": "profilarr",
     "functions": ["request"]
   },
+  "capabilities": {
+    "targets": true
+  },
+  "targets": {
+    "label": "Database"
+  },
   "labels": {
     "operation": "Operation",
     "operations": "Operations"

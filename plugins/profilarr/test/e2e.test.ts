@@ -100,7 +100,11 @@ describe('Profilarr end to end (fake Profilarr)', () => {
       expect(r.ok, JSON.stringify(r)).toBe(true);
       expect(wrongRefused).toBe(true);
       expect(literal).toBe(confirm);
-      expect(shown.join('\n')).not.toContain('ghp_new-pat-333333');
+      for (const secret of ['ghp_new-pat-333333', 'ghp_link-pat-555555'])
+        expect(shown.join('\n')).not.toContain(secret);
+      // The approver sees which repository is linked or synced.
+      if (key.includes('/databases'))
+        expect(shown[0]).toMatch(/github\.com\/(Dictionarry-Hub\/database|someone\/profiles)/);
     });
   });
 
@@ -123,7 +127,7 @@ describe('Profilarr end to end (fake Profilarr)', () => {
 
     it('keeps a database token out of the approval and the audit log', async () => {
       const pat = 'ghp_linked-pat-444444';
-      allow('POST /databases', 'ask');
+      h.setOperationLevel('POST /databases', 'ask');
       const shown: string[] = [];
       const r = await h.execute(
         call({
@@ -134,10 +138,11 @@ describe('Profilarr end to end (fake Profilarr)', () => {
         {
           onApproval: (a) => {
             shown.push(a.message, JSON.stringify(a.pending));
-            a.approve();
+            a.approve('Profilarr');
           },
         },
       );
+      h.setOperationLevel('POST /databases', null);
       expect(r.ok).toBe(true);
       // The repository the token is for stays visible to the approver.
       expect(shown.join('\n')).toContain('https://github.com/me/db');

@@ -66,6 +66,24 @@ describe('Profilarr plugin', () => {
     await expect(summary('404')).resolves.toMatchObject({ confirmLiteral: '404' });
   });
 
+  it('names the stored database and its repository as the target of non-GET database calls', async () => {
+    const targets = (key: string, id: string) => plugin.resolveTargets!({ key, params: { path: { id } } });
+    const dictionarry = {
+      kind: 'database',
+      id: '1',
+      name: 'Dictionarry (https://github.com/Dictionarry-Hub/database)',
+    };
+    await expect(targets('POST /databases/{id}/sync', '1')).resolves.toEqual([dictionarry]);
+    await expect(targets('GET /databases/{id}', '1')).resolves.toEqual([]);
+    await expect(targets('DELETE /databases/{id}', '404')).resolves.toEqual([]);
+    expect(
+      await plugin.summarize({ key: 'DELETE /databases/{id}', params: { path: { id: '1' } }, targets: [dictionarry] }),
+    ).toEqual({
+      text: 'Profilarr DELETE /databases/1 on Dictionarry (https://github.com/Dictionarry-Hub/database)',
+      confirmLiteral: 'Dictionarry',
+    });
+  });
+
   it('reports a rejected key without throwing', async () => {
     const bad = createProfilarrPlugin();
     await bad.init({ ...connection(), secrets: { apiKey: 'wrong' }, sdkVersion: '1' });

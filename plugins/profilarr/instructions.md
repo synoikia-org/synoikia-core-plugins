@@ -12,4 +12,4 @@ Workflows:
 - Back up: `POST /backups` → `GET /jobs/{id}` → `GET /backups`; schedule and retention in `GET /backups/settings`.
 - News: `GET /announcements` → `GET /announcements/{id}`.
 
-The API has no endpoints for editing profiles or custom formats. Locked (a person types a confirmation): database sync, update and unlink, backup delete and backup settings.
+The API has no endpoints for editing profiles or custom formats. Locked (a person types a confirmation): database link, sync, update and unlink, backup delete and backup settings.

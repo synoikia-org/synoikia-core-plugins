@@ -18,12 +18,17 @@ exclude:
 
 rules:
   # Irreversible, or pushes profiles into Radarr/Sonarr: always a human with a typed confirmation.
+  # Linking can set a token, auto-pull and a one-minute interval: unattended pushes from any repository.
   - match:
+      - 'POST /databases'
       - 'DELETE /databases/{id}'
       - 'PATCH /databases/{id}'
       - 'POST /databases/{id}/sync'
       - 'DELETE /backups/{filename}'
       - 'PATCH /backups/settings'
+    locked: true
+  # A delete a newer spec adds is locked until reviewed.
+  - match: 'DELETE *'
     locked: true
 
   # The literal an approver types: the stored database's name, or the backup file in the path.
@@ -34,6 +39,8 @@ rules:
     summaryNote: '(with auto-pull on, pulled changes are pushed to the Radarr/Sonarr instances synced on pull)'
   - match: 'DELETE /backups/{filename}'
     confirm: { param: /path/filename }
+  - match: 'POST /databases'
+    summaryNote: '(with auto_pull and sync_strategy set, this repository is pushed to Radarr/Sonarr on a schedule)'
   - match: 'PATCH /backups/settings'
     summaryNote: '(a shorter retention deletes older backups at the next cleanup)'
 

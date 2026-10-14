@@ -7,6 +7,21 @@ export interface LockCase {
 
 export const LOCK_CASES: LockCase[] = [
   {
+    key: 'POST /databases',
+    request: {
+      method: 'POST',
+      path: '/databases',
+      body: {
+        name: 'Elsewhere',
+        repository_url: 'https://github.com/someone/profiles',
+        personal_access_token: 'ghp_link-pat-555555',
+        auto_pull: true,
+        sync_strategy: 1,
+      },
+    },
+    confirm: 'Profilarr',
+  },
+  {
     key: 'PATCH /databases/{id}',
     request: {
       method: 'PATCH',

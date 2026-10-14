@@ -30,11 +30,14 @@ Each is locked with a typed confirmation. Literals come from the stored object o
 | --- | --- | --- |
 | `POST /databases/{id}/sync` | With auto-pull on, a pull triggers the arr syncs set to run on pull (`pcdManager.sync` → `triggerSyncs({ event: 'on_pull' })`), which overwrite quality profiles and custom formats in Radarr/Sonarr | database name (lookup) |
 | `PATCH /databases/{id}` | Turns auto-pull and the sync interval on, which runs the same push on a schedule; replaces the GitHub token | database name (lookup) |
+| `POST /databases` | Links any repository with a model-supplied token, `auto_pull` and a sync interval as short as a minute: unattended pushes into Radarr/Sonarr | instance name (`Profilarr`) |
 | `DELETE /databases/{id}` | Unlinks the database and its local data | database name (lookup) |
 | `DELETE /backups/{filename}` | Irreversible | the file name |
 | `PATCH /backups/settings` | A shorter retention deletes older backups at the next cleanup; can turn backups off | instance name (`Profilarr`) |
 
-`POST /databases` (link) stays an ordinary write: a newly linked database has no arr sync configs yet.
+A `DELETE *` rule locks any delete a newer spec adds until it is reviewed (the locked-key check covers exact keys only).
+
+**Targets.** Non-GET calls on `/databases/{id}…` resolve the stored database through `GET /databases/{id}` as a core target (`capabilities.targets`), named `<name> (<repository_url>)`, and the approval text ends with it, so the approver sees which repository is synced, changed or unlinked. A failed lookup gives no target; the summary still shows the path id.
 
 ## Secrets
 
