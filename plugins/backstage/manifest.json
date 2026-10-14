@@ -1,0 +1,66 @@
+{
+  "id": "backstage",
+  "name": "Backstage",
+  "version": "0.1.0",
+  "sdk": "^0.2.2",
+  "description": "Backstage for Synoikia.",
+  "entry": "dist/index.js",
+  "binding": {
+    "namespace": "backstage",
+    "functions": [
+      "request"
+    ]
+  },
+  "connection": {
+    "schema": {
+      "type": "object",
+      "required": [
+        "baseUrl",
+        "token"
+      ],
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "title": "Base URL"
+        },
+        "token": {
+          "type": "string",
+          "title": "API token",
+          "writeOnly": true
+        },
+        "verifyTls": {
+          "type": "boolean",
+          "title": "Verify TLS certificate",
+          "default": true
+        }
+      }
+    },
+    "ui": {
+      "baseUrl": {
+        "widget": "url",
+        "placeholder": "https://backstage.internal.lan"
+      },
+      "token": {
+        "widget": "secret",
+        "help": "A long-lived API token for a dedicated, least-privileged user."
+      },
+      "verifyTls": {
+        "widget": "bool"
+      }
+    },
+    "help": "1. In Backstage, create a dedicated user with only the access Synoikia should have, and its api token.\n2. Enter the base URL and credentials, then **Test connection**.\n3. Keep *Verify TLS* on unless Backstage uses a self-signed certificate on a trusted network.\n\nAfter the first sync, raise groups on the Access page as needed."
+  },
+  "sensitiveKeys": [
+    "token",
+    "apiKey",
+    "api_key",
+    "password",
+    "secret"
+  ],
+  "network": {
+    "hosts": [
+      "{{connection.baseUrl}}"
+    ]
+  }
+}
