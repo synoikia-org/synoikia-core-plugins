@@ -27,6 +27,12 @@ afterAll(async () => {
 
 beforeEach(() => fake.reset());
 
+const TEMPLATE = {
+  apiVersion: 'scaffolder.backstage.io/v1beta3',
+  kind: 'Template',
+  metadata: { name: 'checkout' },
+  spec: { steps: [] },
+};
 const call = (request: unknown) => `return await backstage.request(${JSON.stringify(request)});`;
 const allow = (key: string, level: 'read' | 'ask') => h.setGroupLevel(h.operation(key).pluginGroup, level);
 
@@ -49,21 +55,50 @@ describe('Backstage end to end (fake Backstage)', () => {
     expect(r).toMatchObject({ ok: true, value: ['petstore', 'billing', 2] });
   });
 
-  it('validates and dry-runs a template at Read, keeping its secrets out of the audit log', async () => {
+  it('validates a template at Read', async () => {
     allow('POST /api/catalog/validate-entity', 'read');
-    allow('POST /api/scaffolder/v2/dry-run', 'read');
-    const dryRunSecret = 'gho_dry-run-secret-444444';
     const r = await h.execute(
-      `const template = { apiVersion: 'scaffolder.backstage.io/v1beta3', kind: 'Template',
-         metadata: { name: 'checkout' }, spec: { steps: [] } };
-       await backstage.request({ method: 'POST', path: '/api/catalog/validate-entity',
-         body: { location: 'url:https://example.com/template.yaml', entity: template } });
-       const run = await backstage.request({ method: 'POST', path: '/api/scaffolder/v2/dry-run',
-         body: { template, values: { name: 'checkout' }, secrets: { USER_OAUTH_TOKEN: '${dryRunSecret}' },
-           directoryContents: [] } });
-       return run.output.name;`,
+      call({
+        method: 'POST',
+        path: '/api/catalog/validate-entity',
+        body: { location: 'url:https://example.com/template.yaml', entity: TEMPLATE },
+      }),
     );
-    expect(r).toMatchObject({ ok: true, value: 'checkout' });
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+  });
+
+  it('needs a human for a dry-run, whose files can carry the Backstage token', async () => {
+    const dryRunSecret = 'gho_dry-run-secret-444444';
+    const request = {
+      method: 'POST',
+      path: '/api/scaffolder/v2/dry-run',
+      body: {
+        template: TEMPLATE,
+        values: { name: 'checkout' },
+        secrets: { USER_OAUTH_TOKEN: dryRunSecret },
+        directoryContents: [],
+      },
+    };
+    const before = fake.requests.filter((r) => r.path === request.path).length;
+    allow('POST /api/scaffolder/v2/dry-run', 'read');
+    await expect(h.execute(call(request))).resolves.toMatchObject({ ok: false });
+    expect(fake.requests.filter((r) => r.path === request.path)).toHaveLength(before);
+
+    allow('POST /api/scaffolder/v2/dry-run', 'ask');
+    const shown: string[] = [];
+    const r = await h.execute(
+      `const run = await backstage.request(${JSON.stringify(request)});
+       return run.directoryContents[0].base64Content;`,
+      {
+        onApproval: (a) => {
+          shown.push(a.message, JSON.stringify(a.pending));
+          a.approve();
+        },
+      },
+    );
+    expect(shown).toHaveLength(2);
+    expect(shown.join('\n')).not.toContain(dryRunSecret);
+    expect(r).toMatchObject({ ok: true, value: Buffer.from(SECRETS.backstageToken).toString('base64') });
     expect(JSON.stringify(h.audit({ operationKey: 'POST /api/scaffolder/v2/dry-run' }))).not.toContain(dryRunSecret);
   });
 
@@ -137,7 +172,7 @@ describe('Backstage end to end (fake Backstage)', () => {
     it('in the audit log of a scaffold run', async () => {
       h.setOperationLevel('POST /api/scaffolder/v2/tasks', 'ask');
       const r = await h.execute(call(LOCK_CASES.find((c) => c.key === 'POST /api/scaffolder/v2/tasks')!.request), {
-        onApproval: (a) => a.approve('Backstage'),
+        onApproval: (a) => a.approve('template:default/react-app'),
       });
       h.setOperationLevel('POST /api/scaffolder/v2/tasks', null);
       expect(r).toMatchObject({ ok: true, value: { id: 'task-0002' } });

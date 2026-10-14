@@ -41,7 +41,8 @@ rules:
   - match: 'DELETE *'
     locked: true
 
-  # The literal an approver types: the stored entity, location or task's template, never a body field.
+  # The literal an approver types: the stored entity, location or task's template. A create has nothing stored, so
+  # it confirms on the body field the approver sees: the location's target, or the template ref.
   - match: 'DELETE /api/catalog/entities/by-uid/{uid}'
     confirm:
       lookup:
@@ -56,6 +57,10 @@ rules:
         args: [{ taskId: { $param: /path/taskId } }]
         field: [/spec/templateInfo/entity/metadata/name, /spec/templateInfo/entityRef]
   - match: 'POST /api/catalog/locations'
+    confirm: { param: /body/target }
+  - match: 'POST /api/scaffolder/v2/tasks'
+    confirm: { param: /body/templateRef }
+  - match: 'POST /api/catalog/locations'
     summaryNote: '(the catalog ingests every entity at target and keeps refreshing it; preview with POST /api/catalog/analyze-location)'
   - match: 'POST /api/scaffolder/v2/tasks'
     summaryNote: '(runs every step of templateRef for real, such as publishing repositories and registering entities)'
@@ -64,12 +69,12 @@ rules:
   - match: 'POST /api/events/bus/v1/events'
     summaryNote: '(every subscriber of the topic acts on it, in this and other Backstage instances on the bus)'
 
-  # Template authoring and catalog queries: POSTs that only read, so they work at the Read level.
+  # Dry-run stays a write: Backstage hands steps the caller's backstageToken, which a step can render into the
+  # returned files (scaffolder-backend router.ts /v2/dry-run).
   - match: 'POST /api/scaffolder/v2/dry-run'
-    classification: read
-    reason: dry-run:read
-    needsReview: false
-    guidance: Backstage skips every step whose action lacks supportsDryRun and gives actions no secrets; check the log for skipped steps.
+    guidance: Backstage skips every step whose action lacks supportsDryRun, but the steps it runs get secrets, including a Backstage token; check the log for skipped steps.
+
+  # Template authoring and catalog queries: POSTs that only read, so they work at the Read level.
   - match: 'POST /api/catalog/validate-entity'
     classification: read
     reason: validate:read

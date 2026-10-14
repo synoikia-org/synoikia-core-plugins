@@ -29,8 +29,9 @@ GET reads, every other verb writes, and anything the rules don't settle stays a 
 | `POST /api/catalog/entities/by-refs`, `/entities/by-query`, `/entity-facets`, `/locations/by-query` | Queries with a body |
 | `POST /api/catalog/validate-entity` | Validates an entity without registering it |
 | `POST /api/catalog/analyze-location` | Previews what registering a location would add |
-| `POST /api/scaffolder/v2/dry-run` | Backstage skips every action without `supportsDryRun` and runs the rest in dry-run mode (`NunjucksWorkflowRunner.ts`); returns the log, output and files |
 | `POST /api/scaffolder/v2/autocomplete/{provider}/{resource}` | Lists repositories, branches or groups from an SCM |
+
+`POST /api/scaffolder/v2/dry-run` is a plain write, so it needs an approval at Ask. Backstage skips every action without `supportsDryRun`, but it gives the steps it runs `secrets: { ...body.secrets, backstageToken: <caller's token> }` (`scaffolder-backend/src/service/router.ts`, `/v2/dry-run`), and `NunjucksWorkflowRunner` passes them to each step. A step such as `fetch:template` can render `${{ secrets.backstageToken }}` into a file that comes back base64 in `directoryContents`. The plan classified dry-run as a read; this is stricter.
 
 `POST /api/catalog/refresh` refreshes one entity and is a plain write. Notification read state and settings are plain writes.
 
@@ -38,26 +39,26 @@ Excluded: the spec routes, notifications' legacy duplicates (`GET`/`POST /api/no
 
 ## Template authoring
 
-The served specs cover the authoring loop, all at Read except the last two: list actions (`GET /api/scaffolder/v2/actions`) and templating extensions → write the Template entity → `POST /api/catalog/validate-entity` → `POST /api/scaffolder/v2/dry-run` → register its location (locked) → `Scaffold` (locked). The loop is in `instructions.md`, and short `guidance` on the validate and dry-run operations. It is not a bundled guide: core serves guides only for attestation-required operations (`guides.get`), and attestation on these reads would add a required key to every call for no security gain.
+The served specs cover the authoring loop, all at Read except the last three: list actions (`GET /api/scaffolder/v2/actions`) and templating extensions → write the Template entity → `POST /api/catalog/validate-entity` → `POST /api/scaffolder/v2/dry-run` (approval) → register its location (locked) → `Scaffold` (locked). The loop is in `instructions.md`, and short `guidance` on the validate and dry-run operations. It is not a bundled guide: core serves guides only for attestation-required operations (`guides.get`), and attestation on these operations would add a required key to every call for no security gain.
 
 ## Locks
 
-Each is locked with a typed confirmation. Literals come from the stored object, never from a body field the model writes:
+Each is locked with a typed confirmation. Literals come from the stored object. A create has nothing stored, so it confirms on the body field the approver sees in the summary:
 
 | Operation | Why | Literal |
 | --- | --- | --- |
 | `DELETE /api/catalog/entities/by-uid/{uid}` | Removes the entity (it returns only if a location still emits it) | entity name (lookup) |
-| `POST /api/catalog/locations` | Registers an external source the catalog ingests and keeps refreshing | instance name (`Backstage`) |
+| `POST /api/catalog/locations` | Registers an external source the catalog ingests and keeps refreshing | the body's `target` |
 | `PUT /api/catalog/locations/{id}` | Points a location at another source | stored location target (lookup) |
 | `DELETE /api/catalog/locations/{id}` | Unregisters a location and orphans its entities | stored location target (lookup) |
-| `POST /api/scaffolder/v2/tasks` | Runs a template for real: publishes repositories, opens PRs, registers entities | instance name (`Backstage`) |
+| `POST /api/scaffolder/v2/tasks` | Runs a template for real: publishes repositories, opens PRs, registers entities | the body's `templateRef` |
 | `POST /api/scaffolder/v2/tasks/{taskId}/cancel`, `/retry` | Stops a run midway, or reruns its steps | the task's template name (lookup) |
 | `POST /api/notifications/notifications` | Sends to other users; `broadcast` reaches everyone | instance name (`Backstage`) |
 | `POST /api/events/bus/v1/events` | Every subscriber of the topic acts on it | instance name (`Backstage`) |
 
 A `DELETE *` rule locks any delete a newer spec adds until it is reviewed.
 
-**Targets** (`capabilities.targets`) put what a call acts on in the approval text: an entity delete names the stored `kind:namespace/name`; a location update or delete names the stored `type:target`; a task cancel or retry names the task's template ref and status; a scaffold names the template the body's `templateRef` resolves to in the catalog, with its title, and no target when the catalog has none. Location register, notification and event bodies (target URL, recipients, topic) show in the summary itself.
+**Targets** (`capabilities.targets`) put what a call acts on in the approval text: an entity delete names the stored `kind:namespace/name`; a location update or delete names the stored `type:target`; a task cancel or retry names the task's template ref and status; a scaffold names the template the body's `templateRef` resolves to in the catalog, with its title, and no target when the catalog has none. A location register names the body's `type:target` right after the operation, before the body. Notification and event bodies (recipients, topic) show in the summary itself.
 
 ## Secrets
 

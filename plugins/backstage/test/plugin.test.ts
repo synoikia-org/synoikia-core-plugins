@@ -109,7 +109,7 @@ describe('Backstage plugin', () => {
     await expect(plugin.syncCatalog()).resolves.toMatchObject({ upstreamVersion: VERSION });
   });
 
-  it('confirms against the stored entity, location and task, never a body field', async () => {
+  it('confirms against the stored entity, location and task, and a create against its visible body field', async () => {
     const literal = async (key: string, path: Record<string, string>, body?: unknown) =>
       (await plugin.summarize({ key, params: { path, body }, targets: [] })).confirmLiteral;
     expect(await literal('DELETE /api/catalog/entities/by-uid/{uid}', { uid: PETSTORE_UID })).toBe('petstore');
@@ -117,7 +117,13 @@ describe('Backstage plugin', () => {
       await literal('PUT /api/catalog/locations/{id}', { id: LOCATION_ID }, { type: 'url', target: 'https://x' }),
     ).toBe(LOCATION_TARGET);
     expect(await literal('POST /api/scaffolder/v2/tasks/{taskId}/cancel', { taskId: TASK_ID })).toBe('react-app');
-    expect(await literal('POST /api/scaffolder/v2/tasks', {}, { templateRef: 'template:default/x' })).toBe('Backstage');
+    // A create has nothing stored: the literal is the body field the approver sees.
+    expect(await literal('POST /api/scaffolder/v2/tasks', {}, { templateRef: 'template:default/x' })).toBe(
+      'template:default/x',
+    );
+    expect(await literal('POST /api/catalog/locations', {}, { type: 'url', target: 'https://x/a.yaml' })).toBe(
+      'https://x/a.yaml',
+    );
     // A lookup that finds nothing falls back to the id in the path.
     expect(await literal('DELETE /api/catalog/locations/{id}', { id: 'gone' })).toBe('gone');
   });
@@ -138,6 +144,15 @@ describe('Backstage plugin', () => {
     ).resolves.toEqual([
       { kind: 'template', id: 'template:default/react-app', name: 'template:default/react-app (React app)' },
     ]);
+    await expect(
+      targets('POST /api/catalog/locations', { body: { type: 'url', target: 'https://x/a.yaml' } }),
+    ).resolves.toEqual([{ kind: 'location', id: 'https://x/a.yaml', name: 'url:https://x/a.yaml' }]);
+    const register = await plugin.summarize({
+      key: 'POST /api/catalog/locations',
+      params: { body: { type: 'url', target: 'https://x/a.yaml' } },
+      targets: [{ kind: 'location', id: 'https://x/a.yaml', name: 'url:https://x/a.yaml' }],
+    });
+    expect(register.text).toMatch(/^Backstage POST \/api\/catalog\/locations from url:https:\/\/x\/a\.yaml: \{/);
     // Unknown templates, other kinds and reads get no target.
     for (const [key, params] of [
       ['POST /api/scaffolder/v2/tasks', { body: { templateRef: 'template:default/nope' } }],

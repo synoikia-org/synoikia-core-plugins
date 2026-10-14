@@ -33,7 +33,12 @@
   },
   "POST /api/scaffolder/v2/dry-run": {
     "masked": {
-      "directoryContents": [],
+      "directoryContents": [
+        {
+          "base64Content": "ZXlKLmJhY2tzdGFnZS11c2VyLXRva2VuLjU1NTU1NQ==",
+          "path": "token.txt"
+        }
+      ],
       "log": [
         {
           "body": {

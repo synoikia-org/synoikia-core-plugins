@@ -378,8 +378,8 @@
     "typedConfirmation": false
   },
   {
-    "classification": "read",
-    "classificationReason": "dry-run:read",
+    "classification": "write",
+    "classificationReason": "verb:POST",
     "group": "scaffolder",
     "key": "POST /api/scaffolder/v2/dry-run",
     "kind": "rest",

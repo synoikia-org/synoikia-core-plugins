@@ -17,8 +17,9 @@ export const SPECS: Record<string, string> = Object.fromEntries(
 );
 export const specsOf = (ids: readonly string[] = PLUGIN_IDS) => ids.map((id) => ({ id, spec: SPECS[id]! }));
 
-/** A secret a task result would carry if Backstage stopped stripping it. */
-export const SECRETS = { taskSecret: 'gho_task-secret-111111' };
+/** A secret a task result would carry if Backstage stopped stripping it, and the caller's token Backstage hands
+ * dry-run steps as secrets.backstageToken. */
+export const SECRETS = { taskSecret: 'gho_task-secret-111111', backstageToken: 'eyJ.backstage-user-token.555555' };
 
 export const PETSTORE_UID = '7f3e9a00-0000-4000-8000-000000000001';
 export const LOCATION_ID = 'a1b2c3d4-0000-4000-8000-000000000002';
@@ -183,7 +184,10 @@ export async function startFakeBackstage(): Promise<FakeBackstage> {
         const body = req.body as { values?: Record<string, unknown> };
         return ok({
           log: [{ body: { message: 'Skipping because publish:github does not support dry-run' } }],
-          directoryContents: [],
+          // As fetch:template renders `${{ secrets.backstageToken }}` into a file.
+          directoryContents: [
+            { path: 'token.txt', base64Content: Buffer.from(SECRETS.backstageToken).toString('base64') },
+          ],
           output: { name: body.values?.name },
           steps: [],
         });

@@ -29,6 +29,7 @@ const ENTITY = 'DELETE /api/catalog/entities/by-uid/{uid}';
 const LOCATION = / \/api\/catalog\/locations\/\{id\}$/;
 const TASK = /^POST \/api\/scaffolder\/v2\/tasks\/\{taskId\}\/(cancel|retry)$/;
 const SCAFFOLD = 'POST /api/scaffolder/v2/tasks';
+export const REGISTER = 'POST /api/catalog/locations';
 
 export async function backstageTargets(
   client: HttpJsonClient,
@@ -63,6 +64,12 @@ export async function backstageTargets(
     const status = field(task, 'status');
     return [{ kind: 'task', id: String(path.taskId), name: status ? `${template} (task ${status})` : template }];
   }
+  if (key === REGISTER) {
+    // Where the catalog will ingest from, as the body names it: the approver must see it first.
+    const body = isPlainObject(params) ? params.body : undefined;
+    const target = field(body, 'target');
+    return target ? [{ kind: 'location', id: target, name: `${field(body, 'type') ?? 'url'}:${target}` }] : [];
+  }
   if (key === SCAFFOLD) {
     // The template the body names, shown only when the catalog has it, with its title.
     const body = isPlainObject(params) ? params.body : undefined;
@@ -78,6 +85,10 @@ export async function backstageTargets(
   return [];
 }
 
-/** The approval text with the targets it acts on. */
-export const withTargets = (text: string, targets: readonly ResolvedTarget[]) =>
-  targets.length ? `${text} on ${targets.map((t) => t.name).join(', ')}` : text;
+/** The approval text with the targets it acts on; a location register leads with where it ingests from. */
+export function withTargets(text: string, key: string, targets: readonly ResolvedTarget[]) {
+  if (!targets.length) return text;
+  const names = targets.map((t) => t.name).join(', ');
+  if (key === REGISTER && text.includes(key)) return text.replace(key, `${key} from ${names}:`);
+  return `${text} on ${names}`;
+}

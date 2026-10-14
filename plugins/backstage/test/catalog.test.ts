@@ -24,7 +24,6 @@ const READ_POSTS = [
   'POST /api/catalog/entities/by-query',
   'POST /api/catalog/entity-facets',
   'POST /api/catalog/locations/by-query',
-  'POST /api/scaffolder/v2/dry-run',
   'POST /api/scaffolder/v2/autocomplete/{provider}/{resource}',
 ];
 
@@ -80,7 +79,7 @@ describe('Backstage catalog (pinned specs)', () => {
     expect(specKeys.length - keys.size).toBe(6);
   });
 
-  it('reads with GET and the reviewed query and authoring POSTs; every other verb writes', () => {
+  it('reads with GET and the reviewed query and validation POSTs; every other verb, dry-run included, writes', () => {
     for (const o of catalog.operations) {
       const read = o.key.startsWith('GET ') || READ_POSTS.includes(o.key);
       expect(o.classification, o.key).toBe(read ? 'read' : 'write');

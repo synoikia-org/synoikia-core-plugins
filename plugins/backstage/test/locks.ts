@@ -26,8 +26,8 @@ export const LOCK_CASES: LockCase[] = [
       path: '/api/catalog/locations',
       body: { type: 'url', target: 'https://github.com/someone/else/blob/main/all.yaml' },
     },
-    confirm: 'Backstage',
-    shows: 'https://github.com/someone/else/blob/main/all.yaml',
+    confirm: 'https://github.com/someone/else/blob/main/all.yaml',
+    shows: 'POST /api/catalog/locations from url:https://github.com/someone/else/blob/main/all.yaml:',
   },
   {
     key: 'PUT /api/catalog/locations/{id}',
@@ -56,7 +56,7 @@ export const LOCK_CASES: LockCase[] = [
         secrets: { USER_OAUTH_TOKEN: SCAFFOLD_SECRET },
       },
     },
-    confirm: 'Backstage',
+    confirm: 'template:default/react-app',
     shows: 'template:default/react-app (React app)',
   },
   {

@@ -96,7 +96,7 @@ export function createBackstagePlugin(): PluginHandlers {
           backstageTargets(kit.client(), key, params, settings.defaults.timeouts.lookup),
         async summarize(params) {
           const summary = await binding.summarize(params);
-          return { ...summary, text: withTargets(summary.text, params.targets) };
+          return { ...summary, text: withTargets(summary.text, params.key, params.targets) };
         },
         invoke: (params) => binding.invoke(params),
       };

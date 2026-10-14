@@ -24,10 +24,16 @@
     "text": "Backstage DELETE /api/catalog/locations/a1b2c3d4-0000-4000-8000-000000000002 on url:https://github.com/acme/catalog/blob/main/catalog-info.yaml"
   },
   "POST /api/catalog/locations": {
-    "confirmLiteral": "Backstage",
+    "confirmLiteral": "https://github.com/someone/else/blob/main/all.yaml",
     "resolved": "POST /api/catalog/locations",
-    "targets": [],
-    "text": "Backstage POST /api/catalog/locations {\"type\":\"url\",\"target\":\"https://github.com/someone/else/blob/main/all.yaml\"} (the catalog ingests every entity at target and keeps refreshing it; preview with POST /api/catalog/analyze-location)"
+    "targets": [
+      {
+        "id": "https://github.com/someone/else/blob/main/all.yaml",
+        "kind": "location",
+        "name": "url:https://github.com/someone/else/blob/main/all.yaml"
+      }
+    ],
+    "text": "Backstage POST /api/catalog/locations from url:https://github.com/someone/else/blob/main/all.yaml: {\"type\":\"url\",\"target\":\"https://github.com/someone/else/blob/main/all.yaml\"} (the catalog ingests every entity at target and keeps refreshing it; preview with POST /api/catalog/analyze-location)"
   },
   "POST /api/events/bus/v1/events": {
     "confirmLiteral": "Backstage",
@@ -42,7 +48,7 @@
     "text": "Backstage POST /api/notifications/notifications {\"recipients\":{\"type\":\"broadcast\"},\"payload\":{\"title\":\"Maintenance tonight\"}} (sent to every user the recipients resolve to; type broadcast reaches all users)"
   },
   "POST /api/scaffolder/v2/tasks": {
-    "confirmLiteral": "Backstage",
+    "confirmLiteral": "template:default/react-app",
     "resolved": "POST /api/scaffolder/v2/tasks",
     "targets": [
       {
