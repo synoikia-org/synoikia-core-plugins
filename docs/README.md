@@ -11,6 +11,7 @@ The original per-server designs the TrueNAS, Seerr and Home Assistant plugins co
 | Profilarr           | [`designs/profilarr.md`](designs/profilarr.md)         |
 | Nginx Proxy Manager | [`designs/npm.md`](designs/npm.md)                     |
 | Grafana             | [`designs/grafana.md`](designs/grafana.md)             |
+| Backstage           | [`designs/backstage.md`](designs/backstage.md)         |
 
 [`designs/api-definitions.md`](designs/api-definitions.md) maps where every plugin, existing and planned, gets its API definition.
 
