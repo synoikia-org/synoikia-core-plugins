@@ -24,7 +24,7 @@ describe('Lidarr catalog (pinned spec)', () => {
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(24);
+    expect(locked).toHaveLength(27);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
@@ -38,7 +38,7 @@ describe('Lidarr catalog (pinned spec)', () => {
     const named = new Set(lockedKeys(settings.rules));
     const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
     expect(extra).toEqual([]);
-    expect(locked).toHaveLength(60);
+    expect(locked).toHaveLength(63);
   });
 
   it('has a lock case for every named lock and every twin', () => {

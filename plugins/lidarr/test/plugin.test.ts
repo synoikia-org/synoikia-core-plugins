@@ -171,6 +171,17 @@ describe('Lidarr plugin', () => {
       { kind: 'trackfile', id: '13', name: '/music/Radiohead/OK Computer (1997)/01 - Airbag.flac' },
       { kind: 'trackfile', id: '99', name: 'track file 99' },
     ]);
+    await expect(
+      targets('PUT /api/v1/config/mediamanagement/{id}', {
+        body: { id: 1, useScriptImport: true, scriptImportPath: '/config/run.sh\u202e' },
+      }),
+    ).resolves.toEqual([{ kind: 'script', id: 'scriptImportPath', name: 'import script on: /config/run.sh\\u202e' }]);
+    await expect(
+      targets('PUT /api/v1/config/mediamanagement/{id}', { body: { id: 1, recycleBin: '/bin' } }),
+    ).resolves.toEqual([]);
+    await expect(targets('POST /api/v1/rootfolder', { body: { name: 'All', path: '/' } })).resolves.toEqual([
+      { kind: 'folder', id: 'path', name: 'root folder /' },
+    ]);
     await expect(targets('DELETE /api/v1/downloadclient/{id}', { path: { id: '6' } })).resolves.toEqual([
       { kind: 'downloadclient', id: '6', name: 'downloadclient qBit (QBittorrent) → http://qbittorrent.lan:8080' },
     ]);
@@ -335,6 +346,15 @@ describe('case-insensitive binding', () => {
       ]),
     );
     await refused(fields([{ name: 'host', value: 'a', Value: 'b' }]));
+  });
+
+  it('reads the import script switch whatever its case', async () => {
+    const { params } = await resolve({
+      method: 'PUT',
+      path: '/api/v1/config/mediamanagement/1',
+      body: { Id: 1, USESCRIPTIMPORT: true, ScriptImportPath: '/x.sh' },
+    });
+    expect(params).toMatchObject({ body: { id: 1, useScriptImport: true, scriptImportPath: '/x.sh' } });
   });
 
   it('spells provider field keys as Lidarr does, so pointers and destinations see them', async () => {

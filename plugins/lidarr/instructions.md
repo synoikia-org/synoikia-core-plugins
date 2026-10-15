@@ -12,4 +12,4 @@ Workflows:
 - Downloads: `GET /api/v1/queue` (`includeArtist`), then `GET /api/v1/history`.
 - Upcoming: `GET /api/v1/calendar` (`start`, `end`).
 
-Locked (a person types a confirmation): deletes, moving files, bulk artist edits, file-changing commands, host and metadata-provider settings, restart, backups, and changing download clients, indexers, import lists and notifications. Filesystem browsing, manual-import scans and log downloads are not available.
+Locked (typed confirmation): deletes, moving files, bulk artist edits, file-changing commands, host, media and metadata settings, root folders, restart, backups, and editing download clients, indexers, import lists and notifications. Filesystem browsing, manual-import scans and log downloads are not available.

@@ -24,6 +24,8 @@ Radarr's locks for host settings, shutdown and restart, backups, providers, noti
 | `DELETE /api/v1/album/{id}` (+ `#delete-files`) | Removes the album; the twin also deletes its files | album title |
 | `DELETE /api/v1/trackfile/{id}`, `DELETE /api/v1/trackfile/bulk` | Always deletes the file from disk (to the recycle bin if set) | file path; `<n> track files` |
 | `PUT /api/v1/config/metadataprovider/{id}` | Sets the metadata server Lidarr trusts and whether it rewrites the tags in audio files | instance name |
+| `PUT /api/v1/config/mediamanagement/{id}` | `useScriptImport` and `scriptImportPath` run any program on each import; also file permissions, owner group and the recycle bin. The target shows the script first | instance name |
+| `POST /api/v1/rootfolder`, `PUT /api/v1/rootfolder/{id}` | A root folder at `/` makes Lidarr list every folder under it as unmapped and scan it. The PUT's "cannot edit path" check compares the body with itself, so it doesn't stop a path change | body `path` |
 | `POST /api/v1/command#heavy` | Any command not in `plugin.quickCommands`: `RefreshArtist`, `RefreshAlbum`, `BulkRefreshArtist` (with `writeAudioTags: sync` and rescan `always`, a refresh rescans and rewrites the tags in the artist's files, as `RetagArtist` does), `RetagFiles`, `RetagArtist`, `RenameFiles`, `RenameArtist`, `MoveArtist`, `BulkMoveArtist`, `RescanFolders` (takes any folder and adds artists), `ManualImport`, `DownloadedAlbumsScan`, `ApplicationUpdateCheck` (installs an update when started by hand), `InstallPlugin`, `ResetApiKey`, … and future ones | the command name, else instance name |
 
 Quick commands: `AlbumSearch`, `ArtistSearch`, `MissingAlbumSearch`, `CutoffUnmetAlbumSearch`, `RefreshMonitoredDownloads`, `RssSync`, `ImportListSync`, `CheckHealth`, `Housekeeping`, `Backup`.
@@ -34,4 +36,4 @@ Quick commands: `AlbumSearch`, `ArtistSearch`, `MissingAlbumSearch`, `CutoffUnme
 
 ## Request keys and secrets
 
-As Radarr. `plugin.canonicalKeys` adds `artistIds`, `trackFileIds` and `addImportListExclusion`. Import list fields such as Spotify's `accessToken` and `refreshToken` are hidden by the secret-name rule in `src/fields.ts`.
+As Radarr. `plugin.canonicalKeys` adds `artistIds`, `trackFileIds`, `addImportListExclusion`, `useScriptImport` and `scriptImportPath`. Import list fields such as Spotify's `accessToken` and `refreshToken` are hidden by the secret-name rule in `src/fields.ts`.

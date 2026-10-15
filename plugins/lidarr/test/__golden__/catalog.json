@@ -2097,13 +2097,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "rootfolder",
     "key": "POST /api/v1/rootfolder",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2254,13 +2254,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "mediamanagementconfig",
     "key": "PUT /api/v1/config/mediamanagement/{id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2530,13 +2530,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "rootfolder",
     "key": "PUT /api/v1/rootfolder/{id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",

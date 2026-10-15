@@ -327,6 +327,18 @@
     ],
     "text": "Lidarr POST /api/v1/release/push on Some.Artist-Some.Album-2020-FLAC from https://tracker.example {\"title\":\"Some.Artist-Some.Album-2020-FLAC\",\"downloadUrl\":\"[REDACTED]\",\"protocol\":\"torrent\"}"
   },
+  "POST /api/v1/rootfolder": {
+    "confirmLiteral": "/",
+    "resolved": "POST /api/v1/rootfolder",
+    "targets": [
+      {
+        "id": "path",
+        "kind": "folder",
+        "name": "root folder /"
+      }
+    ],
+    "text": "Lidarr POST /api/v1/rootfolder on root folder / {\"name\":\"Everything\",\"path\":\"/\"} (Lidarr lists and imports every folder under it)"
+  },
   "POST /api/v1/system/backup/restore/{id}": {
     "confirmLiteral": "lidarr_backup_v3.1.6.5078_2026.10.14_10.00.00.zip",
     "resolved": "POST /api/v1/system/backup/restore/{id}",
@@ -379,6 +391,18 @@
     "resolved": "PUT /api/v1/config/host/{id}",
     "targets": [],
     "text": "Lidarr PUT /api/v1/config/host/1 {\"id\":1,\"bindAddress\":\"*\",\"urlBase\":\"/lidarr\"} (sign-in, bind address, port, URL base, proxy and update script)"
+  },
+  "PUT /api/v1/config/mediamanagement/{id}": {
+    "confirmLiteral": "Home Lidarr",
+    "resolved": "PUT /api/v1/config/mediamanagement/{id}",
+    "targets": [
+      {
+        "id": "scriptImportPath",
+        "kind": "script",
+        "name": "import script on: /config/import.sh"
+      }
+    ],
+    "text": "Lidarr PUT /api/v1/config/mediamanagement/1 on import script on: /config/import.sh {\"id\":1,\"useScriptImport\":true,\"scriptImportPath\":\"/config/import.sh\",\"chmodFolder\":\"777\"} (import script, file permissions and recycle bin)"
   },
   "PUT /api/v1/config/metadataprovider/{id}": {
     "confirmLiteral": "Home Lidarr",
@@ -433,5 +457,17 @@
       }
     ],
     "text": "Lidarr PUT /api/v1/notification/9 on notification Discord (Discord) → https://discord.com {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"}"
+  },
+  "PUT /api/v1/rootfolder/{id}": {
+    "confirmLiteral": "/etc",
+    "resolved": "PUT /api/v1/rootfolder/{id}",
+    "targets": [
+      {
+        "id": "path",
+        "kind": "folder",
+        "name": "root folder /etc"
+      }
+    ],
+    "text": "Lidarr PUT /api/v1/rootfolder/5 on root folder /etc {\"id\":5,\"name\":\"Music\",\"path\":\"/etc\"} (Lidarr lists and imports every folder under it)"
   }
 }

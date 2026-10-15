@@ -90,6 +90,25 @@ export const LOCK_CASES: LockCase[] = [
     confirm: INSTANCE,
   },
   {
+    key: 'PUT /api/v1/config/mediamanagement/{id}',
+    request: {
+      method: 'PUT',
+      path: '/api/v1/config/mediamanagement/1',
+      body: { id: 1, useScriptImport: true, scriptImportPath: '/config/import.sh', chmodFolder: '777' },
+    },
+    confirm: INSTANCE,
+  },
+  {
+    key: 'POST /api/v1/rootfolder',
+    request: { method: 'POST', path: '/api/v1/rootfolder', body: { name: 'Everything', path: '/' } },
+    confirm: '/',
+  },
+  {
+    key: 'PUT /api/v1/rootfolder/{id}',
+    request: { method: 'PUT', path: '/api/v1/rootfolder/5', body: { id: 5, name: 'Music', path: '/etc' } },
+    confirm: '/etc',
+  },
+  {
     key: 'PUT /api/v1/config/host/{id}',
     request: { method: 'PUT', path: '/api/v1/config/host/1', body: { id: 1, bindAddress: '*', urlBase: '/lidarr' } },
     confirm: INSTANCE,

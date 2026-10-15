@@ -114,6 +114,17 @@ export async function resolveTargets(
   }
   if (key === 'DELETE /api/v1/trackfile/bulk')
     return several(isPlainObject(body) ? body.trackFileIds : undefined, 'track file', (id) => trackFile(get, id));
+  if (key === 'PUT /api/v1/config/mediamanagement/{id}' && isPlainObject(body)) {
+    const script = safe(body.scriptImportPath);
+    const on = body.useScriptImport !== undefined && body.useScriptImport !== false;
+    if (on || script)
+      return [{ kind: 'script', id: 'scriptImportPath', name: `import script ${on ? 'on' : 'off'}: ${script ?? '?'}` }];
+    return [];
+  }
+  if (/^(POST|PUT) \/api\/v1\/rootfolder(\/|$)/.test(key) && isPlainObject(body)) {
+    const path = safe(body.path);
+    return path ? [{ kind: 'folder', id: 'path', name: `root folder ${path}` }] : [];
+  }
   const match = PROVIDER.exec(key);
   if (match) {
     const id = stringOr(pathParams.id) ?? (isPlainObject(body) ? stringOr(body.id) : undefined);

@@ -36,4 +36,4 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 
 ## Locked operations
 
-Every delete (track file deletes remove the file from disk); deleting artist or album files, moving artist folders; bulk artist edits; commands that rename, retag, move or delete files or change the application; host and metadata-provider settings; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.
+Every delete (track file deletes remove the file from disk); deleting artist or album files, moving artist folders; bulk artist edits; commands that rename, retag, move or delete files or change the application; host, media-management and metadata-provider settings; adding or changing root folders; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.

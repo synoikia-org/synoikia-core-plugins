@@ -41,6 +41,11 @@ rules:
       - 'PUT /api/v1/config/host/{id}'
       # The metadata server Lidarr trusts, and whether it rewrites the tags inside audio files.
       - 'PUT /api/v1/config/metadataprovider/{id}'
+      # Script import runs any program on each import; also permissions, owner group and the recycle bin.
+      - 'PUT /api/v1/config/mediamanagement/{id}'
+      # A root folder at `/` lists every folder under it as unmapped; Lidarr doesn't refuse a path change on PUT.
+      - 'POST /api/v1/rootfolder'
+      - 'PUT /api/v1/rootfolder/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/system/backup/restore/{id}'
@@ -102,6 +107,10 @@ rules:
     summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
   - match: 'PUT /api/v1/config/metadataprovider/{id}'
     summaryNote: '(metadata server, and whether Lidarr rewrites the tags in audio files)'
+  - match: 'PUT /api/v1/config/mediamanagement/{id}'
+    summaryNote: '(import script, file permissions and recycle bin)'
+  - match: ['POST /api/v1/rootfolder', 'PUT /api/v1/rootfolder/{id}']
+    summaryNote: '(Lidarr lists and imports every folder under it)'
   - match: 'POST /api/v1/system/backup/restore/{id}'
     summaryNote: '(replaces the database and settings, then restarts)'
 
@@ -120,11 +129,14 @@ rules:
   - match:
       - 'PUT /api/v1/config/host/{id}'
       - 'PUT /api/v1/config/metadataprovider/{id}'
+      - 'PUT /api/v1/config/mediamanagement/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/notification/testall'
       - 'POST /api/v1/release/push'
     confirm: instance
+  - match: ['POST /api/v1/rootfolder', 'PUT /api/v1/rootfolder/{id}']
+    confirm: { param: /body/path }
   - match: '*#heavy'
     confirm: [{ custom: command }, instance]
   - match:
@@ -272,3 +284,5 @@ plugin:
     - passwordConfirmation
     - proxyPassword
     - sslCertPassword
+    - useScriptImport
+    - scriptImportPath
