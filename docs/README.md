@@ -16,6 +16,7 @@ The original per-server designs the TrueNAS, Seerr and Home Assistant plugins co
 | Grafana Cloud       | [`designs/grafanacloud.md`](designs/grafanacloud.md)   |
 | Jenkins             | [`designs/jenkins.md`](designs/jenkins.md)             |
 | Lidarr              | [`designs/lidarr.md`](designs/lidarr.md)               |
+| Sonarr              | [`designs/sonarr.md`](designs/sonarr.md)               |
 
 [`designs/api-definitions.md`](designs/api-definitions.md) maps where every plugin, existing and planned, gets its API definition.
 

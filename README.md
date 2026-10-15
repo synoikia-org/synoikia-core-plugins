@@ -29,6 +29,7 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 | `grafanacloud`  | [Grafana Cloud](https://grafana.com/docs/grafana-cloud/developer-resources/api-reference/cloud-api/) (grafana.com API) | the spec grafana.com publishes, with a GitHub fallback | [`docs/designs/grafanacloud.md`](docs/designs/grafanacloud.md)   |
 | `jenkins`       | [Jenkins](https://www.jenkins.io/) 2.x                                                                                 | operations declared in `plugin.yaml` (no spec)         | [`docs/designs/jenkins.md`](docs/designs/jenkins.md)             |
 | `lidarr`        | [Lidarr](https://github.com/Lidarr/Lidarr)                                                                             | `openapi.json` for the instance's release              | [`docs/designs/lidarr.md`](docs/designs/lidarr.md)               |
+| `sonarr`        | [Sonarr](https://github.com/Sonarr/Sonarr)                                                                             | `openapi.json` for the instance's release              | [`docs/designs/sonarr.md`](docs/designs/sonarr.md)               |
 
 ## Layout
 
