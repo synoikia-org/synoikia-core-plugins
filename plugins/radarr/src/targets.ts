@@ -2,22 +2,27 @@ import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
 
-/** What a non-GET call acts on, for the approver: the stored movie(s) by title, year and folder, or a provider
- * connection by name with the hosts it sends to. Lookups that fail leave the id (fail visible, not closed). */
+/** What a non-GET call acts on, for the approver: the stored movie(s) by title, year and folder, a provider
+ * connection by name with the hosts it sends to, the import script a media management change runs, or a root
+ * folder. Lookups that fail leave the id (fail visible, not closed). */
 
 const MAX_MOVIES = 10;
 const PROVIDER = /^(POST|PUT|DELETE) \/api\/v3\/(downloadclient|indexer|importlist|notification|metadata)(\/|$|#)/;
 
 type Get = (path: string) => Promise<unknown>;
 
-async function movie(get: Get, id: string): Promise<ResolvedTarget> {
-  let m: unknown;
+async function fetchObject(get: Get, path: string): Promise<Record<string, unknown> | undefined> {
   try {
-    m = await get(`/api/v3/movie/${encodeURIComponent(id)}`);
+    const row = await get(path);
+    return isPlainObject(row) ? row : undefined;
   } catch {
-    m = undefined;
+    return undefined;
   }
-  if (!isPlainObject(m)) return { kind: 'movie', id, name: `movie ${safe(id) ?? '?'}` };
+}
+
+async function movie(get: Get, id: string): Promise<ResolvedTarget> {
+  const m = await fetchObject(get, `/api/v3/movie/${encodeURIComponent(id)}`);
+  if (!m) return { kind: 'movie', id, name: `movie ${safe(id) ?? '?'}` };
   const year = typeof m.year === 'number' && m.year > 0 ? ` (${m.year})` : '';
   const path = safe(m.path);
   return { kind: 'movie', id, name: `${safe(m.title) ?? id}${year}${path ? ` at ${path}` : ''}` };
@@ -65,6 +70,31 @@ export async function resolveTargets(
   const p = isPlainObject(params) ? params : {};
   const pathParams = isPlainObject(p.path) ? p.path : {};
   const body = p.body;
+  if (key.startsWith('PUT /api/v3/config/mediamanagement/{id}')) {
+    // Servarr keeps the stored value for a field the body leaves out, sends as null or, for the path, empty.
+    const set = (k: string) => isPlainObject(body) && body[k] !== undefined && body[k] !== null && body[k] !== '';
+    if (!set('useScriptImport') && !set('scriptImportPath')) return [];
+    const b = body as Record<string, unknown>;
+    const stored =
+      set('useScriptImport') && set('scriptImportPath')
+        ? {}
+        : ((await fetchObject(get, '/api/v3/config/mediamanagement')) ?? {});
+    const on = (set('useScriptImport') ? b.useScriptImport : stored.useScriptImport) === true;
+    const path = safe(set('scriptImportPath') ? b.scriptImportPath : stored.scriptImportPath) || '(none)';
+    return [{ kind: 'script', id: 'scriptImportPath', name: `import script ${on ? 'on' : 'off'}: ${path}` }];
+  }
+  if (key.startsWith('POST /api/v3/rootfolder') && isPlainObject(body)) {
+    const path = safe(body.path);
+    return path ? [{ kind: 'folder', id: 'path', name: `root folder ${path}` }] : [];
+  }
+  if (key.startsWith('PUT /api/v3/rootfolder/{id}')) {
+    const id = stringOr(pathParams.id);
+    if (!id) return [];
+    const stored = await fetchObject(get, `/api/v3/rootfolder/${encodeURIComponent(id)}`);
+    const from = safe(stored?.path) ?? safe(id) ?? '?';
+    const to = isPlainObject(body) ? safe(body.path) : undefined;
+    return [{ kind: 'folder', id, name: `root folder ${from}${to ? ` → ${to}` : ''}` }];
+  }
   if (/^(PUT|DELETE) \/api\/v3\/movie\/\{id\}/.test(key)) {
     const id = stringOr(pathParams.id);
     if (!id) return [];

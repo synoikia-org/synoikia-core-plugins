@@ -232,6 +232,9 @@ export async function startFakeLidarr(): Promise<FakeLidarr> {
       [`PUT ${API}/artist/editor`]: () => ({ status: 202, body: [] }),
       [`DELETE ${API}/artist/editor`]: () => ({ body: {} }),
       [`DELETE ${API}/trackfile/bulk`]: () => ({ body: {} }),
+      [`GET ${API}/config/mediamanagement`]: () => ({
+        body: { id: 1, useScriptImport: false, scriptImportPath: '/config/scripts/import.sh' },
+      }),
       [`PUT ${API}/config/mediamanagement/{id}`]: (req) => ({ status: 202, body: req.body }),
       [`GET ${API}/config/metadataprovider`]: () => ({ body: metadataProvider }),
       [`PUT ${API}/config/metadataprovider/{id}`]: (req) => ({

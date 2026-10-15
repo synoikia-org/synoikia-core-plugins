@@ -31,6 +31,7 @@ Excluded:
 | `GET /api/v3/log/file*` | Log file downloads (text files) |
 | `GET /api/v3/mediacover/*` | Images |
 | `GET /api/v3/filesystem*`, `GET /api/v3/manualimport` | List any directory, or the media files in any folder, the Radarr process can read. Root folders take a path, so the model doesn't need them |
+| `POST /api/v3/manualimport` | Reprocesses files at any path the body names and returns their details |
 | `POST /api/v3/system/backup/restore/upload` | Multipart upload |
 
 ## Request keys
@@ -53,21 +54,26 @@ Each is locked with a typed confirmation. Literals come from the stored item, th
 | `PUT`, `DELETE /api/v3/movie/editor` (+ `#delete-files`) | Bulk edits, moves (`rootFolderPath` + `moveFiles`) and deletes | `<n> movies` |
 | `DELETE …/bulk` | Bulk deletes | `<n> items` |
 | `PUT /api/v3/config/host/{id}` | Sign-in, bind address, port, URL base, proxy, update script | instance name |
+| `PUT /api/v3/config/mediamanagement/{id}` | `useScriptImport` + `scriptImportPath` make Radarr run any program on every import; it also sets chmod, chown and the recycle bin | instance name |
+| `POST /api/v3/rootfolder` | A root folder lists its unmapped subfolders; one at `/` lists the host's top-level directories | body `path` |
+| `PUT /api/v3/rootfolder/*` | Not in the pinned spec. Servarr's check that the path is unchanged compares the body with itself, so a PUT can change it; one a newer spec adds is locked | body `path` |
 | `POST /api/v3/system/shutdown`, `/restart` | Stops the service | instance name |
 | `POST /api/v3/system/backup/restore/{id}`, `DELETE /api/v3/system/backup/{id}` | Replaces the database; irreversible | backup file name |
 | `POST`, `PUT` download clients, indexers, import lists, notifications | They hold credentials and decide where Radarr sends data and fetches from | body `name` on create, stored name on update |
 | `POST /api/v3/notification/test`, `/testall`, `/action/{name}` | Sends a message to any recipient | stored name, else instance name |
 | `POST /api/v3/{downloadclient,indexer,importlist}/{test,action/{name}}#stored` | With an `id` in the body, Radarr fills in the stored password or API key and contacts the host in the body (`ProviderControllerBase.Test`) | stored name |
 | `POST /api/v3/release/push` | Radarr fetches the release from any URL and hands it to a download client | instance name |
-| `POST /api/v3/command#heavy` | Any command not in `plugin.quickCommands`: `RenameFiles`, `RenameMovie`, `MoveMovie`, `ManualImport`, `DownloadedMoviesScan`, `DeleteLogFiles`, `ClearBlocklist`, `CleanUpRecycleBin`, `ResetApiKey`, `ApplicationUpdate`, `Shutdown`, `Restart`, … and future ones. Radarr matches names case-insensitively, and so does the check | the command name (a plain word), else instance name |
+| `POST /api/v3/command#heavy` | Any command not in `plugin.quickCommands`: `RenameFiles`, `RenameMovie`, `MoveMovie`, `ManualImport`, `DownloadedMoviesScan`, `DeleteLogFiles`, `ClearBlocklist`, `CleanUpRecycleBin`, `ResetApiKey`, `ApplicationCheckUpdate`, `ApplicationUpdate`, `Shutdown`, `Restart`, … and future ones. Radarr matches names case-insensitively, and so does the check | the command name (a plain word), else instance name |
 
-Quick commands, the ordinary `POST /api/v3/command`: searches (`MoviesSearch`, `MissingMoviesSearch`, `CutoffUnmetMoviesSearch`), `RssSync`, `RefreshMovie`, `RescanMovie`, `RefreshCollections`, `RefreshMonitoredDownloads`, `ImportListSync`, `CheckHealth`, `ApplicationCheckUpdate`, `Housekeeping`, `Backup`.
+Quick commands, the ordinary `POST /api/v3/command`: searches (`MoviesSearch`, `MissingMoviesSearch`, `CutoffUnmetMoviesSearch`), `RssSync`, `RefreshMovie`, `RescanMovie`, `RefreshCollections`, `RefreshMonitoredDownloads`, `ImportListSync`, `CheckHealth`, `Housekeeping`, `Backup`. They write metadata or a backup and can delete empty folders. None of them takes a caller's folder, installs, updates or restarts. `ApplicationCheckUpdate` is heavy: started through the API it counts as manual, ignores the auto-update setting and queues `ApplicationUpdate`, which installs the update and restarts.
 
 **Targets** (`capabilities.targets`). Non-GET calls name what they act on, placed right after the method and path in the approval text, ahead of the truncated body:
 
 - movie calls: `Title (year) at <folder>`, plus `→ <new folder>` for a PUT; the movie editor lists up to 10 movies and the new root folder;
 - provider calls: `<kind> <name> (<implementation>) → <destinations>`: `host:port`, URL origins only (no path, query or credentials), e-mail server and recipients, read by exact field name, first match, as Servarr does; from the body, else the stored provider;
-- release push: the title and the origin of the download URL.
+- release push: the title and the origin of the download URL;
+- media management: `import script on|off: <path>` when the body sets `useScriptImport` or `scriptImportPath`; a field the body leaves out or sends as null (or an empty path) comes from the stored settings;
+- root folders: `root folder <path>` on create; `root folder <stored path> → <new path>` on a PUT.
 
 Model-written strings in targets are escaped (control, bidi and zero-width characters).
 

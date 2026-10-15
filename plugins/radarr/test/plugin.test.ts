@@ -62,7 +62,7 @@ describe('Radarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 228,
+      count: 227,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -166,6 +166,24 @@ describe('Radarr plugin', () => {
       targets('POST /api/v3/release/push', { body: { title: 'X', downloadUrl: 'https://t.example/dl?passkey=pk' } }),
     ).resolves.toEqual([{ kind: 'release', id: 'push', name: 'X from https://t.example' }]);
     await expect(targets('GET /api/v3/movie/{id}', { path: { id: '1' } })).resolves.toEqual([]);
+    const media = (body: object) => targets('PUT /api/v3/config/mediamanagement/{id}', { path: { id: '1' }, body });
+    await expect(media({ id: 1, useScriptImport: true, scriptImportPath: '/tmp/x‮.sh' })).resolves.toEqual([
+      { kind: 'script', id: 'scriptImportPath', name: 'import script on: /tmp/x\\u202e.sh' },
+    ]);
+    await expect(media({ id: 1, useScriptImport: true })).resolves.toEqual([
+      { kind: 'script', id: 'scriptImportPath', name: 'import script on: /config/scripts/import.sh' },
+    ]);
+    for (const scriptImportPath of [null, ''])
+      await expect(media({ id: 1, useScriptImport: true, scriptImportPath })).resolves.toEqual([
+        { kind: 'script', id: 'scriptImportPath', name: 'import script on: /config/scripts/import.sh' },
+      ]);
+    await expect(media({ id: 1, recycleBin: '/trash' })).resolves.toEqual([]);
+    await expect(
+      targets('PUT /api/v3/rootfolder/{id}', { path: { id: '5' }, body: { id: 5, path: '/' } }),
+    ).resolves.toEqual([{ kind: 'folder', id: '5', name: 'root folder /movies → /' }]);
+    await expect(targets('POST /api/v3/rootfolder', { body: { path: '/' } })).resolves.toEqual([
+      { kind: 'folder', id: 'path', name: 'root folder /' },
+    ]);
   });
 
   it('puts the destination ahead of a long body in the approval text', async () => {
@@ -290,6 +308,10 @@ describe('case-insensitive binding', () => {
     expect(await key({ method: 'POST', path: '/api/v3/command', body: { Name: 'RenameMovie' } })).toBe(
       'POST /api/v3/command#heavy',
     );
+    expect(
+      (await resolve({ method: 'PUT', path: '/api/v3/config/mediamanagement/1', body: { UseScriptImport: true } }))
+        .params,
+    ).toEqual({ path: { id: '1' }, body: { useScriptImport: true } });
     expect(await key({ method: 'POST', path: '/api/v3/command', body: { NAME: 'rsssync' } })).toBe(
       'POST /api/v3/command',
     );

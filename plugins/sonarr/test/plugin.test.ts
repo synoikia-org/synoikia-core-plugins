@@ -189,6 +189,10 @@ describe('Sonarr plugin', () => {
     await expect(media({ id: 1, useScriptImport: true })).resolves.toEqual([
       { kind: 'script', id: 'scriptImportPath', name: 'import script on: /config/scripts/import.sh' },
     ]);
+    for (const scriptImportPath of [null, ''])
+      await expect(media({ id: 1, useScriptImport: true, scriptImportPath })).resolves.toEqual([
+        { kind: 'script', id: 'scriptImportPath', name: 'import script on: /config/scripts/import.sh' },
+      ]);
     await expect(media({ id: 1, recycleBin: '/trash' })).resolves.toEqual([]);
     await expect(
       targets('PUT /api/v3/rootfolder/{id}', { path: { id: '5' }, body: { id: 5, path: '/' } }),

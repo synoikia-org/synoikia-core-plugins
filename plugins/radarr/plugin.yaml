@@ -10,7 +10,7 @@ defaults:
 instanceName: { op: 'GET /api/v3/system/status', field: instanceName, fallback: Radarr }
 
 # The web UI and its sign-in, the iCal feed, binary downloads, the multipart backup upload, and host filesystem
-# browsing and the manual-import scan (they list any directory the Radarr process can read).
+# browsing and the manual-import scan and reprocess (they list or read any path the Radarr process can read).
 exclude:
   - 'GET /'
   - 'GET /{path}'
@@ -23,7 +23,7 @@ exclude:
   - 'GET /api/v3/log/file*'
   - 'GET /api/v3/mediacover/*'
   - 'GET /api/v3/filesystem*'
-  - 'GET /api/v3/manualimport'
+  - '* /api/v3/manualimport'
   - 'POST /api/v3/system/backup/restore/upload'
 
 rules:
@@ -33,6 +33,10 @@ rules:
       - 'PUT /api/v3/movie/editor'
       - 'DELETE /api/v3/movie/editor'
       - 'PUT /api/v3/config/host/{id}'
+      # `useScriptImport` + `scriptImportPath` run any program on every import; also chmod, chown, recycle bin.
+      - 'PUT /api/v3/config/mediamanagement/{id}'
+      # A root folder lists its unmapped subfolders: one at `/` lists the host's top-level directories.
+      - 'POST /api/v3/rootfolder'
       - 'POST /api/v3/system/shutdown'
       - 'POST /api/v3/system/restart'
       - 'POST /api/v3/system/backup/restore/{id}'
@@ -54,6 +58,9 @@ rules:
     locked: true
   # A delete a newer spec adds is locked until reviewed.
   - match: 'DELETE *'
+    locked: true
+  # Not in the spec; Servarr's root folder PUT can change the path, so one a newer spec adds is locked.
+  - match: 'PUT /api/v3/rootfolder/*'
     locked: true
 
   # Locked twins picked per call (src/plugin.ts): deleting or moving files on disk, a command not in
@@ -90,6 +97,8 @@ rules:
     summaryNote: '(sends the stored credentials to the host in the body)'
   - match: 'PUT /api/v3/config/host/{id}'
     summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
+  - match: 'PUT /api/v3/config/mediamanagement/{id}'
+    summaryNote: '(import script, file permissions and owner, recycle bin)'
   - match: 'POST /api/v3/system/backup/restore/{id}'
     summaryNote: '(replaces the database and settings, then restarts)'
 
@@ -99,11 +108,14 @@ rules:
       lookup: { op: 'GET /api/v3/movie/{id}', args: [{ id: { $param: /path/id } }], field: title }
   - match: ['* /api/v3/movie/editor*', 'DELETE */bulk']
     confirm: [{ custom: count }, instance]
+  - match: ['POST /api/v3/rootfolder', 'PUT /api/v3/rootfolder/*']
+    confirm: { param: /body/path }
   - match: '* /api/v3/system/backup/*'
     confirm:
       lookup: { op: 'GET /api/v3/system/backup', find: { field: id, equals: { $param: /path/id } }, field: name }
   - match:
       - 'PUT /api/v3/config/host/{id}'
+      - 'PUT /api/v3/config/mediamanagement/{id}'
       - 'POST /api/v3/system/shutdown'
       - 'POST /api/v3/system/restart'
       - 'POST /api/v3/notification/testall'
@@ -216,10 +228,11 @@ plugin:
   versionField: version
   # Refuse a spec with fewer operations: a truncated one must not replace the catalog.
   minOperations: 150
-  # Commands that only search, refresh, scan or check take the ordinary `POST /api/v3/command`. Any other name,
-  # a future one included, takes the locked `#heavy` twin. Radarr matches names case-insensitively.
+  # Searches, refreshes, rescans, checks and backups take the ordinary `POST /api/v3/command`: they write metadata
+  # or a backup and may delete empty folders, but none takes a caller's folder, installs, updates or restarts. Any
+  # other name, a future one included, takes the locked `#heavy` twin; Radarr matches names case-insensitively.
+  # A manual `ApplicationCheckUpdate` ignores the auto-update setting and installs an update, so it is not listed.
   quickCommands:
-    - ApplicationCheckUpdate
     - Backup
     - CheckHealth
     - CutoffUnmetMoviesSearch
@@ -249,6 +262,8 @@ plugin:
     - deleteFiles
     - moveFiles
     - addImportExclusion
+    - useScriptImport
+    - scriptImportPath
     - downloadUrl
     - magnetUrl
     - apiKey

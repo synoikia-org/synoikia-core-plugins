@@ -179,6 +179,14 @@ describe('Lidarr plugin', () => {
     await expect(
       targets('PUT /api/v1/config/mediamanagement/{id}', { body: { id: 1, recycleBin: '/bin' } }),
     ).resolves.toEqual([]);
+    for (const scriptImportPath of [null, ''])
+      await expect(
+        targets('PUT /api/v1/config/mediamanagement/{id}', {
+          body: { id: 1, useScriptImport: true, scriptImportPath },
+        }),
+      ).resolves.toEqual([
+        { kind: 'script', id: 'scriptImportPath', name: 'import script on: /config/scripts/import.sh' },
+      ]);
     await expect(targets('POST /api/v1/rootfolder', { body: { name: 'All', path: '/' } })).resolves.toEqual([
       { kind: 'folder', id: 'path', name: 'root folder /' },
     ]);

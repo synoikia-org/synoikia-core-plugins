@@ -19,6 +19,11 @@ const tryGet = async (get: Get, path: string): Promise<unknown> => {
   }
 };
 
+async function storedConfig(get: Get): Promise<Record<string, unknown>> {
+  const config = await tryGet(get, '/api/v1/config/mediamanagement');
+  return isPlainObject(config) ? config : {};
+}
+
 async function artist(get: Get, id: string): Promise<ResolvedTarget> {
   const a = await tryGet(get, `/api/v1/artist/${encodeURIComponent(id)}`);
   if (!isPlainObject(a)) return { kind: 'artist', id, name: `artist ${safe(id) ?? '?'}` };
@@ -114,12 +119,15 @@ export async function resolveTargets(
   }
   if (key === 'DELETE /api/v1/trackfile/bulk')
     return several(isPlainObject(body) ? body.trackFileIds : undefined, 'track file', (id) => trackFile(get, id));
-  if (key === 'PUT /api/v1/config/mediamanagement/{id}' && isPlainObject(body)) {
-    const script = safe(body.scriptImportPath);
-    const on = body.useScriptImport !== undefined && body.useScriptImport !== false;
-    if (on || script)
-      return [{ kind: 'script', id: 'scriptImportPath', name: `import script ${on ? 'on' : 'off'}: ${script ?? '?'}` }];
-    return [];
+  if (key.startsWith('PUT /api/v1/config/mediamanagement/{id}')) {
+    // Servarr keeps the stored value for a field the body leaves out, sends as null or, for the path, empty.
+    const set = (k: string) => isPlainObject(body) && body[k] !== undefined && body[k] !== null && body[k] !== '';
+    if (!set('useScriptImport') && !set('scriptImportPath')) return [];
+    const b = body as Record<string, unknown>;
+    const stored = set('useScriptImport') && set('scriptImportPath') ? {} : await storedConfig(get);
+    const on = (set('useScriptImport') ? b.useScriptImport : stored.useScriptImport) === true;
+    const path = safe(set('scriptImportPath') ? b.scriptImportPath : stored.scriptImportPath) || '(none)';
+    return [{ kind: 'script', id: 'scriptImportPath', name: `import script ${on ? 'on' : 'off'}: ${path}` }];
   }
   if (/^(POST|PUT) \/api\/v1\/rootfolder(\/|$)/.test(key) && isPlainObject(body)) {
     const path = safe(body.path);
