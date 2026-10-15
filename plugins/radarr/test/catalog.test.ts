@@ -159,7 +159,17 @@ describe('split predicates', () => {
     const heavy = (body: unknown) => splitWhen.heavy!(call('POST /api/v3/command', { body }));
     expect(heavy({ name: 'MoviesSearch', movieIds: [1] })).toBe(false);
     expect(heavy({ name: 'rsssync' })).toBe(false);
-    for (const name of ['RenameFiles', 'RenameMovie', 'DeleteLogFiles', 'ResetApiKey', 'ApplicationUpdate', 'Nope', 7])
+    for (const name of [
+      'RenameFiles',
+      'RenameMovie',
+      'DeleteLogFiles',
+      'ResetApiKey',
+      'ApplicationUpdate',
+      'ApplicationCheckUpdate',
+      'applicationcheckupdate',
+      'Nope',
+      7,
+    ])
       expect(heavy({ name }), String(name)).toBe(true);
     expect(heavy(undefined)).toBe(true);
   });
