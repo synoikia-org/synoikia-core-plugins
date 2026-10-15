@@ -62,6 +62,20 @@ export const LOCK_CASES: LockCase[] = [
     confirm: INSTANCE,
   },
   {
+    key: 'PUT /api/v3/config/mediamanagement/{id}',
+    request: {
+      method: 'PUT',
+      path: '/api/v3/config/mediamanagement/1',
+      body: { id: 1, useScriptImport: true, scriptImportPath: '/tmp/evil.sh' },
+    },
+    confirm: INSTANCE,
+  },
+  {
+    key: 'POST /api/v3/rootfolder',
+    request: { method: 'POST', path: '/api/v3/rootfolder', body: { path: '/' } },
+    confirm: '/',
+  },
+  {
     key: 'POST /api/v3/system/shutdown',
     request: { method: 'POST', path: '/api/v3/system/shutdown' },
     confirm: INSTANCE,

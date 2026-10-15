@@ -268,6 +268,18 @@
     ],
     "text": "Radarr POST /api/v3/release/push on Some.Movie.2020.1080p from https://tracker.example {\"title\":\"Some.Movie.2020.1080p\",\"downloadUrl\":\"[REDACTED]\",\"protocol\":\"torrent\"}"
   },
+  "POST /api/v3/rootfolder": {
+    "confirmLiteral": "/",
+    "resolved": "POST /api/v3/rootfolder",
+    "targets": [
+      {
+        "id": "path",
+        "kind": "folder",
+        "name": "root folder /"
+      }
+    ],
+    "text": "Radarr POST /api/v3/rootfolder on root folder / {\"path\":\"/\"}"
+  },
   "POST /api/v3/system/backup/restore/{id}": {
     "confirmLiteral": "radarr_backup_v6.4.4.10685_2026.10.14_10.00.00.zip",
     "resolved": "POST /api/v3/system/backup/restore/{id}",
@@ -291,6 +303,18 @@
     "resolved": "PUT /api/v3/config/host/{id}",
     "targets": [],
     "text": "Radarr PUT /api/v3/config/host/1 {\"id\":1,\"bindAddress\":\"*\",\"urlBase\":\"/radarr\"} (sign-in, bind address, port, URL base, proxy and update script)"
+  },
+  "PUT /api/v3/config/mediamanagement/{id}": {
+    "confirmLiteral": "Home Radarr",
+    "resolved": "PUT /api/v3/config/mediamanagement/{id}",
+    "targets": [
+      {
+        "id": "scriptImportPath",
+        "kind": "script",
+        "name": "import script on: /tmp/evil.sh"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/config/mediamanagement/1 on import script on: /tmp/evil.sh {\"id\":1,\"useScriptImport\":true,\"scriptImportPath\":\"/tmp/evil.sh\"} (import script, file permissions and owner, recycle bin)"
   },
   "PUT /api/v3/downloadclient/{id}": {
     "confirmLiteral": "qBit",

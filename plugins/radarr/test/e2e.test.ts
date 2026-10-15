@@ -36,7 +36,7 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Radarr end to end (fake Radarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(228);
+    expect(h.operations()).toHaveLength(227);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
     expect(h.operation('DELETE /api/v3/movie/{id}#delete-files')).toMatchObject({

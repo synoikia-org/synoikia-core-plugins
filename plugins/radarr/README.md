@@ -1,6 +1,6 @@
 # Radarr
 
-Exposes a Radarr instance's v3 REST API (228 operations: movies, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Radarr release builds don't serve their spec, so the catalog comes from `src/Radarr.Api.V3/openapi.json` in Radarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/radarr.md`](../../docs/designs/radarr.md).
+Exposes a Radarr instance's v3 REST API (227 operations: movies, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Radarr release builds don't serve their spec, so the catalog comes from `src/Radarr.Api.V3/openapi.json` in Radarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/radarr.md`](../../docs/designs/radarr.md).
 
 The sandbox calls `radarr.request({ method, path, query, body })` with the full `/api/v3` path:
 
@@ -36,4 +36,4 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 
 ## Locked operations
 
-Every delete; deleting or moving movie files; bulk movie edits; commands that rename, move or delete files or change the application; host settings; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.
+Every delete; deleting or moving movie files; bulk movie edits; commands that rename, move or delete files or change the application; host and media management settings (import script); new root folders; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.
