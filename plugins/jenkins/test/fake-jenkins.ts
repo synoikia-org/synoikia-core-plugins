@@ -10,9 +10,13 @@ export const CREDENTIALS = { username: 'synoikia', token: 'test-token-EXAMPLE' }
 /** A build's password parameter value, and a job's password parameter default. */
 export const BUILD_SECRET = 'fake-build-secret-5f4e3d';
 export const DEFAULT_SECRET = 'fake-default-secret-9a8b7c';
+/** Credentials in a git remote URL and an injected environment variable. */
+export const GIT_SECRET = 'fake-git-secret-EXAMPLE';
+export const ENV_SECRET = 'fake-env-secret-EXAMPLE';
+export const GIT_URL = `https://ci-bot:${GIT_SECRET}@git.example.com/infra/deploy.git`;
 export const DEPLOY = 'infra/deploy app';
 export const HELLO = 'hello';
-export const LOG = Array.from({ length: 40 }, (_, i) => `line ${i + 1} ✓`).join('\n') + '\n';
+export const LOG = `Cloning ${GIT_URL}\n` + Array.from({ length: 40 }, (_, i) => `line ${i + 1} ✓`).join('\n') + '\n';
 
 interface Build {
   number: number;
@@ -40,7 +44,14 @@ interface QueueItem {
 export interface FakeJenkins extends FakeHttp {
   jobs: Map<string, Job>;
   queue: Map<number, QueueItem>;
-  state: { quietingDown: boolean; quietReason?: string; restarting: boolean; version: string };
+  state: {
+    quietingDown: boolean;
+    quietReason?: string;
+    restarting: boolean;
+    version: string;
+    /** Where every POST action redirects instead, e.g. a sign-in page. */
+    redirectTo?: string;
+  };
   /** Paths answered 403. */
   denied: Set<string>;
   reset(): void;
@@ -112,7 +123,7 @@ export async function startFakeJenkins(): Promise<FakeJenkins> {
   const notFound: FakeResponse = { status: 404, body: '<html><body>Not Found</body></html>' };
   const redirect = (req: FakeRequest, to = '/'): FakeResponse => ({
     status: 302,
-    headers: { location: base(req) + to },
+    headers: { location: state.redirectTo ?? base(req) + to },
   });
 
   const buildJson = (req: FakeRequest, job: Job, b: Build) => ({
@@ -125,6 +136,12 @@ export async function startFakeJenkins(): Promise<FakeJenkins> {
     actions: [
       { _class: 'hudson.model.CauseAction', causes: [{ shortDescription: 'Started by user synoikia' }] },
       ...(b.params.length ? [{ _class: 'hudson.model.ParametersAction', parameters: b.params }] : []),
+      ...(b.number === 41
+        ? [
+            { _class: 'hudson.plugins.git.util.BuildData', remoteUrls: [GIT_URL] },
+            { _class: 'org.jenkinsci.plugins.envinject.EnvInjectPluginAction', envMap: { DB_TOKEN: ENV_SECRET } },
+          ]
+        : []),
     ],
   });
   const jobJson = (req: FakeRequest, job: Job) => ({
@@ -336,7 +353,13 @@ export async function startFakeJenkins(): Promise<FakeJenkins> {
       for (const [k, v] of seed()) jobs.set(k, v);
       queue.clear();
       nextQueue = 100;
-      Object.assign(state, { quietingDown: false, quietReason: undefined, restarting: false, version: VERSION });
+      Object.assign(state, {
+        quietingDown: false,
+        quietReason: undefined,
+        restarting: false,
+        version: VERSION,
+        redirectTo: undefined,
+      });
       denied.clear();
     },
   };

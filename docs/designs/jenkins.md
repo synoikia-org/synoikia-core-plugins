@@ -20,7 +20,8 @@ The sandbox calls `jenkins.call(key, { path, query })`. No operation takes a bod
 | `queue.list` | `GET /queue/api/json` | read |
 | `queue.get` | `GET /queue/item/{id}/api/json` | read |
 | `nodes.list` | `GET /computer/api/json` | read |
-| `builds.trigger` | `POST /job/{job}/build`, or `/buildWithParameters` for a parameterized job | write |
+| `builds.trigger` | `POST /job/{job}/build`, or `/buildWithParameters` for a parameterized job, without parameters in the call | write |
+| `builds.trigger#params` | The same with build parameters in `query` | locked |
 | `builds.stop` | `POST /job/{job}/{number}/stop` | write |
 | `builds.delete` | `POST /job/{job}/{number}/doDelete` | locked |
 | `jobs.delete` | `POST /job/{job}/doDelete` | locked |
@@ -32,9 +33,13 @@ Not declared, so not reachable: the script console (`/script`, `/scriptText`), c
 
 Each read has a default `tree` in `plugin.yaml` (`plugin.trees`) so responses stay small. A call's own `tree` or `depth` replaces it. Reads take only `tree` and `depth`; other query keys (such as `jsonp`) are refused.
 
+- A call's `tree` may name only leaf fields of the operation's default tree, plus `_class` (nested `jobs[…]` count as `jobs`). So it cannot select fields such as git `BuildData.remoteUrls` or EnvInject `envMap`.
+- `depth` is 0, 1 or 2.
+- Whatever a read returns, the plugin masks credentials in URLs (`scheme://user:token@` → `scheme://[REDACTED]@`) in every string, console log text included, and hides `envMap` and `environment` values. `depth` can reach such fields, so this is the second line of defense.
+
 ## Paths
 
-`path.job` is the job's full name, `folder/sub/job`. Each level becomes its own `encodeURIComponent` segment: `/job/folder/job/sub/job/job`. A name that is not a string, is over 1024 characters, has control characters, or has an empty, `.` or `..` level is refused, so a name reaches only the job it names. `{folder}` is optional; without it, `jobs.list` reads the root. `path.number` is a build number; reads also take the permalinks `lastBuild`, `lastSuccessfulBuild`, `lastFailedBuild` and `lastCompletedBuild`, writes take a number only (a permalink can move during an approval wait). `path.id` is a numeric queue item. A path param the template does not take is refused. The SDK's HTTP client also refuses `.` and `..` segments and paths outside the base URL.
+`path.job` is the job's full name, `folder/sub/job`. Each level becomes its own `encodeURIComponent` segment: `/job/folder/job/sub/job/job`. A name is refused when it is not a string, is over 1024 characters, has control characters, has a character Jenkins forbids in item names (``?*\%!@#$^&|<>[]:;``), or has an empty level or one that is `.` or `..` after NFKC normalization (fullwidth `．．`). So a name reaches only the job it names; a job named like an endpoint (`scriptText`) stays under `/job/`. `{folder}` is optional; without it, `jobs.list` reads the root. `path.number` is a build number; reads also take the permalinks `lastBuild`, `lastSuccessfulBuild`, `lastFailedBuild` and `lastCompletedBuild`, writes take a number only (a permalink can move during an approval wait). `path.id` is a numeric queue item. A path param the template does not take is refused. The SDK's HTTP client also refuses `.` and `..` segments and paths outside the base URL.
 
 Query keys that differ only by case are refused, and query values must be strings, numbers or booleans.
 
@@ -49,6 +54,8 @@ Query keys that differ only by case are refused, and query values must be string
 A tail call downloads the log from byte 0, within the HTTP client's 32 MiB response cap; a follow-up with `start` downloads only the rest.
 
 ## Builds and the queue
+
+A trigger with build parameters resolves to the locked twin `builds.trigger#params`; one without stays a plain write (a parameterized job then builds with its defaults). Parameter values can be code: a branch with its own Jenkinsfile, or strings a pipeline passes to `evaluate`. This is stricter than the approved set, which had the trigger as a plain write, and follows the plan's lock list ("Jenkins build with params"). The plugin refuses an `invoke` whose key does not match whether the call has parameters.
 
 `builds.trigger` reads the job's parameter definitions first. A job with parameters is built through `/buildWithParameters` with `query` as its parameters, a job without through `/build`. A parameter the job does not define is refused. The reply's `Location` header (`…/queue/item/<id>/`) gives `{ job, queueId }`. The model polls `queue.get` until `executable.number`, then reads the build.
 
@@ -72,6 +79,7 @@ Each locked operation needs a typed confirmation:
 
 | Operation | Why | Literal |
 | --- | --- | --- |
+| `builds.trigger#params` | Runs the job with values the model chose, which can be code | job full name (lookup) |
 | `builds.delete` | Removes the build, its log and artifacts | `<job full name>#<number>` (lookup) |
 | `jobs.delete` | Removes the job, or a folder with all its jobs, and every build | job full name (lookup) |
 | `jobs.disable`, `jobs.enable` | Stops or starts scheduled and triggered builds | job full name (lookup) |
@@ -80,7 +88,11 @@ Each locked operation needs a typed confirmation:
 
 Jenkins has no instance name, so instance-wide locks confirm on the base URL's host name (`jenkins.internal.lan`, without the port). Job and build literals come from the stored object, read back as the approval's target; when it cannot be read, the names in the call are the literal. `*.delete` and `system.*` are locked as a pattern, so a later delete or instance action is locked until reviewed.
 
-`builds.trigger` and `builds.stop` are plain writes: an admin decides at the group level, and pre-approval rules can name the job target.
+`builds.trigger` without parameters and `builds.stop` are plain writes: an admin decides at the group level, and pre-approval rules can name the job target.
+
+## Redirects
+
+Jenkins answers most actions with a redirect. An action's 3xx is success only when its `Location` stays within the base URL (same origin and path prefix) and is not a sign-in page (`/login`, `securityRealm`): those mean the action did not run. A read's 3xx is a failure. The Jenkins URL setting must therefore match the connection's base URL.
 
 ## Targets
 

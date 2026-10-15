@@ -24,6 +24,16 @@
             "value": "[REDACTED]"
           }
         ]
+      },
+      {
+        "_class": "hudson.plugins.git.util.BuildData",
+        "remoteUrls": [
+          "https://[REDACTED]@git.example.com/infra/deploy.git"
+        ]
+      },
+      {
+        "_class": "org.jenkinsci.plugins.envinject.EnvInjectPluginAction",
+        "envMap": "[REDACTED]"
       }
     ],
     "building": false,

@@ -55,6 +55,6 @@ describe('instructions.md', () => {
     const named = [...text.matchAll(/`((?:jobs|builds|queue|nodes|system)\.[A-Za-z]+)`/g)].map((m) => m[1]!);
     expect(named.length).toBeGreaterThanOrEqual(10);
     for (const key of named) expect(keys, key).toContain(key);
-    for (const key of keys) expect(named, key).toContain(key);
+    for (const key of keys) if (!key.includes('#')) expect(named, key).toContain(key);
   });
 });

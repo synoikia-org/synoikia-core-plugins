@@ -2,15 +2,20 @@ import { readFileSync } from 'node:fs';
 import { checkConformance, ErrorCodes } from '@synoikia/plugin-sdk';
 import type { OperationDescriptor } from '@synoikia/plugin-sdk';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { maskParameterSecrets } from '../src/mask.js';
+import { checkStatus, redirectFailure } from '../src/jenkins.js';
+import { maskEmbeddedCredentials, maskParameterSecrets } from '../src/mask.js';
 import { fillPath, jobSegments } from '../src/paths.js';
 import { createJenkinsPlugin, safe, settings } from '../src/plugin.js';
+import { checkTree, treeLeaves } from '../src/tree.js';
 import {
   BUILD_SECRET,
   CONTEXT,
   CREDENTIALS,
   DEFAULT_SECRET,
   DEPLOY,
+  ENV_SECRET,
+  GIT_SECRET,
+  GIT_URL,
   HELLO,
   LOG,
   startFakeJenkins,
@@ -54,15 +59,36 @@ describe('job paths', () => {
   it('nests each folder level as its own encoded segment', () => {
     expect(jobSegments('hello')).toBe('hello');
     expect(jobSegments('infra/deploy app')).toBe('infra/job/deploy%20app');
-    expect(jobSegments('a/b?c#d/%2e')).toBe('a/job/b%3Fc%23d/job/%252e');
+    expect(jobSegments('a/b c/ü-1.0')).toBe('a/job/b%20c/job/%C3%BC-1.0');
+    // A job may be named like an endpoint; it stays under /job/.
+    expect(jobSegments('scriptText')).toBe('scriptText');
+    expect(fillPath('/job/{job}/api/json', { job: 'scriptText' }, [])).toBe('/job/scriptText/api/json');
   });
 
-  it.each(['', '/a', 'a/', 'a//b', '.', '..', 'a/../b', 'a/./b', 'a\nb', 'a\u0000b', 'x'.repeat(1025)])(
-    'refuses job name %j',
-    (name) => {
-      expect(() => jobSegments(name)).toThrow(expect.objectContaining({ code: ErrorCodes.InvalidParams }));
-    },
-  );
+  it.each([
+    '',
+    '/a',
+    'a/',
+    'a//b',
+    '.',
+    '..',
+    'a/../b',
+    'a/./b',
+    'a\nb',
+    'a\u0000b',
+    'x'.repeat(1025),
+    'a;b',
+    'a\\b',
+    '%2e%2e',
+    'a/%2e%2e/b',
+    '\uff0e\uff0e',
+    'a/\uff0e/b',
+    'a?b',
+    'a#b',
+    'a[0]',
+  ])('refuses job name %j', (name) => {
+    expect(() => jobSegments(name)).toThrow(expect.objectContaining({ code: ErrorCodes.InvalidParams }));
+  });
 
   it('refuses a job that is not a string', () => {
     expect(() => jobSegments(['a'])).toThrow(/full name/);
@@ -123,9 +149,95 @@ describe('secret parameters', () => {
   });
 });
 
+describe('tree and depth', () => {
+  const builds = settings.plugin.trees['builds.get']!;
+
+  it('reads the leaf fields of a tree', () => {
+    expect(treeLeaves('a,b[c,d[e]]{0,5},_class')).toEqual(['a', 'b.c', 'b.d.e', '_class']);
+    for (const bad of ['a[b', 'a]', 'a,,b', 'a{x}', 'a b', 'a[b]c', ''])
+      expect(() => treeLeaves(bad), bad).toThrow(expect.objectContaining({ code: ErrorCodes.InvalidParams }));
+  });
+
+  it("allows fields of the operation's default tree, nested folders and _class", () => {
+    expect(() =>
+      checkTree('builds.get', 'number,result,actions[_class,causes[shortDescription]]', builds),
+    ).not.toThrow();
+    expect(() =>
+      checkTree('jobs.list', 'jobs[fullName,jobs[fullName,jobs[color]]]', settings.plugin.trees['jobs.list']!),
+    ).not.toThrow();
+  });
+
+  it('refuses fields the default tree leaves out, such as git remote URLs and environments', () => {
+    for (const tree of ['actions[remoteUrls]', 'actions', 'actions[envMap]', 'number,changeSets[items[paths]]'])
+      expect(() => checkTree('builds.get', tree, builds), tree).toThrow(/cannot select/);
+  });
+
+  it('refuses a tree naming remoteUrls, and depth outside 0 to 2, before any request', async () => {
+    const before = fake.requests.length;
+    await expect(
+      resolve('builds.get', { path: { job: DEPLOY, number: 41 }, query: { tree: 'actions[remoteUrls]' } }),
+    ).rejects.toThrow(/cannot select actions.remoteUrls/);
+    await expect(resolve('jobs.get', { path: { job: HELLO }, query: { depth: 3 } })).rejects.toThrow(/depth/);
+    await expect(resolve('builds.log', { path: { job: HELLO, number: 7 }, query: { tree: 'x' } })).rejects.toThrow();
+    expect(fake.requests.length).toBe(before);
+    await expect(resolve('jobs.get', { path: { job: HELLO }, query: { depth: 2 } })).resolves.toBeTruthy();
+  });
+
+  it('masks URL credentials and environments whatever is selected, as with depth', async () => {
+    expect(maskEmbeddedCredentials({ u: ['git@x:y', 'https://a:b@h/p', 'ssh://tok@h'], envMap: { K: 'v' } })).toEqual({
+      u: ['git@x:y', 'https://[REDACTED]@h/p', 'ssh://[REDACTED]@h'],
+      envMap: '[REDACTED]',
+    });
+    const build = await run('builds.get', { path: { job: DEPLOY, number: 41 }, query: { depth: 1 } });
+    const log = await run('builds.log', { path: { job: DEPLOY, number: 41 }, query: { start: 0, lines: 1 } });
+    for (const r of [build, log]) {
+      expect(JSON.stringify(r)).not.toContain(GIT_SECRET);
+      expect(JSON.stringify(r)).not.toContain(ENV_SECRET);
+    }
+    expect(JSON.stringify(build)).toContain('https://[REDACTED]@git.example.com/infra/deploy.git');
+    expect(GIT_URL).toContain(GIT_SECRET);
+  });
+});
+
+describe('action redirects', () => {
+  const base = 'https://ci.lan/jenkins';
+  const res = (status: number, location?: string) => ({
+    status,
+    headers: location === undefined ? {} : { location },
+    body: '',
+  });
+
+  it('accept a redirect within the base URL only, and never to the sign-in page', () => {
+    expect(redirectFailure('https://ci.lan/jenkins/job/a/', base)).toBeUndefined();
+    expect(redirectFailure('/jenkins/', base)).toBeUndefined();
+    expect(redirectFailure('https://evil.lan/jenkins/', base)).toMatch(/outside the base URL/);
+    expect(redirectFailure('https://ci.lan/other/', base)).toMatch(/outside the base URL/);
+    expect(redirectFailure('https://ci.lan/jenkins/login?from=%2F', base)).toMatch(/sign-in/);
+    expect(redirectFailure('https://ci.lan/jenkins/securityRealm/commenceLogin', base)).toMatch(/sign-in/);
+    expect(redirectFailure(undefined, base)).toMatch(/without a location/);
+  });
+
+  it('count a read redirect as a failure', () => {
+    expect(() => checkStatus(res(302, `${base}/login`), 'GET /api/json')).toThrow(
+      expect.objectContaining({ code: ErrorCodes.UpstreamError }),
+    );
+    expect(() => checkStatus(res(302, `${base}/`), 'POST /safeRestart', base)).not.toThrow();
+  });
+
+  it('fail an action Jenkins redirected to sign in', async () => {
+    fake.state.redirectTo = `${fake.url}${CONTEXT}/securityRealm/commenceLogin`;
+    await expect(run('builds.stop', { path: { job: DEPLOY, number: 42 } })).rejects.toMatchObject({
+      code: ErrorCodes.UpstreamError,
+      message: expect.stringContaining('sign-in'),
+    });
+    fake.state.redirectTo = 'http://elsewhere.lan/';
+    await expect(run('builds.stop', { path: { job: DEPLOY, number: 42 } })).rejects.toThrow(/outside the base URL/);
+  });
+});
+
 describe('summaries', () => {
   it('escapes control, bidi and zero-width characters', () => {
-    expect(safe('a"\n‮b​')).toBe('a\\"\\n\\u202eb\\u200b');
+    expect(safe('a"\n\u202eb\u200b')).toBe('a\\"\\n\\u202eb\\u200b');
   });
 });
 
@@ -162,6 +274,7 @@ describe('Jenkins plugin', () => {
       'builds.stop write',
       'builds.testReport read',
       'builds.trigger write',
+      'builds.trigger#params write locked',
       'jobs.delete write locked',
       'jobs.disable write locked',
       'jobs.enable write locked',
@@ -225,10 +338,16 @@ describe('Jenkins plugin', () => {
 
     it('reads from an offset, and says when more follows', async () => {
       const first = (await run('builds.log', p({ start: 0, lines: 1 }))) as { text: string; end: number };
-      expect(first).toMatchObject({ text: 'line 1 ✓\n', start: 0, truncated: true });
+      // The clone line's URL credentials are masked; offsets still count Jenkins's bytes.
+      expect(first).toMatchObject({
+        text: 'Cloning https://[REDACTED]@git.example.com/infra/deploy.git\n',
+        start: 0,
+        end: Buffer.byteLength(`Cloning ${GIT_URL}\n`),
+        truncated: true,
+      });
       const next = await run('builds.log', p({ start: first.end, lines: 1 }));
       expect(lastRequest().query.get('start')).toBe(String(first.end));
-      expect(next).toMatchObject({ text: 'line 2 ✓\n' });
+      expect(next).toMatchObject({ text: 'line 1 ✓\n' });
       expect(await run('builds.log', p({ start: log.length }))).toMatchObject({ text: '', truncated: false });
     });
 
@@ -258,6 +377,29 @@ describe('Jenkins plugin', () => {
     expect(await run('queue.get', { path: { id: queued.queueId } })).not.toHaveProperty('executable');
     expect(await run('queue.get', { path: { id: queued.queueId } })).toMatchObject({ executable: { number: 43 } });
     expect(await run('builds.get', { path: { job: DEPLOY, number: 43 } })).toMatchObject({ result: 'SUCCESS' });
+  });
+
+  it('splits a trigger: without parameters a plain write, with any the locked #params twin', async () => {
+    expect(await resolve('builds.trigger', { path: { job: DEPLOY } })).toMatchObject({ key: 'builds.trigger' });
+    expect(await resolve('builds.trigger', { path: { job: DEPLOY }, query: { BRANCH: 'x' } })).toMatchObject({
+      key: 'builds.trigger#params',
+    });
+    expect(operations.find((o) => o.key === 'builds.trigger')).toMatchObject({ locked: false });
+    expect(operations.find((o) => o.key === 'builds.trigger#params')).toMatchObject({
+      locked: true,
+      typedConfirmation: true,
+    });
+    const mismatched = [
+      { key: 'builds.trigger', params: { path: { job: DEPLOY }, query: { BRANCH: 'x' } } },
+      { key: 'builds.trigger#params', params: { path: { job: DEPLOY } } },
+    ];
+    for (const m of mismatched)
+      await expect(plugin.invoke({ ...m, context })).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+  });
+
+  it('builds a parameterized job with its defaults through /buildWithParameters', async () => {
+    expect(await run('builds.trigger', { path: { job: DEPLOY } })).toEqual({ job: DEPLOY, queueId: 100 });
+    expect(lastRequest().path).toBe(`${CONTEXT}/job/infra/job/deploy%20app/buildWithParameters`);
   });
 
   it('triggers a job without parameters through /build', async () => {
@@ -322,7 +464,8 @@ describe('Jenkins plugin', () => {
 
   describe('locked operations', () => {
     it.each(LOCK_CASES)('$key confirms on "$confirm" and shows its target first', async (c) => {
-      const { key, params } = await resolve(c.key, c.params);
+      const { key, params } = await resolve(c.call, c.params);
+      expect(key).toBe(c.key);
       const targets = (await plugin.resolveTargets?.({ key, params })) ?? [];
       const summary = await plugin.summarize({ key, params, targets });
       expect(summary.confirmLiteral).toBe(c.confirm);
@@ -345,10 +488,12 @@ describe('Jenkins plugin', () => {
   });
 
   it('summarizes a trigger with its parameters, a secret or unknown one hidden', async () => {
-    const params = { path: { job: DEPLOY }, query: { BRANCH: 'x"‮', DEPLOY_KEY: 's', OTHER: 'o' } };
-    const targets = (await plugin.resolveTargets?.({ key: 'builds.trigger', params })) ?? [];
-    expect(await plugin.summarize({ key: 'builds.trigger', params, targets })).toEqual({
-      text: `Jenkins builds.trigger on ${DEPLOY}: POST /job/infra/job/deploy%20app/buildWithParameters with BRANCH="x\\"\\u202e", DEPLOY_KEY=[REDACTED], OTHER=[REDACTED]`,
+    const params = { path: { job: DEPLOY }, query: { BRANCH: 'x"\u202e', DEPLOY_KEY: 's', OTHER: 'o' } };
+    const key = 'builds.trigger#params';
+    const targets = (await plugin.resolveTargets?.({ key, params })) ?? [];
+    expect(await plugin.summarize({ key, params, targets })).toEqual({
+      confirmLiteral: DEPLOY,
+      text: `Jenkins builds.trigger#params on ${DEPLOY}: POST /job/infra/job/deploy%20app/buildWithParameters with BRANCH="x\\"\\u202e", DEPLOY_KEY=[REDACTED], OTHER=[REDACTED]`,
     });
   });
 

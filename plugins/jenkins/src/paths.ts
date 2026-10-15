@@ -4,17 +4,21 @@ import { ErrorCodes, PluginError } from '@synoikia/plugin-sdk';
 const MAX_NAME = 1024;
 const NUMBER = /^[1-9]\d{0,9}$/;
 const CONTROL = /\p{Cc}/u;
+/** Characters Jenkins refuses in item names (`Jenkins.checkGoodName`), so no stored job has them. */
+const UNSAFE = /[?*\\%!@#$^&|<>[\]:;]/;
 
 const invalid = (message: string) => new PluginError(ErrorCodes.InvalidParams, message);
 
 /** `team/apps/api` → `team/job/apps/job/api`: each folder level its own encoded segment. Refuses empty,
- * `.` and `..` segments and control characters, so a name can only reach the job it names. */
+ * `.` and `..` segments (also after Unicode normalization), control characters and characters Jenkins
+ * forbids in names, so a name can only reach the job it names. */
 export function jobSegments(name: unknown, param = 'job'): string {
   if (typeof name !== 'string' || !name) throw invalid(`path.${param} must be a job full name such as folder/job`);
   if (name.length > MAX_NAME) throw invalid(`path.${param} is longer than ${MAX_NAME} characters`);
   if (CONTROL.test(name)) throw invalid(`path.${param} has control characters`);
+  if (UNSAFE.test(name)) throw invalid(`path.${param} has a character Jenkins does not allow in names`);
   const parts = name.split('/');
-  if (parts.some((p) => p === '' || p === '.' || p === '..'))
+  if (parts.some((p) => p === '' || ['.', '..'].includes(p.normalize('NFKC').trim())))
     throw invalid(`path.${param} must be folder/job names separated by single slashes, without . or ..`);
   return parts.map(encodeURIComponent).join('/job/');
 }

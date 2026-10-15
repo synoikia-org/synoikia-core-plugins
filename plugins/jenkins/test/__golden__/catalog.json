@@ -25,6 +25,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -66,6 +68,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -118,6 +122,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -229,6 +235,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -262,6 +270,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -303,6 +313,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -336,6 +348,8 @@
           "additionalProperties": false,
           "properties": {
             "depth": {
+              "maximum": 2,
+              "minimum": 0,
               "type": "integer"
             },
             "tree": {
@@ -391,6 +405,49 @@
       "type": "object"
     },
     "typedConfirmation": false
+  },
+  {
+    "attestationRequired": false,
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "docs": {
+      "description": "`query` holds the build parameters by name; leave it out to use the defaults. Password parameters cannot be set here.",
+      "summary": "Queue a build; returns the queue item id."
+    },
+    "group": "builds",
+    "key": "builds.trigger#params",
+    "kind": "command",
+    "locked": true,
+    "paramsSchema": {
+      "properties": {
+        "path": {
+          "properties": {
+            "job": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "job"
+          ],
+          "type": "object"
+        },
+        "query": {
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "typedConfirmation": true
   },
   {
     "attestationRequired": false,

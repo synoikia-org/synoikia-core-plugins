@@ -15,23 +15,47 @@ export const SERVICE = 'Jenkins';
 
 const JOB_TREE = 'fullName,property[parameterDefinitions[name,type]]';
 
-/** Jenkins answers actions with a redirect, and error pages in HTML: only a short plain-text body is shown. */
-export function checkStatus(res: HttpResponse, label: string): void {
-  if (res.status >= 200 && res.status < 400) return;
+/** A redirect after an action is success only within `base` and not to a sign-in page: a session or SSO
+ * redirect means the action never ran. */
+export function redirectFailure(location: unknown, base: string): string | undefined {
+  if (typeof location !== 'string' || !location) return 'a redirect without a location';
+  let url: URL;
+  const root = new URL(base.endsWith('/') ? base : `${base}/`);
+  try {
+    url = new URL(location, root);
+  } catch {
+    return 'a redirect to an invalid location';
+  }
+  if (url.origin !== root.origin || !url.pathname.startsWith(root.pathname))
+    return `a redirect outside the base URL (to ${url.host}; check that the Jenkins URL setting matches it)`;
+  if (/\/login|securityRealm/i.test(url.pathname)) return 'a redirect to the sign-in page';
+  return undefined;
+}
+
+/** Jenkins answers actions with a redirect, and error pages in HTML: only a short plain-text body is shown.
+ * A read's redirect, and an action's redirect away from `base`, are failures. */
+export function checkStatus(res: HttpResponse, label: string, base?: string): void {
+  if (res.status >= 200 && res.status < 300) return;
+  if (res.status >= 300 && res.status < 400) {
+    const failure = base === undefined ? 'a redirect' : redirectFailure(res.headers.location, base);
+    if (failure === undefined) return;
+    throw upstreamError(SERVICE, 'failed', label, `HTTP ${res.status} (${failure})`, { status: res.status });
+  }
   const text = typeof res.body === 'string' ? res.body.trim() : '';
   const message = text && !text.startsWith('<') && text.length <= 300 ? clip(text, 200) : `HTTP ${res.status}`;
   throw upstreamError(SERVICE, statusKind(res.status), label, message, { status: res.status });
 }
 
-/** One call, its status checked. */
+/** One call, its status checked; `base` (the absolute base URL) allows an action's redirect within it. */
 export async function send(
   client: HttpJsonClient,
   method: string,
   path: string,
-  opts: { query?: Record<string, unknown>; timeoutMs: number },
+  opts: { query?: Record<string, unknown>; timeoutMs: number; base?: string },
 ): Promise<HttpResponse> {
-  const res = await client.raw(method, path, opts);
-  checkStatus(res, `${method} ${path}`);
+  const { base, ...rest } = opts;
+  const res = await client.raw(method, path, rest);
+  checkStatus(res, `${method} ${path}`, method === 'GET' ? undefined : base);
   return res;
 }
 

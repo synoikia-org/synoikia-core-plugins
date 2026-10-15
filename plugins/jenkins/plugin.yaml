@@ -21,7 +21,7 @@ operations:
         query: &tree-query
           type: object
           additionalProperties: false
-          properties: { tree: { type: string }, depth: { type: integer } }
+          properties: { tree: { type: string }, depth: { type: integer, minimum: 0, maximum: 2 } }
   - key: jobs.get
     group: jobs
     classification: read
@@ -179,8 +179,12 @@ rules:
   # Irreversible, or reaching every job and build on the instance: always a human with a typed confirmation.
   - match: ['*.delete', 'jobs.disable', 'jobs.enable', 'system.*']
     locked: true
+  # Build parameters can be code (a branch with its own Jenkinsfile, strings a pipeline evaluates): a trigger
+  # with any is the locked twin `builds.trigger#params`. Stricter than the approved plain-write trigger.
+  - match: builds.trigger
+    split: params
   # The stored job's full name, or `<full name>#<number>` for a build, read back from Jenkins.
-  - match: ['jobs.delete', 'jobs.disable', 'jobs.enable', 'builds.delete']
+  - match: ['jobs.delete', 'jobs.disable', 'jobs.enable', 'builds.delete', 'builds.trigger#params']
     confirm: { custom: stored }
 
 plugin:

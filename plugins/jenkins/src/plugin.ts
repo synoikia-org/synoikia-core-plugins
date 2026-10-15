@@ -1,4 +1,5 @@
 import {
+  baseKey,
   compileRules,
   definePlugin,
   ErrorCodes,
@@ -31,8 +32,9 @@ import {
 } from './jenkins.js';
 import type { JobInfo } from './jenkins.js';
 import { readLog } from './log.js';
-import { maskParameterSecrets } from './mask.js';
+import { maskEmbeddedCredentials, maskParameterSecrets, maskUrlCredentials } from './mask.js';
 import { fillPath } from './paths.js';
+import { checkDepth, checkTree } from './tree.js';
 
 /** The Jenkins plugin: a fixed set of operations declared in plugin.yaml over the remote access API; the
  * sandbox calls `jenkins.call(operation, { path, query })`. */
@@ -72,8 +74,9 @@ const OPERATIONS = new Map(
 const TRIGGER = 'builds.trigger';
 const LOG = 'builds.log';
 
+/** The declared operation of a key or its split twin (`builds.trigger#params`). */
 function operation(key: string): HttpOperation {
-  const op = OPERATIONS.get(key);
+  const op = OPERATIONS.get(baseKey(key));
   if (!op) throw new PluginError(ErrorCodes.UnknownOperation, `${key} is not a ${SERVICE} operation`);
   return op;
 }
@@ -107,7 +110,18 @@ function checkQuery(op: HttpOperation, query: Record<string, unknown>) {
   for (const [k, v] of Object.entries(query))
     if (!['string', 'number', 'boolean'].includes(typeof v))
       throw new PluginError(ErrorCodes.InvalidParams, `query.${truncate(k, 80)} must be a string, number or boolean`);
+  if (op.classification !== 'read') return;
+  if (query.tree !== undefined) {
+    const defaults = settings.plugin.trees[op.key];
+    if (!defaults) throw new PluginError(ErrorCodes.InvalidParams, `${op.key} takes no query.tree`);
+    checkTree(op.key, query.tree, defaults);
+  }
+  if (query.depth !== undefined) checkDepth(query.depth);
 }
+
+/** A trigger with build parameters is its locked `#params` twin: values can carry code (a branch with its
+ * own Jenkinsfile, strings a pipeline evaluates). */
+const hasParameters = (params: unknown) => Object.keys(queryOf(params)).length > 0;
 
 /** A model-written string as one visible line: control, bidi and zero-width characters escaped. */
 export function safe(value: unknown): string {
@@ -186,7 +200,14 @@ export function createJenkinsPlugin(): PluginHandlers {
       const lookupMs = settings.defaults.timeouts.lookup;
       const rules = compileRules(settings, { custom: { stored: storedLiteral, host } });
       const operations = staticCatalog(rules);
-      const binding = staticHttpBinding({ namespace: 'jenkins', service: SERVICE, rules, client });
+      const binding = staticHttpBinding({
+        namespace: 'jenkins',
+        service: SERVICE,
+        rules,
+        client,
+        splitWhen: { params: (_key, params) => hasParameters(params) },
+      });
+      const base = () => joinApiPath(requireString(kit.init().config, 'baseUrl'), '');
 
       return {
         async syncCatalog() {
@@ -239,7 +260,7 @@ export function createJenkinsPlugin(): PluginHandlers {
             path += queryString(query);
           }
           const dest = destination(op, params, targets, host());
-          const text = `${SERVICE} ${op.key} on ${dest}: ${op.http.method} ${path}${detail}`;
+          const text = `${SERVICE} ${key} on ${dest}: ${op.http.method} ${path}${detail}`;
           const literal = await rules.confirmLiteral({ key, params, targets });
           return literal ? { text, confirmLiteral: literal } : { text };
         },
@@ -251,22 +272,27 @@ export function createJenkinsPlugin(): PluginHandlers {
           const query = queryOf(params);
           checkQuery(op, query);
 
-          if (op.key === LOG) return readLog(client(), path, query, settings.plugin.log, timeoutMs);
+          if (op.key === LOG) {
+            const slice = await readLog(client(), path, query, settings.plugin.log, timeoutMs);
+            return { ...slice, text: maskUrlCredentials(slice.text) };
+          }
           if (op.classification === 'read') {
             const tree = settings.plugin.trees[op.key];
             const sent = tree && query.tree === undefined && query.depth === undefined ? { ...query, tree } : query;
             const res = await send(client(), 'GET', path, { query: sent, timeoutMs });
-            return maskParameterSecrets(res.body);
+            return maskEmbeddedCredentials(maskParameterSecrets(res.body));
           }
           if (op.key === TRIGGER) {
+            if (hasParameters(params) !== (key !== op.key))
+              throw new PluginError(ErrorCodes.InvalidParams, `${key} does not match the call's build parameters`);
             const info = await jobInfo(client(), pathOf(params).job, timeoutMs);
             checkTriggerParameters(info, query);
             const endpoint = info.parameters.length ? `${path}WithParameters` : path;
-            const res = await send(client(), 'POST', endpoint, { query, timeoutMs });
+            const res = await send(client(), 'POST', endpoint, { query, timeoutMs, base: base() });
             const queueId = queueIdOf(res.headers.location);
             return queueId === undefined ? { job: info.fullName, queued: true } : { job: info.fullName, queueId };
           }
-          await send(client(), op.http.method, path, { query, timeoutMs });
+          await send(client(), op.http.method, path, { query, timeoutMs, base: base() });
           return { ok: true };
         },
       };

@@ -9,6 +9,8 @@ import {
   CREDENTIALS,
   DEFAULT_SECRET,
   DEPLOY,
+  ENV_SECRET,
+  GIT_SECRET,
   HELLO,
   startFakeJenkins,
   VERSION,
@@ -45,7 +47,9 @@ const allow = (key: string, level: 'read' | 'ask') => h.setGroupLevel(h.operatio
 
 describe('Jenkins end to end (fake Jenkins under /jenkins)', () => {
   it('syncs the declared operations and the version', () => {
-    expect(h.operations()).toHaveLength(17);
+    expect(h.operations()).toHaveLength(18);
+    expect(h.operation('builds.trigger')).toMatchObject({ locked: false });
+    expect(h.operation('builds.trigger#params')).toMatchObject({ locked: true, typedConfirmation: true });
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(h.operation('system.safeRestart')).toMatchObject({ locked: true, typedConfirmation: true });
   });
@@ -61,10 +65,12 @@ describe('Jenkins end to end (fake Jenkins under /jenkins)', () => {
     expect(r).toMatchObject({ ok: true, value: [41, 'FAILURE', 'line 40 ✓\n', 1] });
   });
 
-  it('triggers a build once approved, then follows the queue to the build', async () => {
+  it('triggers a build with parameters once its job name is typed, then follows the queue to the build', async () => {
     allow('builds.trigger', 'ask');
+    h.setOperationLevel('builds.trigger#params', 'ask');
     allow('queue.get', 'read');
     const shown: string[] = [];
+    let literal: unknown;
     const r = await h.execute(
       `const q = await jenkins.call('builds.trigger', { path: { job: ${JSON.stringify(DEPLOY)} }, query: { BRANCH: 'release' } });
        let item = await jenkins.call('queue.get', { path: { id: q.queueId } });
@@ -73,11 +79,14 @@ describe('Jenkins end to end (fake Jenkins under /jenkins)', () => {
       {
         onApproval: (a) => {
           shown.push(a.message);
-          a.approve();
+          literal = a.pending.confirmLiteral;
+          a.approve(DEPLOY);
         },
       },
     );
+    h.setOperationLevel('builds.trigger#params', null);
     expect(r).toMatchObject({ ok: true, value: 43 });
+    expect(literal).toBe(DEPLOY);
     expect(shown[0]).toContain(
       `on ${DEPLOY}: POST /job/infra/job/deploy%20app/buildWithParameters with BRANCH="release"`,
     );
@@ -106,12 +115,12 @@ describe('Jenkins end to end (fake Jenkins under /jenkins)', () => {
   });
 
   describe('every locked operation needs its literal typed', () => {
-    it.each(LOCK_CASES)('$key → "$confirm"', async ({ key, params, confirm, shows }) => {
+    it.each(LOCK_CASES)('$key → "$confirm"', async ({ key, call: fn, params, confirm, shows }) => {
       h.setOperationLevel(key, 'ask');
       let literal: unknown;
       let wrongRefused = false;
       const shown: string[] = [];
-      const r = await h.execute(call(key, params), {
+      const r = await h.execute(call(fn, params), {
         onApproval: (a) => {
           literal = a.pending.confirmLiteral;
           shown.push(a.message);
@@ -124,7 +133,7 @@ describe('Jenkins end to end (fake Jenkins under /jenkins)', () => {
         },
       });
       h.setOperationLevel(key, null);
-      expect(r, JSON.stringify(r)).toMatchObject({ ok: true, value: { ok: true } });
+      expect(r, JSON.stringify(r)).toMatchObject({ ok: true });
       expect(wrongRefused).toBe(true);
       expect(literal).toBe(confirm);
       expect(shown[0]).toContain(shows);
@@ -133,12 +142,28 @@ describe('Jenkins end to end (fake Jenkins under /jenkins)', () => {
     it('and they took effect upstream', async () => {
       for (const c of LOCK_CASES) {
         h.setOperationLevel(c.key, 'ask');
-        await h.execute(call(c.key, c.params), { onApproval: (a) => a.approve(c.confirm) });
+        await h.execute(call(c.call, c.params), { onApproval: (a) => a.approve(c.confirm) });
         h.setOperationLevel(c.key, null);
       }
       expect(fake.jobs.get(DEPLOY)?.builds.has(41)).toBe(false);
       expect(fake.jobs.has(HELLO)).toBe(false);
-      expect(fake.state).toMatchObject({ restarting: true, quietingDown: false, quietReason: 'upgrade‮ tonight' });
+      expect(fake.state).toMatchObject({ restarting: true, quietingDown: false, quietReason: 'upgrade\u202e tonight' });
+    });
+  });
+
+  it('refuses a tree naming git remote URLs, and masks them under depth', async () => {
+    allow('builds.get', 'read');
+    const at = { path: { job: DEPLOY, number: 41 } };
+    await expect(
+      h.execute(call('builds.get', { ...at, query: { tree: 'actions[remoteUrls]' } })),
+    ).resolves.toMatchObject({ ok: false, error: { code: 'INVALID_PARAMS' } });
+    const r = await h.execute(call('builds.get', { ...at, query: { depth: 1 } }));
+    expect(r.ok).toBe(true);
+    expect(JSON.stringify(r)).not.toContain(GIT_SECRET);
+    expect(JSON.stringify(r)).not.toContain(ENV_SECRET);
+    await expect(h.execute(call('builds.get', { ...at, query: { depth: 3 } }))).resolves.toMatchObject({
+      ok: false,
+      error: { code: 'INVALID_PARAMS' },
     });
   });
 

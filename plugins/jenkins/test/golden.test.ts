@@ -52,7 +52,7 @@ describe('Jenkins golden record', () => {
 
   it('summaries, targets and confirm literals of writes', async () => {
     const cases = [
-      ...LOCK_CASES.map((c) => ({ key: c.key, params: c.params })),
+      ...LOCK_CASES.map((c) => ({ key: c.call, params: c.params })),
       { key: 'builds.trigger', params: { path: { job: DEPLOY }, query: { BRANCH: 'release/1.2' } } },
       { key: 'builds.trigger', params: { path: { job: HELLO } } },
       { key: 'builds.stop', params: { path: { job: DEPLOY, number: 42 } } },
