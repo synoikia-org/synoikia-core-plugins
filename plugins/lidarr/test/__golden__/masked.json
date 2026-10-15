@@ -1,0 +1,202 @@
+{
+  "GET /api/v1/config/host": {
+    "masked": {
+      "apiKey": "[REDACTED]",
+      "authenticationMethod": "forms",
+      "bindAddress": "*",
+      "id": 1,
+      "instanceName": "Home Lidarr",
+      "password": "[REDACTED]",
+      "port": 8686,
+      "proxyPassword": "[REDACTED]",
+      "urlBase": "",
+      "username": "admin"
+    },
+    "sensitiveParams": []
+  },
+  "GET /api/v1/downloadclient": {
+    "masked": [
+      {
+        "enable": true,
+        "fields": [
+          {
+            "name": "host",
+            "privacy": "normal",
+            "value": "qbittorrent.lan"
+          },
+          {
+            "name": "port",
+            "privacy": "normal",
+            "value": 8080
+          },
+          {
+            "name": "useSsl",
+            "privacy": "normal",
+            "value": false
+          },
+          {
+            "name": "username",
+            "privacy": "userName",
+            "value": "lidarr"
+          },
+          {
+            "name": "password",
+            "privacy": "password",
+            "value": "********"
+          }
+        ],
+        "id": 6,
+        "implementation": "QBittorrent",
+        "name": "qBit"
+      }
+    ],
+    "sensitiveParams": [
+      "/body/fields"
+    ]
+  },
+  "GET /api/v1/importlist": {
+    "masked": [
+      {
+        "fields": [
+          {
+            "name": "baseUrl",
+            "privacy": "normal",
+            "value": "http://lidarr-flac.lan:8686"
+          },
+          {
+            "name": "apiKey",
+            "privacy": "apiKey",
+            "value": "********"
+          }
+        ],
+        "id": 8,
+        "implementation": "LidarrImport",
+        "name": "Lidarr Lossless"
+      },
+      {
+        "fields": [
+          {
+            "name": "accessToken",
+            "privacy": "normal",
+            "value": "[REDACTED]"
+          },
+          {
+            "name": "refreshToken",
+            "privacy": "normal",
+            "value": "[REDACTED]"
+          },
+          {
+            "name": "expires",
+            "privacy": "normal",
+            "value": ""
+          }
+        ],
+        "id": 19,
+        "implementation": "SpotifySavedAlbums",
+        "name": "Spotify"
+      }
+    ],
+    "sensitiveParams": [
+      "/body/fields"
+    ]
+  },
+  "GET /api/v1/indexer": {
+    "masked": [
+      {
+        "fields": [
+          {
+            "name": "baseUrl",
+            "privacy": "normal",
+            "value": "https://api.nzbgeek.info"
+          },
+          {
+            "name": "apiKey",
+            "privacy": "apiKey",
+            "value": "********"
+          }
+        ],
+        "id": 7,
+        "implementation": "Newznab",
+        "name": "NZBgeek"
+      },
+      {
+        "fields": [
+          {
+            "name": "baseUrl",
+            "privacy": "normal",
+            "value": "https://tracker.example/[REDACTED]"
+          },
+          {
+            "name": "cookie",
+            "privacy": "normal",
+            "value": "[REDACTED]"
+          }
+        ],
+        "id": 15,
+        "implementation": "TorrentRssIndexer",
+        "name": "Tracker"
+      }
+    ],
+    "sensitiveParams": [
+      "/body/fields"
+    ]
+  },
+  "GET /api/v1/notification": {
+    "masked": [
+      {
+        "fields": [
+          {
+            "name": "webHookUrl",
+            "privacy": "normal",
+            "value": "https://discord.com/[REDACTED]"
+          }
+        ],
+        "id": 9,
+        "implementation": "Discord",
+        "name": "Discord"
+      },
+      {
+        "fields": [
+          {
+            "name": "url",
+            "privacy": "normal",
+            "value": "https://hooks.example.com/[REDACTED]"
+          },
+          {
+            "name": "headers",
+            "privacy": "normal",
+            "value": [
+              {
+                "key": "Authorization",
+                "value": "[REDACTED]"
+              }
+            ]
+          }
+        ],
+        "id": 14,
+        "implementation": "Webhook",
+        "name": "Hook"
+      }
+    ],
+    "sensitiveParams": [
+      "/body/fields"
+    ]
+  },
+  "GET /api/v1/release": {
+    "masked": [
+      {
+        "downloadUrl": "[REDACTED]",
+        "guid": "nzbgeek-1",
+        "indexerId": 7,
+        "title": "Radiohead-OK.Computer-1997-FLAC"
+      }
+    ],
+    "sensitiveParams": []
+  },
+  "POST /api/v1/downloadclient/test": {
+    "masked": {},
+    "sensitiveParams": [
+      "/body/fields"
+    ]
+  }
+}
