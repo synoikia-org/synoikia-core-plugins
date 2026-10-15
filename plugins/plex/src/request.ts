@@ -3,7 +3,7 @@ import type { RestParams } from '@synoikia/plugin-sdk';
 
 /** Plex takes almost every argument in the query. Before the split checks, literals and targets read it, a query
  * with two keys that differ only in case is refused (which one Plex takes is not the plugin's to guess), the keys
- * the rules read are renamed to Plex's spelling, a token is refused (the plugin authenticates), and so is a masked
+ * the rules read are renamed to Plex's spelling and take one plain value (a list would hide all but one), a token is refused (the plugin authenticates), and so is a masked
  * value copied from an earlier result (Plex would store it as is). */
 
 const MAX_DEPTH = 16;
@@ -30,7 +30,10 @@ function canonicalQuery(query: Record<string, unknown>, canonical: readonly stri
     if (other !== undefined)
       refuse(`query: "${other}" and "${key}" name the same parameter; send each key once, in one spelling`);
     seen.set(lower, key);
-    Object.defineProperty(out, byLower.get(lower) ?? key, {
+    const name = byLower.get(lower);
+    if (name !== undefined && value !== null && typeof value === 'object')
+      refuse(`query: "${key}" takes one plain value, not a list or an object`);
+    Object.defineProperty(out, name ?? key, {
       value,
       enumerable: true,
       writable: true,

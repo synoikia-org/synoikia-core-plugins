@@ -7,14 +7,14 @@ Plex Media Server (PMS) serves a household's movie, TV, music and photo librarie
 PMS serves no API spec, and Plex's own developer documentation is incomplete. The catalog comes from the community spec [`LukeHagar/plex-api-spec`](https://github.com/LukeHagar/plex-api-spec) (`plex-api-spec.yaml`, OpenAPI 3.1, Apache-2.0).
 
 1. `GET /` (`MediaContainer.version`) gives the server version. It needs the token, so it also proves the token.
-2. `src/spec.ts` fetches `<specBaseUrl>/<ref>/plex-api-spec.yaml`. `ref` is a full commit SHA pinned in `plugin.yaml` (`a632c48…`, 2026-10-14). `parseSpecSource` refuses a branch or tag name: a change in a third-party repository must not change the catalog without a plugin release. The ref is the catalog's `sourceRef`.
+2. `src/spec.ts` fetches `<specBaseUrl>/<ref>/plex-api-spec.yaml`. `ref` is a full commit SHA pinned in `plugin.yaml` (`a632c48…`, 2026-10-14), next to the file's `sha256`. `parseSpecSource` refuses a branch or tag name. `fetchPlexSpec` refuses a file whose SHA-256 differs, from GitHub or a mirror: a change in a third-party repository or a mirror must not change the catalog without a plugin release. The ref is the catalog's `sourceRef`.
 3. `specBaseUrl` defaults to `https://raw.githubusercontent.com/LukeHagar/plex-api-spec`; a mirror with the same `<ref>/<file>` layout works offline. No credentials go there. Both hosts are in `network.hosts`.
 
 **PMS only.** The spec also describes plex.tv (account, sign-in, PINs, friends, sharing, home users, webhooks) and the cloud metadata and discover providers. Those operations declare their own `servers`. `pmsOnly` drops every operation that declares `servers`, at operation or path level, before the catalog is built. No plex.tv host is in `network.hosts`. Of 405 operations in the pinned spec, 52 are plex.tv or cloud, and 50 PMS operations are excluded (below); the catalog has 303 operations and 2 split twins.
 
 **`:` paths.** Plex keeps actions under a `:` segment (`/:/scrobble`, `/:/prefs`). The SDK's OpenAPI adapter skips paths with `:`, so `src/catalog.ts` builds them under a placeholder segment and restores the keys, templates and segments afterwards. A spec that already uses the placeholder is refused. The SDK should accept `:` segments; this is a core follow-up.
 
-A spec with fewer than 250 PMS operations, or one missing any key `plugin.yaml` locks by name (also when the key moves to plex.tv), is refused. Tests pin a reduced copy of the spec (`test/fixtures/plex-api-spec.yaml`): paths, parameters and request bodies as pinned; responses cut to their descriptions; unreferenced components dropped.
+A spec with fewer than 250 PMS operations, or one missing any key `plugin.yaml` locks, splits or makes a write by name (also when the key moves to plex.tv), is refused (`requiredKeys` in `src/locks.ts`). Tests use the pinned file byte for byte (`test/fixtures/plex-api-spec.yaml.gz`), so the SHA-256 check runs in every sync.
 
 ## Auth and requests
 
@@ -23,7 +23,7 @@ The `X-Plex-Token` header, from the connection's `token`. Every request also sen
 Plex takes almost every argument in the query. `src/request.ts` runs on every call, before the split checks:
 
 - A query with two keys that differ only in case is refused (`INVALID_PARAMS`).
-- The keys in `plugin.canonicalKeys` (`ratingKey`, `sessionId`, `name`, `url`, `uri`, `prefs`, the `async*` flags) are renamed to Plex's spelling, so splits, literals and targets read what Plex binds.
+- The keys in `plugin.canonicalKeys` (`ratingKey`, `sessionId`, `name`, `url`, `uri`, `prefs`, `own` and the refresh flags) are renamed to Plex's spelling, so splits, literals and targets read what Plex binds. Each takes one plain value: a list or an object is refused, since Plex would read a value the target or split didn't check (`url: [a, b]`).
 - `X-Plex-Token` in the query is refused: the plugin authenticates.
 - A query or body that holds `[REDACTED]` (a masked value from an earlier result) is refused: Plex would store it.
 
@@ -34,6 +34,8 @@ GET reads, every other verb writes, and anything unsettled stays a write. Review
 | Operation | Classification |
 | --- | --- |
 | `GET /:/progress`, `/library/sections/{sectionId}/refresh`, `/match`, `/media/grabbers/devices/discover`, `/system/updates` | write: they set progress, start a scan, match items, scan the network or check for updates |
+| `GET /library/metadata/{ids}/subtitles` | locked: adds a subtitle that Plex downloads from `url` |
+| `GET /playQueues/{playQueueId}` | read; `#own` twin (below) |
 | `GET /library/sections/{sectionId}/emptyTrash`, `/unmatch`, `/optimize`, `GET /library/optimize` | locked (below) |
 | `GET /library/metadata/{ids}`, `GET /library/sections/{sectionId}/all` | read; `#refresh` twin (below) |
 | 11 others the action-word heuristic flags (`/sync*`, `computePath`, `autocomplete`, history, play queues, playlist items, subscriptions) | read: the word is in the docs, not the behavior |
@@ -69,9 +71,25 @@ Each is locked with a typed confirmation. Literals come from a lookup of the sto
 | `PUT /updater/apply`, `POST /butler`, `POST /butler/{butlerTask}` | Installs an update; starts maintenance tasks | server name; the task name |
 | `POST /status/sessions/terminate` | Stops someone's playback | the title being played |
 | `DELETE /playlists`, `/playlists/{playlistId}`, `…/items` | Removes or empties a playlist | playlist title |
-| `GET /library/metadata/{ids}#refresh`, `GET /library/sections/{sectionId}/all#refresh` | Taken when an `async*` flag is not plainly off: background refresh, analysis or online lookup of every item read | item or section title |
+| `GET /library/metadata/{ids}#refresh`, `GET /library/sections/{sectionId}/all#refresh` | Taken when a flag in `plugin.refreshFlags` is not plainly off (`async*`, `checkFiles`, `checkFileAvailability`, `refreshLocalMediaAgent`, `refreshAnalysis`): file checks, refresh, analysis or online lookup of every item read | item or section title |
+| `GET /playQueues/{playQueueId}#own` | Taken when `own` is not plainly off: takes the play queue over from the device playing it | play queue id |
+| `GET /library/metadata/{ids}/subtitles` | Plex downloads a subtitle from the `url` given | item title |
+| `PUT /library/sections/{sectionId}/move`, `/edit`, `/prefs` | Admin-only: moves the library folders, changes its metadata or settings | section title |
+| `PUT`, `PATCH /livetv/dvrs/{dvrId}`, `PUT …/lineups`, `…/prefs`, `…/devices/{deviceId}` | Admin-only DVR settings, lineups and tuners | DVR id (the spec gives no name field to look up) |
+| `PUT /media/grabbers/devices/{deviceId}`, `…/prefs`, `…/channelmap` | Admin-only: enables, disables or reconfigures a tuner | device id |
 
 plex.tv sharing, friends and home users are out of scope, so there is nothing to lock there. PMS has no restart endpoint in the spec.
+
+Admin-only writes (the spec's `admin` scope) left as ordinary writes:
+
+| Operation | Why not locked |
+| --- | --- |
+| `PUT /library/metadata/{ids}`, `/prefs`, `/match`, `/unmatch`, `/merge`, `/split`, `/refresh`, `/analyze`, `/matches`, `/addetect`, `/credits`, `/intro`, `/voiceActivity`, `/chapterThumbs`, `/index` | One item's metadata, match or detection; reversible (`split` undoes `merge`, `unmatch` undoes `match`) and the target names the items |
+| `POST /library/sections/{sectionId}/refresh`, `POST /library/sections/refresh` | Scans for new files; the most common write |
+| `PUT /library/collections/{collectionId}/items`, `…/items/{itemId}`, `…/move`, `POST`, `PUT /hubs/sections/{sectionId}/manage/*`, `PUT /media/subscriptions/{subscriptionId}/move` | Collection membership and order, home-screen hubs, recording order; reversible |
+| `PUT /actions/removeFromContinueWatching` | Hides one item from Continue Watching |
+| `PUT /updater/check`, `PUT /myplex/refreshReachability`, `POST /livetv/dvrs/{dvrId}/reloadGuide` | Checks for or downloads an update (`apply` is locked), rechecks remote access, reloads the guide |
+| `POST /livetv/dvrs` | Creates a DVR from a tuner already added (adding a tuner is locked) |
 
 **Targets** (`capabilities.targets`). Writes name what they act on, right after the method and path, ahead of the query: the library section, up to 10 items (`Show – Title (year) [type]`), the playlist, the session (`user playing title on player`), the settings a `PUT /:/prefs` changes, and the origin of a `url` Plex fetches. Model-written strings are escaped.
 
@@ -79,4 +97,4 @@ plex.tv sharing, friends and home users are out of scope, so there is nothing to
 
 - Manifest `sensitiveKeys`: `token`, `X-Plex-Token`, `authToken`, `accessToken`, `authenticationToken`, `PlexOnlineToken`, `password`, `secret`. Core masks them in params and results (`/myplex/account`, `/servers`, `/devices`).
 - `src/mask.ts` masks what key names can't show: a token in a URL query (`X-Plex-Token`, `token`, `accessToken`, `authToken`) anywhere in a result, and the `value` of a server setting whose `id` names a secret (`PlexOnlineToken`, `customCertificateKey`) in `GET /:/prefs`.
-- `sensitiveParams: [/query/url]` on every POST and PUT: a URL can carry a token, so the approval and audit log show only its origin, as a target.
+- `sensitiveParams: [/query/url]` on every operation, and `/query/uri` on `POST /media/grabbers/devices`: a URL can carry a token, so the approval and audit log show only its origin, as a target (`fetches …`, `connects to …`).

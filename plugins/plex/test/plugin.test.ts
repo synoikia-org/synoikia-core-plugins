@@ -5,7 +5,16 @@ import { settings } from '../src/catalog.js';
 import { maskTokens } from '../src/mask.js';
 import { createPlexPlugin } from '../src/plugin.js';
 import { withTargets } from '../src/targets.js';
-import { CREDENTIALS, FAKE_TOKEN, INSTANCE, SECRETS, SPEC_REF, startFakePlex, VERSION } from './fake-plex.js';
+import {
+  CREDENTIALS,
+  FAKE_TOKEN,
+  INSTANCE,
+  SECRETS,
+  SPEC_REF,
+  SPEC_TEXT,
+  startFakePlex,
+  VERSION,
+} from './fake-plex.js';
 import type { FakePlex } from './fake-plex.js';
 
 const manifest: unknown = JSON.parse(readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
@@ -67,7 +76,7 @@ describe('Plex plugin', () => {
     fake.specFetches.length = 0;
     const result = await plugin.syncCatalog();
     expect(result).toMatchObject({ upstreamVersion: VERSION, sourceRef: SPEC_REF });
-    expect(result.operations).toHaveLength(305);
+    expect(result.operations).toHaveLength(306);
     expect(fake.specFetches).toEqual([{ ref: SPEC_REF, token: undefined }]);
   });
 
@@ -81,9 +90,19 @@ describe('Plex plugin', () => {
     });
   });
 
-  it('fails the sync when the spec is not a usable PMS spec', async () => {
-    fake.specText = 'openapi: 3.1.0\npaths: {}\n';
-    await expect(plugin.syncCatalog()).rejects.toMatchObject({ code: ErrorCodes.UpstreamError });
+  it('refuses a spec that is not the pinned file, from GitHub or a mirror', async () => {
+    expect(SPEC_TEXT.includes('\n  /:/prefs:\n')).toBe(true);
+    for (const text of [
+      'openapi: 3.1.0\npaths: {}\n',
+      SPEC_TEXT.replace('\n  /:/prefs:\n', '\n  /:/prefz:\n'),
+      `${SPEC_TEXT}\n`,
+    ]) {
+      fake.specText = text;
+      await expect(plugin.syncCatalog()).rejects.toMatchObject({
+        code: ErrorCodes.UpstreamError,
+        message: expect.stringMatching(/not the pinned file/),
+      });
+    }
   });
 
   it('reports a rejected token without throwing', async () => {
@@ -119,6 +138,13 @@ describe('request keys', () => {
       { method: 'POST', path: '/status/sessions/terminate', query: { sessionId: 'a', SessionId: 'b' } },
       { path: '/library/sections/all', query: { 'x-plex-token': 'other' } },
       { method: 'PUT', path: '/:/prefs', query: { PlexOnlineToken: '[REDACTED]' } },
+      {
+        method: 'POST',
+        path: '/library/metadata/101/extras',
+        query: { url: ['https://a.example', 'https://b.example'] },
+      },
+      { method: 'POST', path: '/media/grabbers/devices', query: { uri: { href: 'http://10.0.0.5' } } },
+      { path: '/library/metadata/101', query: { checkFiles: [0, 1] } },
     ])
       await expect(resolve(request), JSON.stringify(request)).rejects.toMatchObject({
         code: ErrorCodes.InvalidParams,

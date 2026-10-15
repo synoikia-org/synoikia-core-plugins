@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { parseOpenApi } from '@synoikia/plugin-sdk';
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, settings, splitWhen } from '../src/catalog.js';
-import { lockedKeys } from '../src/locks.js';
+import { lockedKeys, requiredKeys } from '../src/locks.js';
 import { parseSpecSource, pmsOnly } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-plex.js';
 import { LOCK_CASES } from './locks.js';
@@ -40,8 +40,8 @@ describe('Plex catalog (pinned spec)', () => {
     for (const key of ['GET /users/account.json', 'POST /shared_servers', 'GET /friends', 'POST /pins'])
       expect(cloud).toContain(key);
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
-    expect(twins).toBe(2);
-    expect(catalog.operations).toHaveLength(305);
+    expect(twins).toBe(3);
+    expect(catalog.operations).toHaveLength(306);
     expect(all.length - cloud.length - (keys.size - twins)).toBe(50);
   });
 
@@ -54,7 +54,7 @@ describe('Plex catalog (pinned spec)', () => {
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(30);
+    expect(locked).toHaveLength(42);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
@@ -68,7 +68,7 @@ describe('Plex catalog (pinned spec)', () => {
     const named = new Set(lockedKeys(settings.rules));
     const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
     expect(extra).toEqual([]);
-    expect(locked).toHaveLength(58);
+    expect(locked).toHaveLength(71);
   });
 
   it('has a lock case for every named lock and every twin', () => {
@@ -132,13 +132,10 @@ describe('Plex catalog (pinned spec)', () => {
     }
   });
 
-  it('hides the URL Plex fetches from approvals', () => {
-    for (const key of [
-      'POST /library/metadata/{ids}/extras',
-      'PUT /library/metadata/{ids}/{element}',
-      'POST /media/providers',
-    ])
-      expect(op(key)?.sensitiveParams, key).toEqual(['/query/url']);
+  it('hides the URL Plex fetches or connects to from approvals, on every operation', () => {
+    for (const o of catalog.operations) expect(o.sensitiveParams, o.key).toContain('/query/url');
+    expect(op('POST /media/grabbers/devices')?.sensitiveParams).toEqual(['/query/url', '/query/uri']);
+    expect(op('GET /library/metadata/{ids}/subtitles')).toMatchObject({ locked: true, classification: 'write' });
   });
 
   it('locks a delete a newer spec adds', () => {
@@ -173,11 +170,31 @@ describe('Plex catalog (pinned spec)', () => {
     expect(() => buildCatalog(small)).toThrow(/refusing a partial catalog/);
   });
 
+  it('refuses a spec that lost an operation a rule splits or makes a write', () => {
+    const required = requiredKeys(settings.rules);
+    for (const key of [
+      'GET /:/progress',
+      'GET /system/updates',
+      'GET /playQueues/{playQueueId}',
+      'GET /library/metadata/{ids}',
+    ])
+      expect(required).toContain(key);
+    const spec = specOf();
+    const { get: _gone, ...rest } = spec.paths['/:/progress']!;
+    expect(() => buildCatalog({ ...spec, paths: { ...spec.paths, '/:/progress': rest } })).toThrow(/GET \/:\/progress/);
+    const renamed: Record<string, Record<string, unknown>> = {
+      ...spec.paths,
+      '/playQueue/{playQueueId}': spec.paths['/playQueues/{playQueueId}']!,
+    };
+    delete renamed['/playQueues/{playQueueId}'];
+    expect(() => buildCatalog({ ...spec, paths: renamed })).toThrow(/GET \/playQueues\/\{playQueueId\}/);
+  });
+
   it('refuses a spec that lost a locked operation, or moved it to plex.tv', () => {
     const spec = specOf();
     const { put: _gone, ...rest } = spec.paths['/updater/apply']!;
     expect(() => buildCatalog({ ...spec, paths: { ...spec.paths, '/updater/apply': rest } })).toThrow(
-      /lacks locked operations \(PUT \/updater\/apply\)/,
+      /lacks operations its rules lock, split or make writes \(PUT \/updater\/apply\)/,
     );
     const cloud = { ...spec.paths['/:/prefs'], servers: [{ url: 'https://plex.tv' }] };
     expect(() => buildCatalog({ ...spec, paths: { ...spec.paths, '/:/prefs': cloud } })).toThrow(/PUT \/:\/prefs/);
@@ -208,8 +225,16 @@ describe('split predicates', () => {
       request: {},
     }) as Parameters<(typeof splitWhen)['refresh']>[0];
 
-  it('takes #refresh for any async flag that is not plainly off', () => {
+  it('takes #own for own that is not plainly off', () => {
+    const own = (query?: object) => splitWhen.own!(call(query));
+    expect([own(undefined), own({ own: 0 }), own({ own: 'false' })]).toEqual([false, false, false]);
+    expect([own({ own: 1 }), own({ own: 'true' })]).toEqual([true, true]);
+  });
+
+  it('takes #refresh for any refresh, analysis, augment or file-check flag that is not plainly off', () => {
     const on = (query?: object) => splitWhen.refresh!(call(query));
+    for (const flag of ['checkFiles', 'checkFileAvailability', 'refreshLocalMediaAgent', 'refreshAnalysis'])
+      expect(on({ [flag]: 1 }), flag).toBe(true);
     expect(
       [undefined, { includeChildren: 1 }, { asyncRefreshAnalysis: 0 }, { asyncCheckFiles: 'false' }].map(on),
     ).toEqual([false, false, false, false]);

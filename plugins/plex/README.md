@@ -36,4 +36,4 @@ The server's own address (usually port 32400), an `X-Plex-Token`, and optionally
 
 ## Locked operations
 
-Every delete; emptying trash, analyzing, unmatching and optimizing libraries; cleaning bundles; adding or changing libraries and bulk edits; deleting items (and their files); anything that makes Plex fetch a URL; server settings; updates; butler tasks; ending a session; playlist deletes; reads with `async*` refresh flags. Reasons and literals are in the design note and `plugin.yaml`.
+Every delete; emptying trash, analyzing, unmatching and optimizing libraries; cleaning bundles; adding or changing libraries and bulk edits; deleting items (and their files); anything that makes Plex fetch a URL or connect to a device; library, DVR and tuner settings; server settings; updates; butler tasks; ending a session; playlist deletes; reads with refresh or file-check flags; taking over a play queue. Reasons and literals are in the design note and `plugin.yaml`.

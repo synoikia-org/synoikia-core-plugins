@@ -7,6 +7,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -17,6 +20,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -27,6 +33,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -37,6 +46,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -47,6 +59,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -57,6 +72,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -67,6 +85,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -77,6 +98,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -87,6 +111,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -97,6 +124,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -107,6 +137,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -117,6 +150,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -127,6 +163,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -137,6 +176,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -147,6 +189,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -157,6 +202,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -167,6 +215,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -177,6 +228,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -187,6 +241,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -197,6 +254,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -207,6 +267,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -217,6 +280,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -227,6 +293,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -237,6 +306,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -247,6 +319,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -257,6 +332,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -267,6 +345,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -277,6 +358,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -287,6 +371,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -297,6 +384,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -307,6 +397,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -317,6 +410,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -327,6 +423,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -337,6 +436,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -347,6 +449,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -357,6 +462,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -367,6 +475,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -377,6 +488,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -387,6 +501,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -397,6 +514,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -407,6 +527,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -417,6 +540,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -427,6 +553,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -437,6 +566,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -447,6 +579,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -457,6 +592,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -467,6 +605,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -477,6 +618,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -487,6 +631,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -497,6 +644,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -507,6 +657,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -517,6 +670,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -527,6 +683,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -537,6 +696,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -547,6 +709,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -557,6 +722,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -567,6 +735,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -577,6 +748,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -587,6 +761,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -597,6 +774,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -607,6 +787,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -617,6 +800,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -627,6 +813,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -637,6 +826,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -647,6 +839,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -657,6 +852,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -667,6 +865,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -677,6 +878,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -687,6 +891,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -697,6 +904,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -707,6 +917,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -717,6 +930,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -727,17 +943,23 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
-    "classification": "read",
-    "classificationReason": "verb:GET",
+    "classification": "write",
+    "classificationReason": "reviewed:get-changes-state",
     "group": "library",
     "key": "GET /library/metadata/{ids}/subtitles",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "read",
@@ -747,6 +969,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -757,6 +982,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -767,6 +995,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -777,6 +1008,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -787,6 +1021,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -797,6 +1034,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -807,6 +1047,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -817,6 +1060,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -827,6 +1073,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -837,6 +1086,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -847,6 +1099,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -857,6 +1112,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -867,6 +1125,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -877,6 +1138,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -887,6 +1151,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -897,6 +1164,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -907,6 +1177,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -917,6 +1190,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -927,6 +1203,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -937,6 +1216,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -947,6 +1229,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -957,6 +1242,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -967,6 +1255,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -977,6 +1268,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -987,6 +1281,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -997,6 +1294,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1007,6 +1307,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1017,6 +1320,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1027,6 +1333,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1037,6 +1346,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1047,6 +1359,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1057,6 +1372,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -1067,6 +1385,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1077,6 +1398,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1087,6 +1411,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1097,6 +1424,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1107,6 +1437,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1117,6 +1450,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1127,6 +1463,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1137,6 +1476,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1147,6 +1489,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1157,6 +1502,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1167,6 +1515,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1177,6 +1528,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1187,6 +1541,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -1197,6 +1554,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1207,6 +1567,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1217,6 +1580,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1227,6 +1593,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1237,6 +1606,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1247,6 +1619,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1257,6 +1632,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1267,6 +1645,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1277,6 +1658,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1287,6 +1671,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1297,6 +1684,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1307,6 +1697,9 @@
     "kind": "rest",
     "locked": true,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": true
   },
   {
@@ -1317,6 +1710,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1327,6 +1723,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1337,6 +1736,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1347,6 +1749,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1357,6 +1762,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1367,6 +1775,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1377,6 +1788,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1387,6 +1801,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1397,6 +1814,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1407,6 +1827,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1417,6 +1840,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1427,6 +1853,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1437,6 +1866,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1447,6 +1879,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1457,6 +1892,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1467,6 +1905,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1477,6 +1918,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1487,6 +1931,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1497,6 +1944,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1507,6 +1957,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1517,6 +1970,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1527,6 +1983,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1537,6 +1996,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1547,6 +2009,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1557,6 +2022,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1567,6 +2035,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1577,6 +2048,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1587,6 +2061,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1597,6 +2074,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1607,6 +2087,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1617,6 +2100,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1627,6 +2113,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1637,6 +2126,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1647,6 +2139,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1657,6 +2152,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1667,6 +2165,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1677,6 +2178,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1687,6 +2191,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1697,6 +2204,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1707,6 +2217,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1717,6 +2230,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1727,6 +2243,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1737,6 +2256,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1747,6 +2269,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1757,7 +2282,23 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "play_queue",
+    "key": "GET /playQueues/{playQueueId}#own",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "read",
@@ -1767,6 +2308,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1777,6 +2321,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1787,6 +2334,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1797,6 +2347,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1807,6 +2360,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1817,6 +2373,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1827,6 +2386,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1837,6 +2399,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1847,6 +2412,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1857,6 +2425,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1867,6 +2438,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1877,6 +2451,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1887,6 +2464,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1897,6 +2477,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1907,6 +2490,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1917,6 +2503,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1927,6 +2516,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1937,6 +2529,9 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
@@ -1947,17 +2542,23 @@
     "kind": "rest",
     "locked": false,
     "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
     "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PATCH",
+    "classificationReason": "locked:destructive",
     "group": "dvrs",
     "key": "PATCH /livetv/dvrs/{dvrId}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2189,7 +2790,8 @@
     "locked": true,
     "needsReview": false,
     "sensitiveParams": [
-      "/query/url"
+      "/query/url",
+      "/query/uri"
     ],
     "typedConfirmation": true
   },
@@ -3014,16 +3616,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "library",
     "key": "PUT /library/sections/{sectionId}/edit",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -3040,120 +3642,120 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "library",
     "key": "PUT /library/sections/{sectionId}/move",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "library",
     "key": "PUT /library/sections/{sectionId}/prefs",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "dvrs",
     "key": "PUT /livetv/dvrs/{dvrId}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "dvrs",
     "key": "PUT /livetv/dvrs/{dvrId}/devices/{deviceId}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "dvrs",
     "key": "PUT /livetv/dvrs/{dvrId}/lineups",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "dvrs",
     "key": "PUT /livetv/dvrs/{dvrId}/prefs",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "devices",
     "key": "PUT /media/grabbers/devices/{deviceId}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "devices",
     "key": "PUT /media/grabbers/devices/{deviceId}/channelmap",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "devices",
     "key": "PUT /media/grabbers/devices/{deviceId}/prefs",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",

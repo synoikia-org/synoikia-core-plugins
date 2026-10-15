@@ -33,10 +33,11 @@ beforeEach(() => fake.reset());
 const call = (request: unknown) => `return await plex.request(${JSON.stringify(request)});`;
 const allow = (key: string, level: 'read' | 'ask') => h.setGroupLevel(h.operation(key).pluginGroup, level);
 const SECRET_VALUES = Object.values(SECRETS);
+const URL_SECRETS = ['trailer-signature-888888', 'provider-key-999999', 'subtitle-key-131313', 'tuner-key-141414'];
 
 describe('Plex end to end (fake Plex)', () => {
   it('syncs the PMS operations of the pinned spec', () => {
-    expect(h.operations()).toHaveLength(305);
+    expect(h.operations()).toHaveLength(306);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches.map((f) => f.ref)).toContain(SPEC_REF);
     expect(h.operation('PUT /:/prefs')).toMatchObject({ locked: true, typedConfirmation: true });
@@ -97,12 +98,18 @@ describe('Plex end to end (fake Plex)', () => {
       expect(wrongRefused).toBe(true);
       expect(literal).toBe(confirm);
       const text = shown.join('\n');
-      for (const secret of ['trailer-signature-888888', 'provider-key-999999', ...SECRET_VALUES])
+      const audit = JSON.stringify(h.audit({ operationKey: key }));
+      for (const secret of [...URL_SECRETS, ...SECRET_VALUES]) {
         expect(text).not.toContain(secret);
-      // The approver sees where Plex fetches from.
+        expect(audit).not.toContain(secret);
+      }
+      // The approver sees where Plex fetches from or connects to.
       const url = request.query?.url;
       if (typeof url === 'string' && url.startsWith('https://'))
         expect(shown[0]).toContain(`fetches ${new URL(url).origin}`);
+      const uri = request.query?.uri;
+      if (key === 'POST /media/grabbers/devices' && typeof uri === 'string')
+        expect(shown[0]).toContain(`connects to ${new URL(uri).origin}`);
     });
   });
 

@@ -80,12 +80,9 @@ function origin(value: unknown): string | undefined {
   }
 }
 
-/** The setting names a prefs write changes, `prefs[...]` and `prefs` object keys included. */
+/** The setting names a prefs write changes (`prefs[name]` counts as `name`). */
 function settingNames(query: Record<string, unknown>): string[] {
-  const names = Object.entries(query).flatMap(([k, v]) =>
-    k === 'prefs' && isPlainObject(v) ? Object.keys(v) : [k.replace(/^prefs\[(.*)\]$/, '$1')],
-  );
-  return names.map((n) => safe(n) ?? '?');
+  return Object.keys(query).map((k) => safe(k.replace(/^prefs\[(.*)\]$/, '$1')) ?? '?');
 }
 
 export async function resolveTargets(get: Get, key: string, params: unknown): Promise<ResolvedTarget[]> {
@@ -111,6 +108,9 @@ export async function resolveTargets(get: Get, key: string, params: unknown): Pr
 
   const to = origin(query.url);
   if (query.url !== undefined && to) out.push({ kind: 'url', id: 'url', name: `fetches ${safe(to) ?? '?'}` });
+  const device = key.startsWith('POST /media/grabbers/devices') ? origin(query.uri) : undefined;
+  if (query.uri !== undefined && device)
+    out.push({ kind: 'url', id: 'uri', name: `connects to ${safe(device) ?? '?'}` });
   return out;
 }
 

@@ -112,7 +112,7 @@ export const LOCK_CASES: LockCase[] = [
   ),
   lock(
     'POST /media/grabbers/devices',
-    { method: 'POST', path: '/media/grabbers/devices', query: { uri: 'http://10.0.0.5' } },
+    { method: 'POST', path: '/media/grabbers/devices', query: { uri: 'http://10.0.0.5/tuner?key=tuner-key-141414' } },
     INSTANCE,
   ),
   lock(
@@ -133,4 +133,58 @@ export const LOCK_CASES: LockCase[] = [
     'Nolan Films',
   ),
   lock('DELETE /activities/{activityId}', { method: 'DELETE', path: '/activities/act-123' }, 'act-123'),
+  lock(
+    'GET /library/metadata/{ids}/subtitles',
+    {
+      method: 'GET',
+      path: '/library/metadata/101/subtitles',
+      query: { url: 'https://subs.example/inception.srt?key=subtitle-key-131313', language: 'en' },
+    },
+    'Inception',
+  ),
+  lock(
+    'GET /library/metadata/{ids}#refresh',
+    { method: 'GET', path: '/library/metadata/101', query: { checkFiles: 1 } },
+    'Inception',
+    'GET /library/metadata/{ids}#refresh (checkFiles)',
+  ),
+  lock(
+    'GET /library/sections/{sectionId}/all#refresh',
+    { method: 'GET', path: '/library/sections/1/all', query: { refreshAnalysis: 'true' } },
+    'Movies',
+    'GET /library/sections/{sectionId}/all#refresh (refreshAnalysis)',
+  ),
+  lock('GET /playQueues/{playQueueId}#own', { method: 'GET', path: '/playQueues/55', query: { own: 1 } }, '55'),
+  ...(['move', 'edit', 'prefs'] as const).map((action) =>
+    lock(
+      `PUT /library/sections/{sectionId}/${action}`,
+      { method: 'PUT', path: `/library/sections/2/${action}`, query: action === 'move' ? { location: '/new' } : {} },
+      'TV Shows',
+    ),
+  ),
+  lock('PUT /livetv/dvrs/{dvrId}', { method: 'PUT', path: '/livetv/dvrs/7' }, '7'),
+  lock('PATCH /livetv/dvrs/{dvrId}', { method: 'PATCH', path: '/livetv/dvrs/7' }, '7'),
+  lock(
+    'PUT /livetv/dvrs/{dvrId}/lineups',
+    { method: 'PUT', path: '/livetv/dvrs/7/lineups', query: { lineup: 'x' } },
+    '7',
+  ),
+  lock(
+    'PUT /livetv/dvrs/{dvrId}/prefs',
+    { method: 'PUT', path: '/livetv/dvrs/7/prefs', query: { name: 'a', value: 'b' } },
+    '7',
+  ),
+  lock('PUT /livetv/dvrs/{dvrId}/devices/{deviceId}', { method: 'PUT', path: '/livetv/dvrs/7/devices/dev-1' }, '7'),
+  lock(
+    'PUT /media/grabbers/devices/{deviceId}',
+    { method: 'PUT', path: '/media/grabbers/devices/dev-1', query: { enabled: 0 } },
+    'dev-1',
+  ),
+  ...(['prefs', 'channelmap'] as const).map((action) =>
+    lock(
+      `PUT /media/grabbers/devices/{deviceId}/${action}`,
+      { method: 'PUT', path: `/media/grabbers/devices/dev-1/${action}` },
+      'dev-1',
+    ),
+  ),
 ];

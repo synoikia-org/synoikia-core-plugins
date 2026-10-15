@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { startFakeHttp } from '@synoikia/core/testing';
 import type { FakeHttp, FakeRequest, FakeResponse } from '@synoikia/core/testing';
 
@@ -13,7 +14,10 @@ export const INSTANCE = 'Home Plex';
 export const SPEC_REF = 'a632c48261aedefe0bc3a9ae3ddc4bc227abcda0';
 export const SPEC_FILE = 'plex-api-spec.yaml';
 
-export const SPEC_TEXT = readFileSync(new URL('./fixtures/plex-api-spec.yaml', import.meta.url), 'utf8');
+/** The upstream file at SPEC_REF, byte for byte (gzipped): its SHA-256 is the one plugin.yaml pins. */
+export const SPEC_TEXT = gunzipSync(
+  readFileSync(new URL('./fixtures/plex-api-spec.yaml.gz', import.meta.url)),
+).toString('utf8');
 
 export const SECRETS = {
   onlineToken: 'plex-online-token-111111',
@@ -131,6 +135,7 @@ export async function startFakePlex(): Promise<FakePlex> {
         return ok;
       },
       'DELETE /library/metadata/{ids}/media/{mediaItem}': () => ok,
+      'GET /library/metadata/{ids}/subtitles': () => ok,
       'POST /library/metadata/{ids}/{element}': () => ok,
       'PUT /library/metadata/{ids}/{element}': () => ok,
       'PUT /library/clean/bundles': () => ok,
@@ -195,6 +200,14 @@ export async function startFakePlex(): Promise<FakePlex> {
       'POST /butler/{butlerTask}': () => ok,
       'DELETE /activities/{activityId}': () => ok,
       'PUT /updater/apply': () => ok,
+      'PUT /livetv/dvrs/{dvrId}': () => ok,
+      'PATCH /livetv/dvrs/{dvrId}': () => ok,
+      'PUT /livetv/dvrs/{dvrId}/{action}': () => ok,
+      'PUT /livetv/dvrs/{dvrId}/devices/{deviceId}': () => ok,
+      'PUT /media/grabbers/devices/{deviceId}': () => ok,
+      'PUT /media/grabbers/devices/{deviceId}/{action}': () => ok,
+      'GET /playQueues/{playQueueId}': ({ params }) =>
+        container({ playQueueID: Number(params.playQueueId), Metadata: [s().items.get('102')] }),
     },
   });
 

@@ -8,7 +8,7 @@ import {
 } from '@synoikia/plugin-sdk';
 import type { CompiledRules, ConfirmContext, OpenApiCatalog, RestCall, RuleHooks } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
-import { lockedKeys, requireLockedKeys } from './locks.js';
+import { requiredKeys, requireLockedKeys } from './locks.js';
 import { parseSpecSource, pmsOnly } from './spec.js';
 
 /** Plex's catalog: the SDK's OpenAPI catalog over the PMS operations of the pinned community spec, with
@@ -49,6 +49,7 @@ const flagOn = (v: unknown) => v !== undefined && v !== null && v !== false && v
 /** When a call takes its locked twin (plugin.yaml `split`). */
 export const splitWhen: Record<string, (call: RestCall) => boolean> = {
   refresh: (call) => settings.plugin.refreshFlags.some((flag) => flagOn(call.params.query?.[flag])),
+  own: (call) => flagOn(call.params.query?.own),
 };
 
 export type Get = (path: string) => Promise<unknown>;
@@ -90,7 +91,7 @@ export function customSources(get?: Get): NonNullable<RuleHooks['custom']> {
 /** plugin.yaml's rules, without upstream lookups. */
 export const policy = compileRules(settings, { custom: customSources() });
 
-const LOCKED_KEYS = lockedKeys(settings.rules);
+const REQUIRED_KEYS = requiredKeys(settings.rules);
 
 // The SDK skips paths with characters outside [A-Za-z0-9_-./{}], and Plex keeps actions under a `:` segment
 // (`/:/scrobble`, `/:/prefs`): those paths are built under a placeholder segment and restored after.
@@ -132,6 +133,6 @@ export function buildCatalog(
       op.template = restore(op.template);
       op.segments = op.segments.map((s) => (s === COLON ? ':' : s));
     }
-  requireLockedKeys(catalog.operations, LOCKED_KEYS, SERVICE);
+  requireLockedKeys(catalog.operations, REQUIRED_KEYS, SERVICE);
   return catalog;
 }

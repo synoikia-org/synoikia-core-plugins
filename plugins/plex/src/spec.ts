@@ -1,4 +1,5 @@
-import { fetchSpec, isPlainObject, parseOpenApi } from '@synoikia/plugin-sdk';
+import { createHash } from 'node:crypto';
+import { ErrorCodes, fetchSpec, isPlainObject, parseOpenApi, PluginError } from '@synoikia/plugin-sdk';
 
 /** PMS serves no spec. The community spec (LukeHagar/plex-api-spec) is fetched at a pinned commit from a
  * configurable mirror, with no credentials sent, and cut to the operations the PMS itself serves. */
@@ -8,6 +9,8 @@ export interface SpecSource {
   baseUrl: string;
   /** A full commit SHA: a branch would let a third-party change alter the catalog. */
   ref: string;
+  /** SHA-256 of the file at `ref`, so a mirror (or GitHub) can't serve another spec. */
+  sha256: string;
   file: string;
   maxBytes: number;
   timeoutMs: number;
@@ -28,22 +31,37 @@ export function parseSpecSource(value: unknown): SpecSource {
   };
   const ref = text('ref');
   if (!/^[0-9a-f]{40}$/.test(ref)) throw new Error('plugin.yaml plugin.spec.ref must be a full commit SHA');
-  return { baseUrl: text('baseUrl'), ref, file: text('file'), maxBytes: num('maxBytes'), timeoutMs: num('timeoutMs') };
+  const sha256 = text('sha256');
+  if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error('plugin.yaml plugin.spec.sha256 must be a SHA-256 hex digest');
+  return {
+    baseUrl: text('baseUrl'),
+    ref,
+    sha256,
+    file: text('file'),
+    maxBytes: num('maxBytes'),
+    timeoutMs: num('timeoutMs'),
+  };
 }
 
-/** Fetches the spec at the pinned ref; returns its text and the ref. */
-export function fetchPlexSpec(
+/** Fetches the spec at the pinned ref and refuses any file but the pinned one; returns its text and the ref. */
+export async function fetchPlexSpec(
   service: string,
   source: SpecSource,
   baseUrl: string = source.baseUrl,
 ): Promise<{ text: string; ref: string }> {
   const base = baseUrl.replace(/\/+$/, '');
-  return fetchSpec({
+  const spec = await fetchSpec({
     service,
     candidates: [{ url: `${base}/${source.ref}/${source.file}`, ref: source.ref }],
     maxBytes: source.maxBytes,
     timeoutMs: source.timeoutMs,
   });
+  if (createHash('sha256').update(spec.text, 'utf8').digest('hex') !== source.sha256)
+    throw new PluginError(
+      ErrorCodes.UpstreamError,
+      `The ${service} API spec from ${new URL(base).host} is not the pinned file (SHA-256 mismatch); refusing it`,
+    );
+  return spec;
 }
 
 const VERBS = new Set(['get', 'put', 'post', 'delete', 'patch', 'head', 'options', 'trace']);
