@@ -17,8 +17,9 @@ import type { CompiledRules, InitParams, PluginHandlers } from '@synoikia/plugin
 import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
+import { normalizeRequest, readTree } from './request.js';
 import { withDestinations } from './summary.js';
-import { resolveTargets, withTargets } from './targets.js';
+import { resolveTargets, STRICT_FIELDS, TARGET_FIELDS, withTargets } from './targets.js';
 import { grafanaVersion } from './version.js';
 
 /** The Grafana plugin: catalog from the HTTP API spec Grafana 12+ serves at /public/openapi3.json, keyed by
@@ -63,6 +64,18 @@ export const settings = parsePluginSettings(raw, {
 export const policy = compileRules(settings);
 
 const LOCKED_KEYS = lockedKeys(settings.rules);
+
+/** Every body pointer the plugin or core reads: destinations, targets and the rules' sensitiveParams. */
+const READ_TREE = readTree(
+  [
+    ...settings.plugin.destinationFields,
+    ...TARGET_FIELDS,
+    ...settings.rules
+      .flatMap((r) => r.sensitiveParams ?? [])
+      .flatMap((p) => (p.startsWith('/body/') ? [p.slice(5)] : [])),
+  ],
+  STRICT_FIELDS,
+);
 
 export function buildCatalog(spec: string | Record<string, unknown>, rules: CompiledRules<unknown> = policy) {
   const catalog = buildOpenApiCatalog(spec, { service: SERVICE, rules, minOperations: settings.plugin.minOperations });
@@ -116,6 +129,7 @@ export function createGrafanaPlugin(): PluginHandlers {
         client: api,
         stripPrefix: settings.plugin.apiPath,
         maxSummaryBody: 1000,
+        adjust: ({ params }) => normalizeRequest(params, READ_TREE),
       });
       return {
         async syncCatalog() {

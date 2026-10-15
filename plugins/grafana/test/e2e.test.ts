@@ -190,6 +190,47 @@ describe('Grafana end to end (fake Grafana)', () => {
     });
   });
 
+  it.each([
+    ['Datasource', '/ds/query', { queries: [{ datasource: { uid: 'prom' }, Datasource: { uid: 'mysql-prod' } }] }],
+    ['URL', '/datasources', { name: 'loki', url: 'http://loki:3100', URL: 'http://evil.example.net' }],
+    ['ſettings', '/v1/provisioning/contact-points', { settings: { url: 'https://a.example' }, ſettings: {} }],
+  ])('refuses a body with a %s key before any approval or upstream call', async (_name, path, body) => {
+    const key = `POST ${path}`;
+    h.setOperationLevel(key, 'ask');
+    const before = fake.requests.filter((r) => r.method === 'POST').length;
+    let asked = false;
+    const r = await h.execute(call({ method: 'POST', path, body }), {
+      onApproval: (a) => {
+        asked = true;
+        a.approve(ORG);
+      },
+    });
+    h.setOperationLevel(key, null);
+    expect(r).toMatchObject({ ok: false, error: { code: 'INVALID_PARAMS' } });
+    expect(asked).toBe(false);
+    expect(fake.requests.filter((q) => q.method === 'POST')).toHaveLength(before);
+  });
+
+  it('masks a contact point URL sent as Settings.URL and shows only its host', async () => {
+    const key = 'POST /v1/provisioning/contact-points';
+    h.setOperationLevel(key, 'ask');
+    const url = 'https://hooks.slack.com/services/EXAMPLE';
+    const body = { name: 'S', type: 'slack', Settings: { URL: url } };
+    const shown: string[] = [];
+    const r = await h.execute(call({ method: 'POST', path: '/v1/provisioning/contact-points', body }), {
+      onApproval: (a) => {
+        shown.push(a.message, JSON.stringify(a.pending));
+        a.approve(ORG);
+      },
+    });
+    h.setOperationLevel(key, null);
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+    expect(shown[0]).toContain('hooks.slack.com (contact point URL)');
+    expect(shown.join('\n')).not.toContain('services/EXAMPLE');
+    expect(JSON.stringify(h.audit({ operationKey: key }))).not.toContain('services/EXAMPLE');
+    expect(fake.requests.at(-1)?.body).toMatchObject({ settings: { url } });
+  });
+
   it('reports a Grafana denial as UPSTREAM_DENIED', async () => {
     allow('GET /folders', 'read');
     fake.denied.add('/api/folders');
