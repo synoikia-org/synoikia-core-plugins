@@ -121,6 +121,26 @@ describe('Grafana plugin', () => {
     await expect(targets(many)).rejects.toMatchObject({ code: ErrorCodes.TargetResolutionFailed });
   });
 
+  it('names a data source given by datasourceId or name with its stored uid, and refuses one it cannot read', async () => {
+    const prom = { kind: 'datasource', id: 'prom', name: 'Prometheus (prometheus, http://prometheus:9090)' };
+    const padding = 'x'.repeat(1500);
+    for (const q of [{ datasourceId: 5 }, { datasourceId: '5' }, { datasource: 'Prometheus' }, { DatasourceID: 5 }]) {
+      const call = await plugin.resolveOperation({
+        fn: 'request',
+        args: [{ method: 'POST', path: '/ds/query', body: { padding, queries: [{ refId: 'A', padding, ...q }] } }],
+      });
+      const targets = await plugin.resolveTargets!(call);
+      expect(targets, JSON.stringify(q)).toEqual([prom]);
+      const { text } = await plugin.summarize({ ...call, targets });
+      expect(text).toContain(`on ${prom.name}`);
+    }
+    const targets = (queries: unknown[]) =>
+      plugin.resolveTargets!({ key: 'POST /ds/query', params: { body: { queries } } });
+    await expect(targets([{ datasource: { uid: 'prom' } }, { datasourceId: 5 }])).resolves.toEqual([prom]);
+    for (const q of [{ datasourceId: 99 }, { datasource: 'Unknown' }, { datasource: 7 }, { datasourceId: { id: 5 } }])
+      await expect(targets([q]), JSON.stringify(q)).rejects.toMatchObject({ code: ErrorCodes.TargetResolutionFailed });
+  });
+
   it("names only a contact point URL's host as its destination", async () => {
     const targets = (url: unknown) =>
       plugin.resolveTargets!({ key: 'POST /v1/provisioning/contact-points', params: { body: { settings: { url } } } });
@@ -160,6 +180,9 @@ describe('Grafana plugin', () => {
       ['POST', '/v1/provisioning/contact-points', { settings: { url: 'https://a.example' }, ſettings: {} }],
       ['PUT', '/reports/7', { recipients: 'a@example.net', recipientſ: 'x@evil.example.net' }],
       ['POST', '/licensing/token', { token: 'a', ['toKen']: 'b' }],
+      ['POST', '/ds/query', { queries: [{ datasourceId: 5, DatasourceId: 9 }] }],
+      ['POST', '/ds/query', { queries: [{ datasource: { uid: 'prom' }, model: { Expr: 'a', expr: 'b' } }] }],
+      ['POST', '/datasources', { name: 'p', secureJsonData: {}, SecureJsonData: { password: 'x' } }],
     ] as const)
       await expect(resolve(method, path, body), JSON.stringify(body)).rejects.toMatchObject({
         code: ErrorCodes.InvalidParams,
@@ -167,6 +190,16 @@ describe('Grafana plugin', () => {
     await expect(resolve('GET', '/search', undefined, { query: 'a', Query: 'b' })).rejects.toMatchObject({
       code: ErrorCodes.InvalidParams,
     });
+  });
+
+  it('passes free-form maps the plugin never reads as sent', async () => {
+    for (const [path, body] of [
+      ['/dashboards/db', { dashboard: { panels: [{ aliasColors: { CPU: 'red', cpu: 'blue', Température: 'x' } }] } }],
+      ['/datasources', { name: 'p', url: 'http://p:9090', jsonData: { Header: 'a', header: 'b' } }],
+    ] as const) {
+      const { params } = await plugin.resolveOperation({ fn: 'request', args: [{ method: 'POST', path, body }] });
+      expect(params).toEqual({ body });
+    }
   });
 
   it('renames a lone case variant to the spelling targets and summaries read', async () => {
@@ -183,6 +216,11 @@ describe('Grafana plugin', () => {
       args: [{ method: 'POST', path: '/datasources', body: { name: 'loki', URL: 'http://loki.example.net:3100' } }],
     });
     expect(ds.params).toEqual({ body: { name: 'loki', url: 'http://loki.example.net:3100' } });
+    const cp = await plugin.resolveOperation({
+      fn: 'request',
+      args: [{ method: 'POST', path: '/v1/provisioning/contact-points', body: { Settings: { URL: 'https://a.b/c' } } }],
+    });
+    expect(cp.params).toEqual({ body: { settings: { url: 'https://a.b/c' } } });
     await expect(plugin.summarize({ ...ds, targets: [] })).resolves.toMatchObject({
       text: expect.stringContaining('[to url="http://loki.example.net:3100"]'),
     });

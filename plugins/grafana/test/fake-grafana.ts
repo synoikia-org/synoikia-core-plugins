@@ -86,6 +86,7 @@ export async function startFakeGrafana(): Promise<FakeGrafana> {
     'GET /api/datasources': () => ok([DATASOURCE]),
     'GET /api/datasources/{id}': byId('id', { '5': DATASOURCE }),
     'GET /api/datasources/uid/{uid}': byId('uid', { prom: DATASOURCE }),
+    'GET /api/datasources/name/{name}': byId('name', { Prometheus: DATASOURCE }),
     'GET /api/folders/{folder_uid}': byId('folder_uid', { 'f-ops': { uid: 'f-ops', title: 'Ops' } }),
     'GET /api/dashboards/uid/{uid}': byId('uid', {
       'd-home': { dashboard: { uid: 'd-home', title: 'Home Lab', panels: [] }, meta: { folderUid: 'f-ops' } },

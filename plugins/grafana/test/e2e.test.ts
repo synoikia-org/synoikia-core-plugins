@@ -211,6 +211,26 @@ describe('Grafana end to end (fake Grafana)', () => {
     expect(fake.requests.filter((q) => q.method === 'POST')).toHaveLength(before);
   });
 
+  it('masks a contact point URL sent as Settings.URL and shows only its host', async () => {
+    const key = 'POST /v1/provisioning/contact-points';
+    h.setOperationLevel(key, 'ask');
+    const url = 'https://hooks.slack.com/services/EXAMPLE';
+    const body = { name: 'S', type: 'slack', Settings: { URL: url } };
+    const shown: string[] = [];
+    const r = await h.execute(call({ method: 'POST', path: '/v1/provisioning/contact-points', body }), {
+      onApproval: (a) => {
+        shown.push(a.message, JSON.stringify(a.pending));
+        a.approve(ORG);
+      },
+    });
+    h.setOperationLevel(key, null);
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+    expect(shown[0]).toContain('hooks.slack.com (contact point URL)');
+    expect(shown.join('\n')).not.toContain('services/EXAMPLE');
+    expect(JSON.stringify(h.audit({ operationKey: key }))).not.toContain('services/EXAMPLE');
+    expect(fake.requests.at(-1)?.body).toMatchObject({ settings: { url } });
+  });
+
   it('reports a Grafana denial as UPSTREAM_DENIED', async () => {
     allow('GET /folders', 'read');
     fake.denied.add('/api/folders');

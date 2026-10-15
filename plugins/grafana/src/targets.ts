@@ -6,7 +6,7 @@ const MAX_QUERY_SOURCES = 20;
 
 /** A data source named with its type and URL, so the approver sees where its queries go; undefined when it
  * can't be read. */
-async function dataSource(client: HttpJsonClient, path: string, id: string, timeoutMs: number) {
+async function dataSource(client: HttpJsonClient, path: string, id: string | undefined, timeoutMs: number) {
   let ds: unknown;
   try {
     ds = await client.request('GET', path, { timeoutMs });
@@ -14,9 +14,11 @@ async function dataSource(client: HttpJsonClient, path: string, id: string, time
     return undefined;
   }
   if (!isPlainObject(ds)) return undefined;
-  const name = stringOr(ds.name) ?? id;
+  const key = id ?? stringOr(ds.uid);
+  if (!key) return undefined;
+  const name = stringOr(ds.name) ?? key;
   const detail = [stringOr(ds.type), stringOr(ds.url)].filter(Boolean).join(', ');
-  return { kind: 'datasource', id, name: detail ? `${name} (${detail})` : name } satisfies ResolvedTarget;
+  return { kind: 'datasource', id: key, name: detail ? `${name} (${detail})` : name } satisfies ResolvedTarget;
 }
 
 /** `https://hooks.slack.com/services/…` → `hooks.slack.com`: where it posts, without the token in its path. */
@@ -27,6 +29,10 @@ export function hostOf(value: unknown): string {
     return 'an invalid URL';
   }
 }
+
+/** Body pointers the targets and destinations read; anything under `queries` is checked whole. */
+export const TARGET_FIELDS = ['/queries/*/datasource/uid', '/queries/*/datasourceId', '/settings/url'];
+export const STRICT_FIELDS = ['/queries'];
 
 /** What a call acts on: the stored data source of a non-GET `/datasources/{id}` or `/datasources/uid/{uid}`
  * call, every data source a `POST /ds/query` names (an unreadable one by its uid), or the host a contact
@@ -42,26 +48,39 @@ export async function resolveTargets(
 
   if (key === 'POST /ds/query') {
     const queries = readPointer(p.body, '/queries');
-    const uids = new Set<string>();
+    const refs = new Map<string, string>();
     for (const q of Array.isArray(queries) ? queries : []) {
-      const uid = stringOr(readPointer(q, '/datasource/uid'));
-      if (uid) uids.add(uid);
+      const ds = readPointer(q, '/datasource');
+      const uid = stringOr(readPointer(ds, '/uid'));
+      if (uid) refs.set(`uid/${encodeURIComponent(uid)}`, uid);
+      else if (typeof ds === 'string' && ds) refs.set(`name/${encodeURIComponent(ds)}`, ds);
+      else if (ds !== undefined && ds !== null && !isPlainObject(ds))
+        throw new PluginError(ErrorCodes.TargetResolutionFailed, 'POST /ds/query names a data source it cannot read');
+      const id = readPointer(q, '/datasourceId');
+      if (typeof id === 'number' || (typeof id === 'string' && id))
+        refs.set(encodeURIComponent(String(id)), `id ${id}`);
+      else if (id !== undefined && id !== null)
+        throw new PluginError(ErrorCodes.TargetResolutionFailed, 'POST /ds/query names a data source it cannot read');
     }
-    if (uids.size > MAX_QUERY_SOURCES)
+    if (refs.size > MAX_QUERY_SOURCES)
       throw new PluginError(
         ErrorCodes.TargetResolutionFailed,
-        `POST /ds/query names ${uids.size} data sources; the limit is ${MAX_QUERY_SOURCES}`,
+        `POST /ds/query names ${refs.size} data sources; the limit is ${MAX_QUERY_SOURCES}`,
       );
-    return Promise.all(
-      [...uids].map(
-        async (uid): Promise<ResolvedTarget> =>
-          (await dataSource(client, `/datasources/uid/${encodeURIComponent(uid)}`, uid, timeoutMs)) ?? {
-            kind: 'datasource',
-            id: uid,
-            name: uid,
-          },
-      ),
+    const resolved = await Promise.all(
+      [...refs].map(async ([ref, label]): Promise<ResolvedTarget> => {
+        const uid = ref.startsWith('uid/') ? label : undefined;
+        const found = await dataSource(client, `/datasources/${ref}`, uid, timeoutMs);
+        if (found) return found;
+        // An unknown uid is shown as itself; a name or id that can't be read has no uid to scope rules on.
+        if (uid) return { kind: 'datasource', id: uid, name: uid };
+        throw new PluginError(
+          ErrorCodes.TargetResolutionFailed,
+          `POST /ds/query names data source ${label}, which can't be read`,
+        );
+      }),
     );
+    return [...new Map(resolved.map((t) => [t.id, t])).values()];
   }
 
   if (key === 'POST /v1/provisioning/contact-points' || key === 'PUT /v1/provisioning/contact-points/{UID}') {
