@@ -169,6 +169,7 @@ describe('split predicates', () => {
       'DeleteLogFiles',
       'ResetApiKey',
       'ApplicationUpdate',
+      'ApplicationUpdateCheck',
       'Nope',
       7,
     ])

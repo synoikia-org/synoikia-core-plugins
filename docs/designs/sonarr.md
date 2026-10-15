@@ -31,9 +31,9 @@ The same as Radarr: web UI and sign-in, the iCal feed, log file downloads, media
 | `POST /api/v3/seasonpass` | Changes monitoring of many series and seasons at once | `<n> series` |
 | `DELETE /api/v3/episodefile/{id}` | Deletes the file from disk | relative path |
 | `DELETE /api/v3/episodefile/bulk` | Deletes many files from disk | `<n> items` |
-| `POST /api/v3/command#heavy` | Any command not in `plugin.quickCommands`: `RenameFiles`, `RenameSeries`, `MoveSeries`, `BulkMoveSeries`, `ManualImport`, `DownloadedEpisodesScan`, `ProcessMonitoredDownloads`, `DeleteLogFiles`, `ClearBlocklist`, `CleanUpRecycleBin`, `ResetApiKey`, `ResetQualityDefinitions`, `ApplicationUpdate`, `Shutdown`, `Restart`, … and future ones | the command name |
+| `POST /api/v3/command#heavy` | Any command not in `plugin.quickCommands`: `RenameFiles`, `RenameSeries`, `MoveSeries`, `BulkMoveSeries`, `ManualImport`, `DownloadedEpisodesScan`, `ProcessMonitoredDownloads`, `DeleteLogFiles`, `ClearBlocklist`, `CleanUpRecycleBin`, `ResetApiKey`, `ResetQualityDefinitions`, `ApplicationUpdateCheck`, `ApplicationUpdate`, `Shutdown`, `Restart`, … and future ones | the command name |
 
-Quick commands: `SeriesSearch`, `SeasonSearch`, `EpisodeSearch`, `MissingEpisodeSearch`, `CutoffUnmetEpisodeSearch`, `RssSync`, `RefreshSeries`, `RescanSeries`, `RefreshMonitoredDownloads`, `ImportListSync`, `CheckHealth`, `ApplicationUpdateCheck`, `Housekeeping`, `Backup`. Sonarr finds the command by class name without `Command`, case-insensitively (`CommandController.StartCommand`).
+Quick commands: `SeriesSearch`, `SeasonSearch`, `EpisodeSearch`, `MissingEpisodeSearch`, `CutoffUnmetEpisodeSearch`, `RssSync`, `RefreshSeries`, `RescanSeries`, `RefreshMonitoredDownloads`, `ImportListSync`, `CheckHealth`, `Housekeeping`, `Backup`. None of them takes a folder. `ApplicationUpdateCheck` is heavy: started through the API it counts as manual, ignores the auto-update setting and queues `ApplicationUpdate`, which installs the update and restarts. Sonarr finds the command by class name without `Command`, case-insensitively (`CommandController.StartCommand`).
 
 All other locks (host config, shutdown, restart, backups, providers, notification tests, `#stored` provider tests and actions, release push, `DELETE *`) are as in Radarr.
 
