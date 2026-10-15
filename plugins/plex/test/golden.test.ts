@@ -1,8 +1,9 @@
 import { maskSensitiveResult } from '@synoikia/plugin-sdk';
 import type { OperationDescriptor } from '@synoikia/plugin-sdk';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { settings } from '../src/catalog.js';
 import { createPlexPlugin } from '../src/plugin.js';
-import { CREDENTIALS, startFakePlex } from './fake-plex.js';
+import { CREDENTIALS, SPEC_SHA256, startFakePlex } from './fake-plex.js';
 import type { FakePlex } from './fake-plex.js';
 import { LOCK_CASES } from './locks.js';
 
@@ -42,7 +43,11 @@ const plugin = createPlexPlugin();
 let fake: FakePlex;
 let operations: OperationDescriptor[];
 
+// The fake serves the reduced fixture, so the in-process plugin expects its digest (test only).
+const PINNED_SHA256 = settings.plugin.spec.sha256;
+
 beforeAll(async () => {
+  settings.plugin.spec.sha256 = SPEC_SHA256;
   fake = await startFakePlex();
   await plugin.init({
     instanceId: 'plex',
@@ -53,6 +58,7 @@ beforeAll(async () => {
   operations = (await plugin.syncCatalog()).operations as OperationDescriptor[];
 });
 afterAll(async () => {
+  settings.plugin.spec.sha256 = PINNED_SHA256;
   await plugin.shutdown?.();
   await fake?.close();
 });

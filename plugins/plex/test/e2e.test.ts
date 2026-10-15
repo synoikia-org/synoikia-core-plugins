@@ -1,23 +1,41 @@
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkPluginContract, startPluginHarness } from '@synoikia/core/testing';
 import type { PluginHarness } from '@synoikia/core/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { CREDENTIALS, INSTANCE, SECRETS, SPEC_REF, startFakePlex, VERSION } from './fake-plex.js';
+import { CREDENTIALS, INSTANCE, SECRETS, SPEC_REF, SPEC_SHA256, startFakePlex, VERSION } from './fake-plex.js';
 import type { FakePlex } from './fake-plex.js';
 import { LOCK_CASES } from './locks.js';
 
 /** The real core running this plugin's built bundle against the fake Plex, via core's harness. */
 
 const PLUGIN_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PINNED_SHA256 = 'ff8801eb6c7904e6298215dd789521750e4af0f18b5fde0999bb544d15335070';
+
+/** A copy of the built plugin that expects the reduced fixture's digest; the real bundle stays untouched. */
+function stageTestCopy(): string {
+  const dir = mkdtempSync(path.join(tmpdir(), 'plex-e2e-'));
+  for (const name of ['manifest.json', 'package.json', 'dist'])
+    cpSync(path.join(PLUGIN_DIR, name), path.join(dir, name), { recursive: true });
+  const entry = path.join(dir, 'dist', 'index.js');
+  const bundle = readFileSync(entry, 'utf8');
+  if (bundle.split(PINNED_SHA256).length !== 2) throw new Error('the bundle must pin the spec digest exactly once');
+  writeFileSync(entry, bundle.replace(PINNED_SHA256, SPEC_SHA256));
+  return dir;
+}
+
+let stagedDir: string | undefined;
 
 let h: PluginHarness;
 let fake: FakePlex;
 
 beforeAll(async () => {
   fake = await startFakePlex();
+  stagedDir = stageTestCopy();
   h = await startPluginHarness({
-    pluginDir: PLUGIN_DIR,
+    pluginDir: stagedDir,
     connection: { baseUrl: fake.url, specBaseUrl: fake.specUrl, ...CREDENTIALS },
   });
   await h.ctx.instances.update(h.instanceId, { settings: { executePerMinute: 1000, writesPerMinute: 1000 } });
@@ -26,6 +44,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await h?.stop();
   await fake?.close();
+  if (stagedDir) rmSync(stagedDir, { recursive: true, force: true });
 });
 
 beforeEach(() => fake.reset());

@@ -15,7 +15,9 @@ const op = (key: string) => catalog.operations.find((o) => o.key === key);
 const listOf = (m: string | string[]) => (Array.isArray(m) ? m : [m]);
 const globRe = (glob: string) => new RegExp(`^${glob.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
 type Spec = { paths: Record<string, Record<string, unknown>> };
-const specOf = () => parseOpenApi(SPEC_TEXT) as Spec;
+let parsed: Spec | undefined;
+// Parsed once per file; tests copy it before changing it.
+const specOf = () => (parsed ??= parseOpenApi(SPEC_TEXT) as Spec);
 const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 /** Every operation key in the spec, with whether it declares its own servers (plex.tv and cloud providers). */

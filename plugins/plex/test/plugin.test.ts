@@ -11,6 +11,7 @@ import {
   INSTANCE,
   SECRETS,
   SPEC_REF,
+  SPEC_SHA256,
   SPEC_TEXT,
   startFakePlex,
   VERSION,
@@ -31,11 +32,16 @@ function connection() {
   };
 }
 
+// The fake serves the reduced fixture, so the in-process plugin expects its digest (test only).
+const PINNED_SHA256 = settings.plugin.spec.sha256;
+
 beforeAll(async () => {
+  settings.plugin.spec.sha256 = SPEC_SHA256;
   fake = await startFakePlex();
   await plugin.init({ ...connection(), sdkVersion: '1' });
 });
 afterAll(async () => {
+  settings.plugin.spec.sha256 = PINNED_SHA256;
   await plugin.shutdown?.();
   await fake?.close();
 });
@@ -88,6 +94,11 @@ describe('Plex plugin', () => {
       accept: 'application/json',
       'x-plex-client-identifier': 'synoikia-plex-1',
     });
+  });
+
+  it('pins the upstream file digest in plugin.yaml, not the fixture one', () => {
+    expect(PINNED_SHA256).toBe('ff8801eb6c7904e6298215dd789521750e4af0f18b5fde0999bb544d15335070');
+    expect(SPEC_SHA256).not.toBe(PINNED_SHA256);
   });
 
   it('refuses a spec that is not the pinned file, from GitHub or a mirror', async () => {

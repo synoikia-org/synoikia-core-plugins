@@ -1,5 +1,5 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
 import { startFakeHttp } from '@synoikia/core/testing';
 import type { FakeHttp, FakeRequest, FakeResponse } from '@synoikia/core/testing';
 
@@ -14,10 +14,9 @@ export const INSTANCE = 'Home Plex';
 export const SPEC_REF = 'a632c48261aedefe0bc3a9ae3ddc4bc227abcda0';
 export const SPEC_FILE = 'plex-api-spec.yaml';
 
-/** The upstream file at SPEC_REF, byte for byte (gzipped): its SHA-256 is the one plugin.yaml pins. */
-export const SPEC_TEXT = gunzipSync(
-  readFileSync(new URL('./fixtures/plex-api-spec.yaml.gz', import.meta.url)),
-).toString('utf8');
+/** A reduced copy of the spec at SPEC_REF; tests expect its own digest, not the upstream file's plugin.yaml pins. */
+export const SPEC_TEXT = readFileSync(new URL('./fixtures/plex-api-spec.yaml', import.meta.url), 'utf8');
+export const SPEC_SHA256 = createHash('sha256').update(SPEC_TEXT, 'utf8').digest('hex');
 
 export const SECRETS = {
   onlineToken: 'plex-online-token-111111',
