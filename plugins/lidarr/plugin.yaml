@@ -10,7 +10,8 @@ defaults:
 instanceName: { op: 'GET /api/v1/system/status', field: instanceName, fallback: Lidarr }
 
 # The web UI and its sign-in, the iCal feed, binary downloads, the multipart backup upload, and host filesystem
-# browsing and the manual-import scan (they list any directory the Lidarr process can read).
+# browsing and manual import (the GET lists any directory the Lidarr process can read; the POST re-reads any paths
+# the caller names and returns their tags).
 exclude:
   - 'GET /'
   - 'GET /{path}'
@@ -24,6 +25,7 @@ exclude:
   - 'GET /api/v1/mediacover/*'
   - 'GET /api/v1/filesystem*'
   - 'GET /api/v1/manualimport'
+  - 'POST /api/v1/manualimport'
   - 'POST /api/v1/system/backup/restore/upload'
 
 rules:
@@ -230,22 +232,20 @@ plugin:
   versionField: version
   # Refuse a spec with fewer operations: a truncated one must not replace the catalog.
   minOperations: 150
-  # Commands that only search, refresh or check take the ordinary `POST /api/v1/command`. Any other name, a future
-  # one included, takes the locked `#heavy` twin: `RescanFolders` (any folder, adds artists), `RetagFiles`,
-  # `RenameFiles`, `ApplicationUpdateCheck` (installs an update when started by hand). Lidarr matches names
-  # case-insensitively.
+  # Commands that only search or check take the ordinary `POST /api/v1/command`. Any other name, a future one
+  # included, takes the locked `#heavy` twin: `RefreshArtist`, `RefreshAlbum`, `BulkRefreshArtist` (a refresh
+  # rescans and, with `writeAudioTags: sync`, rewrites tags), `RescanFolders` (any folder, adds artists),
+  # `RetagFiles`, `RenameFiles`, `ApplicationUpdateCheck` (installs an update when started by hand). Lidarr matches
+  # names case-insensitively.
   quickCommands:
     - AlbumSearch
     - ArtistSearch
     - Backup
-    - BulkRefreshArtist
     - CheckHealth
     - CutoffUnmetAlbumSearch
     - Housekeeping
     - ImportListSync
     - MissingAlbumSearch
-    - RefreshAlbum
-    - RefreshArtist
     - RefreshMonitoredDownloads
     - RssSync
   # Request keys the rules, targets and pointers read, in Lidarr's spelling. Lidarr binds query and body keys

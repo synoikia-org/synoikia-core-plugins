@@ -1890,16 +1890,6 @@
   {
     "classification": "write",
     "classificationReason": "verb:POST",
-    "group": "manualimport",
-    "key": "POST /api/v1/manualimport",
-    "kind": "rest",
-    "locked": false,
-    "needsReview": false,
-    "typedConfirmation": false
-  },
-  {
-    "classification": "write",
-    "classificationReason": "verb:POST",
     "group": "metadata",
     "key": "POST /api/v1/metadata",
     "kind": "rest",

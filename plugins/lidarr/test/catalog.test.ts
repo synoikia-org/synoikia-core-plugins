@@ -18,7 +18,7 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Lidarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v1 included', () => {
-    expect(catalog.operations).toHaveLength(226);
+    expect(catalog.operations).toHaveLength(225);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v1\//);
   });
 
@@ -72,6 +72,7 @@ describe('Lidarr catalog (pinned spec)', () => {
       'GET /api/v1/filesystem',
       'GET /api/v1/filesystem/mediafiles',
       'GET /api/v1/manualimport',
+      'POST /api/v1/manualimport',
       'POST /api/v1/system/backup/restore/upload',
     ])
       expect(keys.has(key), key).toBe(false);
@@ -81,7 +82,7 @@ describe('Lidarr catalog (pinned spec)', () => {
         .map((verb) => `${verb.toUpperCase()} ${path}`),
     );
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
-    expect(specKeys.length - (keys.size - twins)).toBe(20);
+    expect(specKeys.length - (keys.size - twins)).toBe(21);
   });
 
   it('reads with GET and writes with every other verb; no GET is left for review', () => {
@@ -164,6 +165,9 @@ describe('split predicates', () => {
     expect(heavy({ name: 'AlbumSearch', albumIds: [1] })).toBe(false);
     expect(heavy({ name: 'rsssync' })).toBe(false);
     for (const name of [
+      'RefreshArtist',
+      'refreshalbum',
+      'BulkRefreshArtist',
       'RenameFiles',
       'RenameArtist',
       'RetagFiles',

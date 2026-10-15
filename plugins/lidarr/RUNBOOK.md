@@ -5,7 +5,7 @@ The plugin is tested against a fake Lidarr. This checklist confirms it against a
 **Before you start:** a Lidarr v3 test instance with one artist that has track files, one download client with a password, one indexer and one notification (a webhook to a test endpoint you control). Copy the API key from Settings → General → Security.
 
 1. **Connect.** New endpoint → **Lidarr**, base URL and key. **Test connection** reports the version (e.g. `3.1.6.5078`). A wrong key fails the test.
-2. **Sync.** About 226 operations appear, grouped by tag (`Artist`, `Album`, `Queue`, `Command`, …). The instance shows the spec ref (`v<version>`). `GET /api/v1/filesystem`, `GET /api/v1/manualimport` and `GET /api/v1/log/file` are absent. With the spec source set to an unreachable URL, the sync fails and the old catalog stays.
+2. **Sync.** About 225 operations appear, grouped by tag (`Artist`, `Album`, `Queue`, `Command`, …). The instance shows the spec ref (`v<version>`). `GET /api/v1/filesystem`, `GET` and `POST /api/v1/manualimport` and `GET /api/v1/log/file` are absent. With the spec source set to an unreachable URL, the sync fails and the old catalog stays.
 3. **Reads.** With `Artist`, `ArtistLookup`, `QualityProfile`, `MetadataProfile` and `RootFolder` at Read, ask for an artist lookup and the root folders: no prompt.
 4. **Add an artist.** With `Artist` at Ask, add an artist from the lookup: a prompt shows `POST /api/v1/artist`; approve, and it appears in Lidarr.
 5. **Command.** With `Command` at Ask, start `ArtistSearch` for that artist: an ordinary prompt; `GET /api/v1/command/{id}` reports `completed`. Ask for `RetagFiles`: the prompt is locked and asks to type `RetagFiles`.

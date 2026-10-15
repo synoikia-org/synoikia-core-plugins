@@ -36,7 +36,7 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Lidarr end to end (fake Lidarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(226);
+    expect(h.operations()).toHaveLength(225);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
     expect(h.operation('DELETE /api/v1/artist/{id}#delete-files')).toMatchObject({

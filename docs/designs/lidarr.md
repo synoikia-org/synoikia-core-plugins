@@ -10,7 +10,7 @@ As Radarr: `Startup.cs` mounts Swagger only `if (BuildInfo.IsDebug)`, so the spe
 
 ## Excluded
 
-Radarr's list with the `/api/v1` prefix. `GET /api/v1/log/file*` also covers the update logs, and `GET /api/v1/mediacover/*` both the artist and the album covers.
+Radarr's list with the `/api/v1` prefix, plus `POST /api/v1/manualimport`: it re-reads the paths the caller names and returns their tags, which probes the host filesystem as the excluded GET does. `GET /api/v1/log/file*` also covers the update logs, and `GET /api/v1/mediacover/*` both the artist and the album covers.
 
 ## Locks
 
@@ -24,9 +24,9 @@ Radarr's locks for host settings, shutdown and restart, backups, providers, noti
 | `DELETE /api/v1/album/{id}` (+ `#delete-files`) | Removes the album; the twin also deletes its files | album title |
 | `DELETE /api/v1/trackfile/{id}`, `DELETE /api/v1/trackfile/bulk` | Always deletes the file from disk (to the recycle bin if set) | file path; `<n> track files` |
 | `PUT /api/v1/config/metadataprovider/{id}` | Sets the metadata server Lidarr trusts and whether it rewrites the tags in audio files | instance name |
-| `POST /api/v1/command#heavy` | Any command not in `plugin.quickCommands`: `RetagFiles`, `RetagArtist`, `RenameFiles`, `RenameArtist`, `MoveArtist`, `BulkMoveArtist`, `RescanFolders` (takes any folder and adds artists), `ManualImport`, `DownloadedAlbumsScan`, `ApplicationUpdateCheck` (installs an update when started by hand), `InstallPlugin`, `ResetApiKey`, … and future ones | the command name, else instance name |
+| `POST /api/v1/command#heavy` | Any command not in `plugin.quickCommands`: `RefreshArtist`, `RefreshAlbum`, `BulkRefreshArtist` (with `writeAudioTags: sync` and rescan `always`, a refresh rescans and rewrites the tags in the artist's files, as `RetagArtist` does), `RetagFiles`, `RetagArtist`, `RenameFiles`, `RenameArtist`, `MoveArtist`, `BulkMoveArtist`, `RescanFolders` (takes any folder and adds artists), `ManualImport`, `DownloadedAlbumsScan`, `ApplicationUpdateCheck` (installs an update when started by hand), `InstallPlugin`, `ResetApiKey`, … and future ones | the command name, else instance name |
 
-Quick commands: `AlbumSearch`, `ArtistSearch`, `MissingAlbumSearch`, `CutoffUnmetAlbumSearch`, `RefreshArtist`, `BulkRefreshArtist`, `RefreshAlbum`, `RefreshMonitoredDownloads`, `RssSync`, `ImportListSync`, `CheckHealth`, `Housekeeping`, `Backup`.
+Quick commands: `AlbumSearch`, `ArtistSearch`, `MissingAlbumSearch`, `CutoffUnmetAlbumSearch`, `RefreshMonitoredDownloads`, `RssSync`, `ImportListSync`, `CheckHealth`, `Housekeeping`, `Backup`.
 
 `PUT /api/v1/album/{id}`, `PUT /api/v1/album/monitor`, `POST /api/v1/albumstudio` and `PUT /api/v1/trackfile/editor` change monitoring or stored quality only, so they stay writes.
 

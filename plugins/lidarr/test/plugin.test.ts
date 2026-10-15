@@ -62,7 +62,7 @@ describe('Lidarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 226,
+      count: 225,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -100,6 +100,11 @@ describe('Lidarr plugin', () => {
       '/ping',
     ])
       await expect(resolve({ path }), path).rejects.toMatchObject({ code: ErrorCodes.UnknownOperation });
+    await expect(
+      resolve({ method: 'POST', path: '/api/v1/manualimport', body: [{ path: '/etc' }] }),
+    ).rejects.toMatchObject({
+      code: ErrorCodes.UnknownOperation,
+    });
   });
 
   it('picks the locked twins from the call', async () => {
@@ -317,7 +322,7 @@ describe('case-insensitive binding', () => {
 
   it('refuses keys that differ only in case in the query, the body, body lists and provider fields', async () => {
     await refused({ method: 'DELETE', path: '/api/v1/artist/1', query: { deleteFiles: false, DeleteFiles: true } });
-    await refused({ method: 'POST', path: '/api/v1/manualimport', body: [{ path: '/a', Path: '/b' }] });
+    await refused({ method: 'PUT', path: '/api/v1/qualitydefinition/update', body: [{ id: 1, Id: 2 }] });
     const fields = (f: unknown[]) => ({
       method: 'POST',
       path: '/api/v1/downloadclient',
