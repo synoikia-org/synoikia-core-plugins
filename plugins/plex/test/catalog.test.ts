@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { parse } from 'yaml';
+import { parseOpenApi } from '@synoikia/plugin-sdk';
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, settings, splitWhen } from '../src/catalog.js';
 import { lockedKeys } from '../src/locks.js';
@@ -15,7 +15,7 @@ const op = (key: string) => catalog.operations.find((o) => o.key === key);
 const listOf = (m: string | string[]) => (Array.isArray(m) ? m : [m]);
 const globRe = (glob: string) => new RegExp(`^${glob.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
 type Spec = { paths: Record<string, Record<string, unknown>> };
-const specOf = () => parse(SPEC_TEXT) as Spec;
+const specOf = () => parseOpenApi(SPEC_TEXT) as Spec;
 const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 /** Every operation key in the spec, with whether it declares its own servers (plex.tv and cloud providers). */
@@ -41,8 +41,8 @@ describe('Plex catalog (pinned spec)', () => {
       expect(cloud).toContain(key);
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
     expect(twins).toBe(2);
-    expect(catalog.operations).toHaveLength(306);
-    expect(all.length - cloud.length - (keys.size - twins)).toBe(51);
+    expect(catalog.operations).toHaveLength(305);
+    expect(all.length - cloud.length - (keys.size - twins)).toBe(50);
   });
 
   it('keeps the actions under the `:` segment, and matches them by path', () => {

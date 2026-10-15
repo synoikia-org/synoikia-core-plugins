@@ -118,5 +118,6 @@ export async function resolveTargets(get: Get, key: string, params: unknown): Pr
 export function withTargets(text: string, targets: readonly ResolvedTarget[]): string {
   if (!targets.length) return text;
   const head = /^\S+ \S+ [^\s?]*/.exec(text)?.[0] ?? '';
-  return `${head} on ${targets.map((t) => t.name).join('; ')}${head ? ' ' : ''}${text.slice(head.length).trimStart()}`;
+  const rest = text.slice(head.length).trimStart();
+  return `${head} on ${targets.map((t) => t.name).join('; ')}${rest ? ` ${rest}` : ''}`;
 }

@@ -138,6 +138,7 @@ rules:
       {base} with an async refresh, analysis or augment flag: Plex starts background work on every item read. Locked;
       leave the flags out to read.
     summaryNote: '(starts a background refresh, analysis or online lookup of the items)'
+    needsReview: false
 
   # The literal an approver types: the stored item's title, never a value the model writes except on create.
   - match: 'DELETE /library/sections/{sectionId}/collection/{collectionId}'
