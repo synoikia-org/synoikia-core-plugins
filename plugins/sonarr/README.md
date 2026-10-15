@@ -1,6 +1,6 @@
 # Sonarr
 
-Exposes a Sonarr v4 instance's REST API (`/api/v3`, 225 operations: series, episodes, episode files, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Sonarr release builds don't serve their spec, so the catalog comes from `src/Sonarr.Api.V3/openapi.json` in Sonarr's repository at the tag of the installed version (`main`, the v4 release branch, if there is none). Design: [`docs/designs/sonarr.md`](../../docs/designs/sonarr.md).
+Exposes a Sonarr v4 instance's REST API (`/api/v3`, 224 operations: series, episodes, episode files, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Sonarr release builds don't serve their spec, so the catalog comes from `src/Sonarr.Api.V3/openapi.json` in Sonarr's repository at the tag of the installed version (`main`, the v4 release branch, if there is none). Design: [`docs/designs/sonarr.md`](../../docs/designs/sonarr.md).
 
 The sandbox calls `sonarr.request({ method, path, query, body })` with the full `/api/v3` path:
 
@@ -36,4 +36,4 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 
 ## Locked operations
 
-Every delete (episode file deletes remove files from disk); deleting or moving series files; the series editor and season pass; commands that rename, move or delete files or change the application; host settings; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.
+Every delete (episode file deletes remove files from disk); deleting or moving series files; the series editor and season pass; commands that rename, move or delete files or change the application; host and media management settings (import script); new root folders; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.

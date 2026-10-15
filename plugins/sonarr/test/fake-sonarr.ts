@@ -154,6 +154,12 @@ export async function startFakeSonarr(): Promise<FakeSonarr> {
   const row = (req: FakeRequest) => table(req.params.resource ?? '').get(Number(req.params.id));
   const notFound: FakeResponse = { status: 404, body: { message: 'NotFound' } };
   const backups = [{ id: 21, name: 'sonarr_backup_v4.0.20.3014_2026.10.14_10.00.00.zip', type: 'scheduled' }];
+  let media: Record<string, unknown> = {
+    id: 1,
+    useScriptImport: false,
+    scriptImportPath: '/config/scripts/import.sh',
+    recycleBin: '',
+  };
   let host: Record<string, unknown> = {
     id: 1,
     bindAddress: '*',
@@ -196,6 +202,11 @@ export async function startFakeSonarr(): Promise<FakeSonarr> {
       [`DELETE ${API}/system/backup/{id}`]: () => ({ body: {} }),
       [`POST ${API}/system/backup/restore/{id}`]: () => ({ body: { restartRequired: true } }),
       [`GET ${API}/config/host`]: () => ({ body: host }),
+      [`GET ${API}/config/mediamanagement`]: () => ({ body: media }),
+      [`PUT ${API}/config/mediamanagement/{id}`]: (req) => {
+        media = { ...media, ...(req.body as object) };
+        return { status: 202, body: media };
+      },
       [`GET ${API}/config/host/{id}`]: () => ({ body: host }),
       [`PUT ${API}/config/host/{id}`]: (req) => {
         host = { ...host, ...(req.body as object) };

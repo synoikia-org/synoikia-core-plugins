@@ -3,7 +3,8 @@ import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
 
 /** What a non-GET call acts on, for the approver: the stored series by title, year and folder, episode files by
- * series and file name, or a provider connection by name with the hosts it sends to. Lookups that fail leave the id
+ * series and file name, a provider connection by name with the hosts it sends to, the import script a media
+ * management change runs, or a new root folder. Lookups that fail leave the id
  * (fail visible, not closed). */
 
 const MAX_ITEMS = 10;
@@ -17,6 +18,16 @@ async function fetchRow(get: Get, resource: string, id: string): Promise<Record<
     return isPlainObject(row) ? row : undefined;
   } catch {
     return undefined;
+  }
+}
+
+/** The stored media management settings, for the import-script fields a body leaves out. */
+async function fetchConfig(get: Get): Promise<Record<string, unknown>> {
+  try {
+    const config = await get('/api/v3/config/mediamanagement');
+    return isPlainObject(config) ? config : {};
+  } catch {
+    return {};
   }
 }
 
@@ -98,6 +109,25 @@ export async function resolveTargets(
   const p = isPlainObject(params) ? params : {};
   const pathParams = isPlainObject(p.path) ? p.path : {};
   const body = p.body;
+  if (key.startsWith('PUT /api/v3/config/mediamanagement/{id}')) {
+    if (!isPlainObject(body) || !('useScriptImport' in body || 'scriptImportPath' in body)) return [];
+    const stored = 'useScriptImport' in body && 'scriptImportPath' in body ? {} : await fetchConfig(get);
+    const on = ('useScriptImport' in body ? body.useScriptImport : stored.useScriptImport) === true;
+    const path = safe('scriptImportPath' in body ? body.scriptImportPath : stored.scriptImportPath) || '(none)';
+    return [{ kind: 'script', id: 'scriptImportPath', name: `import script ${on ? 'on' : 'off'}: ${path}` }];
+  }
+  if (key.startsWith('POST /api/v3/rootfolder') && isPlainObject(body)) {
+    const path = safe(body.path);
+    return path ? [{ kind: 'folder', id: 'path', name: `root folder ${path}` }] : [];
+  }
+  if (key.startsWith('PUT /api/v3/rootfolder/{id}')) {
+    const id = stringOr(pathParams.id);
+    if (!id) return [];
+    const stored = await fetchRow(get, 'rootfolder', id);
+    const from = safe(stored?.path) ?? safe(id) ?? '?';
+    const to = isPlainObject(body) ? safe(body.path) : undefined;
+    return [{ kind: 'folder', id, name: `root folder ${from}${to ? ` → ${to}` : ''}` }];
+  }
   if (/^(PUT|DELETE) \/api\/v3\/series\/\{id\}/.test(key)) {
     const id = stringOr(pathParams.id);
     if (!id) return [];

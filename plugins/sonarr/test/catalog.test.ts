@@ -18,13 +18,13 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Sonarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v3 included', () => {
-    expect(catalog.operations).toHaveLength(225);
+    expect(catalog.operations).toHaveLength(224);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v3\//);
   });
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(23);
+    expect(locked).toHaveLength(25);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
@@ -38,7 +38,7 @@ describe('Sonarr catalog (pinned spec)', () => {
     const named = new Set(lockedKeys(settings.rules));
     const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
     expect(extra).toEqual([]);
-    expect(locked).toHaveLength(59);
+    expect(locked).toHaveLength(61);
   });
 
   it('has a lock case for every named lock and every twin', () => {
@@ -50,7 +50,9 @@ describe('Sonarr catalog (pinned spec)', () => {
   });
 
   it('matches at least one operation with every rule pattern', () => {
-    for (const pattern of settings.rules.flatMap((r) => listOf(r.match)))
+    // Forward-looking: v4 has no root folder PUT, a newer spec may add one.
+    const ahead = new Set(['PUT /api/v3/rootfolder/*']);
+    for (const pattern of settings.rules.flatMap((r) => listOf(r.match)).filter((p) => !ahead.has(p)))
       expect(
         [...keys].some((k) => globRe(pattern).test(k)),
         pattern,
@@ -70,6 +72,7 @@ describe('Sonarr catalog (pinned spec)', () => {
       'GET /api/v3/filesystem',
       'GET /api/v3/filesystem/mediafiles',
       'GET /api/v3/manualimport',
+      'POST /api/v3/manualimport',
       'POST /api/v3/system/backup/restore/upload',
     ])
       expect(keys.has(key), key).toBe(false);
@@ -79,7 +82,7 @@ describe('Sonarr catalog (pinned spec)', () => {
         .map((verb) => `${verb.toUpperCase()} ${path}`),
     );
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
-    expect(specKeys.length - (keys.size - twins)).toBe(19);
+    expect(specKeys.length - (keys.size - twins)).toBe(20);
   });
 
   it('reads with GET and writes with every other verb; no GET is left for review', () => {
@@ -109,6 +112,16 @@ describe('Sonarr catalog (pinned spec)', () => {
     const spec = specOf();
     const newer = { ...spec, paths: { ...spec.paths, '/api/v3/movie/{id}': { delete: { tags: ['Movie'] } } } };
     expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /api/v3/movie/{id}')).toMatchObject({
+      locked: true,
+      typedConfirmation: true,
+    });
+  });
+
+  it('locks a root folder PUT a newer spec adds, confirmed on the new path', () => {
+    const spec = specOf();
+    const item = { ...spec.paths['/api/v3/rootfolder/{id}'], put: { tags: ['RootFolder'] } };
+    const newer = { ...spec, paths: { ...spec.paths, '/api/v3/rootfolder/{id}': item } };
+    expect(buildCatalog(newer).operations.find((o) => o.key === 'PUT /api/v3/rootfolder/{id}')).toMatchObject({
       locked: true,
       typedConfirmation: true,
     });

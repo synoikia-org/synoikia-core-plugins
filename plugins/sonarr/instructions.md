@@ -11,4 +11,4 @@ Workflows:
 - Downloads: `GET /api/v3/queue` (`includeSeries`), then `GET /api/v3/history`.
 - Upcoming: `GET /api/v3/calendar` (`start`, `end`).
 
-Locked: deletes, bulk series edits and season pass, deleting or moving files, file-changing commands, host settings, restart, backups, and download client, indexer, import list and notification changes. No filesystem browsing, manual-import scans or log downloads.
+Locked: deletes, bulk series edits and season pass, deleting or moving files, file-changing commands, host and media management settings, new root folders, restart, backups, and download client, indexer, import list and notification changes. No filesystem browsing, manual-import scans or log downloads.

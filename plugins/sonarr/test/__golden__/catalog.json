@@ -1854,16 +1854,6 @@
   {
     "classification": "write",
     "classificationReason": "verb:POST",
-    "group": "manualimport",
-    "key": "POST /api/v3/manualimport",
-    "kind": "rest",
-    "locked": false,
-    "needsReview": false,
-    "typedConfirmation": false
-  },
-  {
-    "classification": "write",
-    "classificationReason": "verb:POST",
     "group": "metadata",
     "key": "POST /api/v3/metadata",
     "kind": "rest",
@@ -2058,13 +2048,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "rootfolder",
     "key": "POST /api/v3/rootfolder",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -2205,13 +2195,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "mediamanagementconfig",
     "key": "PUT /api/v3/config/mediamanagement/{id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
