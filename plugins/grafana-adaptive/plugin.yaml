@@ -213,7 +213,7 @@ operations:
     summary: Log segments and their ids.
     http: { method: GET, path: /adaptive-logs/segments }
   - key: logs.dropRules.list
-    group: logs.dropRules
+    group: logs.drop-rules
     classification: read
     summary: Drop rules (stream selector, levels, line text, drop rate).
     http: { method: GET, path: /adaptive-logs/drop-rules }
@@ -227,7 +227,7 @@ operations:
             segment_id: { type: string }
             expiration_filter: { type: string, enum: [all, active, expired] }
   - key: logs.dropRules.get
-    group: logs.dropRules
+    group: logs.drop-rules
     classification: read
     summary: One drop rule.
     http: { method: GET, path: '/adaptive-logs/drop-rules/{id}' }
@@ -248,7 +248,7 @@ operations:
     paramsSchema: *id-only
 
   - key: logs.dropRules.create
-    group: logs.dropRules
+    group: logs.drop-rules
     classification: write
     summary: Drop a share of matching log lines before they are stored.
     http: { method: POST, path: /adaptive-logs/drop-rules }
@@ -274,7 +274,7 @@ operations:
                 levels: { type: array, items: { type: string } }
                 log_line_contains: { type: array, items: { type: string } }
   - key: logs.dropRules.update
-    group: logs.dropRules
+    group: logs.drop-rules
     classification: write
     summary: Change a drop rule.
     http: { method: PUT, path: '/adaptive-logs/drop-rules/{id}' }
@@ -283,7 +283,7 @@ operations:
       required: [path, body]
       properties: { path: *id-path, body: *drop-rule-body }
   - key: logs.dropRules.delete
-    group: logs.dropRules
+    group: logs.drop-rules
     classification: write
     summary: Remove a drop rule.
     http: { method: DELETE, path: '/adaptive-logs/drop-rules/{id}' }
