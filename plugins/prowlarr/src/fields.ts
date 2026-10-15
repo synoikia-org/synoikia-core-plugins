@@ -47,15 +47,22 @@ function maskUrl(value: string): string {
   return rest ? `${url.protocol}//${url.host}/${REDACTED}` : value;
 }
 
-const RELEASE_LINKS = ['guid', 'infoUrl', 'commentUrl'];
-
-/** Search results: a `guid`, `infoUrl` or `commentUrl` that is a URL is cut to its origin, since Cardigann and other
- * indexers use the download link, passkey included, as the guid. Other guids stay, so a release can still be grabbed. */
-export function maskReleaseLinks(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(maskReleaseLinks);
+/** `value` with every string under one of `keys` (any case, any depth) that is a URL cut to its origin: Cardigann and
+ * other indexers use the download link, passkey included, as the guid, and info and comment links can carry it too.
+ * Other guids stay, so a release can still be grabbed. */
+export function cutLinksDeep(value: unknown, keys: readonly string[], depth = 0): unknown {
+  if (depth > MAX_DEPTH) return REDACTED;
+  if (Array.isArray(value)) return value.map((v) => cutLinksDeep(v, keys, depth + 1));
   if (!isPlainObject(value)) return value;
-  const out: Record<string, unknown> = { ...value };
-  for (const key of RELEASE_LINKS) if (typeof out[key] === 'string') out[key] = maskUrl(out[key]);
+  const lower = new Set(keys.map((k) => k.toLowerCase()));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value))
+    Object.defineProperty(out, k, {
+      value: lower.has(k.toLowerCase()) && typeof v === 'string' ? maskUrl(v) : cutLinksDeep(v, keys, depth + 1),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   return out;
 }
 
@@ -102,9 +109,11 @@ const KEPT_TYPES = new Set(['select', 'checkbox']);
 /** Cardigann settings are free-form per definition and come back unmasked, so every string is hidden except the
  * site URL (origin) and select or checkbox values. */
 function maskStrict(field: Record<string, unknown>, value: unknown): unknown {
+  // The site URL is a select in Cardigann, so it is cut to its origin before select values are kept.
+  if (field.name === 'baseUrl' && typeof value === 'string') return maskUrl(value);
   const type = typeof field.type === 'string' ? field.type.toLowerCase() : '';
   if (KEPT_TYPES.has(type)) return value;
-  if (typeof value === 'string') return field.name === 'baseUrl' ? maskUrl(value) : REDACTED;
+  if (typeof value === 'string') return REDACTED;
   if (Array.isArray(value)) return value.map((v) => (typeof v === 'string' && v !== '' ? REDACTED : v));
   return isPlainObject(value) ? maskEntries(value) : value;
 }

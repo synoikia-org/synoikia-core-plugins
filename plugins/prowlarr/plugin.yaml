@@ -222,6 +222,9 @@ plugin:
     - implementation
     - ids
     - guid
+    - indexerId
+    - downloadClientId
+    - title
     - downloadUrl
     - magnetUrl
     - apiKey

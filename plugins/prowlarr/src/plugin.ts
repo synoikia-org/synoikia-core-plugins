@@ -15,7 +15,7 @@ import {
 import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import { authHeaders } from './auth.js';
 import { buildCatalog, custom, SERVICE, settings, splitWhen } from './catalog.js';
-import { maskProviderFields, maskReleaseLinks, redactKeysDeep, refuseMaskedValues } from './fields.js';
+import { cutLinksDeep, maskProviderFields, redactKeysDeep, refuseMaskedValues } from './fields.js';
 import { normalizeRequest } from './request.js';
 import { fetchServarrSpec } from './spec.js';
 import { resolveTargets, withTargets } from './targets.js';
@@ -25,6 +25,8 @@ import { resolveTargets, withTargets } from './targets.js';
 
 // Search proxy links carry Prowlarr's API key, history URLs the indexer's key or passkey; matched in any case.
 const LINK_KEYS = ['downloadUrl', 'magnetUrl', 'url'];
+// Link-shaped guids, info and comment links (history `InfoUrl` too) are cut to their origin.
+const ORIGIN_KEYS = ['guid', 'infoUrl', 'commentUrl'];
 
 export function createProwlarrPlugin(): PluginHandlers {
   return definePlugin({
@@ -88,8 +90,8 @@ export function createProwlarrPlugin(): PluginHandlers {
         async invoke(params) {
           // Provider fields wherever they appear; search and history links.
           const result = maskProviderFields(await binding.invoke(params));
-          if (/ \/api\/v1\/search/.test(params.key)) return maskReleaseLinks(redactKeysDeep(result, LINK_KEYS));
-          return / \/api\/v1\/history/.test(params.key) ? redactKeysDeep(result, LINK_KEYS) : result;
+          if (!/ \/api\/v1\/(search|history)/.test(params.key)) return result;
+          return cutLinksDeep(redactKeysDeep(result, LINK_KEYS), ORIGIN_KEYS);
         },
       };
     },

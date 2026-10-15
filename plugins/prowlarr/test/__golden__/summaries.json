@@ -340,10 +340,10 @@
       {
         "id": "nzbgeek-guid-1",
         "kind": "release",
-        "name": "Dune.2021.1080p → download client qBit (from NZBgeek)"
+        "name": "release nzbgeek-guid-1 (\"Dune.2021.1080p\") → download client qBit (from NZBgeek)"
       }
     ],
-    "text": "Prowlarr POST /api/v1/search on Dune.2021.1080p → download client qBit (from NZBgeek) {\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\",\"downloadClientId\":6}"
+    "text": "Prowlarr POST /api/v1/search on release nzbgeek-guid-1 (\"Dune.2021.1080p\") → download client qBit (from NZBgeek) {\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\",\"downloadClientId\":6}"
   },
   "POST /api/v1/search/bulk": {
     "resolved": "POST /api/v1/search/bulk",
@@ -351,15 +351,15 @@
       {
         "id": "nzbgeek-guid-1",
         "kind": "release",
-        "name": "Dune.2021.1080p → the default download client (from NZBgeek)"
+        "name": "release nzbgeek-guid-1 (\"Dune.2021.1080p\") → the default download client (from NZBgeek)"
       },
       {
         "id": "privatehd-guid-7",
         "kind": "release",
-        "name": "Dune.2021.2160p → download client qBit (from PrivateHD)"
+        "name": "release privatehd-guid-7 (\"Dune.2021.2160p\") → download client qBit (from PrivateHD)"
       }
     ],
-    "text": "Prowlarr POST /api/v1/search/bulk on Dune.2021.1080p → the default download client (from NZBgeek); Dune.2021.2160p → download client qBit (from PrivateHD) [{\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\"},{\"guid\":\"privatehd-guid-7\",\"indexerId\":2,\"title\":\"Dune.2021.2160p\"}]"
+    "text": "Prowlarr POST /api/v1/search/bulk on release nzbgeek-guid-1 (\"Dune.2021.1080p\") → the default download client (from NZBgeek); release privatehd-guid-7 (\"Dune.2021.2160p\") → download client qBit (from PrivateHD) [{\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\"},{\"guid\":\"privatehd-guid-7\",\"indexerId\":2,\"title\":\"Dune.2021.2160p\"}]"
   },
   "POST /api/v1/system/backup/restore/{id}": {
     "confirmLiteral": "prowlarr_backup_v2.6.5.5623_2026.10.15_10.00.00.zip",

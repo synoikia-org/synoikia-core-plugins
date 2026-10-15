@@ -30,6 +30,7 @@ export const SECRETS = {
   socksPassword: 'socks-password-121212',
   trackerPid: 'tracker-pid-151515',
   grabPasskey: 'grab-passkey-161616',
+  infoPasskey: 'info-passkey-171717',
 };
 
 type Row = Record<string, unknown> & { id: number };
@@ -63,7 +64,7 @@ export function seed(): Record<string, Row[]> {
         enable: true,
         fields: [
           field('definitionFile', 'privatehd'),
-          field('baseUrl', 'https://privatehd.example/'),
+          field('baseUrl', `https://privatehd.example/?passkey=${SECRETS.trackerPasskey}`, 'normal', 'select'),
           field('username', 'me'),
           field('password', SECRETS.cardigannPassword, 'normal', 'password'),
           field('cookie', SECRETS.trackerCookie),
@@ -302,7 +303,11 @@ export async function startFakeProwlarr(): Promise<FakeProwlarr> {
               eventType: 'releaseGrabbed',
               successful: true,
               // An upstream that stopped camel-casing dictionary keys.
-              data: { GrabTitle: 'Dune.2021.720p', Url: `https://privatehd.example/dl/${SECRETS.grabPasskey}` },
+              data: {
+                GrabTitle: 'Dune.2021.720p',
+                Url: `https://privatehd.example/dl/${SECRETS.grabPasskey}`,
+                InfoUrl: `https://privatehd.example/details/8?passkey=${SECRETS.infoPasskey}`,
+              },
             },
           ],
         },

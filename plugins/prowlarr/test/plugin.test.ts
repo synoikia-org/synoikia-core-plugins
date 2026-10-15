@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { checkConformance, ErrorCodes } from '@synoikia/plugin-sdk';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { settings } from '../src/catalog.js';
-import { destinations, maskProviderFields, maskReleaseLinks, redactKeysDeep } from '../src/fields.js';
+import { cutLinksDeep, destinations, maskProviderFields, redactKeysDeep } from '../src/fields.js';
 import { createProwlarrPlugin } from '../src/plugin.js';
 import { CREDENTIALS, SECRETS, startFakeProwlarr, TAG, VERSION } from './fake-prowlarr.js';
 import type { FakeProwlarr } from './fake-prowlarr.js';
@@ -219,20 +219,37 @@ describe('Prowlarr plugin', () => {
     const history = await invoke({ path: '/api/v1/history' });
     expect(history).not.toContain(SECRETS.grabPasskey);
     expect(history).toContain('"Url":"[REDACTED]"');
+    expect(history).not.toContain(SECRETS.infoPasskey);
+    expect(history).toContain('"InfoUrl":"https://privatehd.example/[REDACTED]"');
   });
 
   it('names the release, its indexer and the download client a grab sends it to', async () => {
     const targets = (key: string, params: object) => plugin.resolveTargets!({ key, params });
     await expect(
       targets('POST /api/v1/search', { body: { guid: 'g', indexerId: 1, title: 'Dune', downloadClientId: 6 } }),
-    ).resolves.toEqual([{ kind: 'release', id: 'g', name: 'Dune → download client qBit (from NZBgeek)' }]);
+    ).resolves.toEqual([
+      { kind: 'release', id: 'g', name: 'release g ("Dune") → download client qBit (from NZBgeek)' },
+    ]);
     await expect(targets('POST /api/v1/search', { body: { guid: 'g', indexerId: 1 } })).resolves.toEqual([
-      { kind: 'release', id: 'g', name: 'g → the default download client (from NZBgeek)' },
+      { kind: 'release', id: 'g', name: 'release g → the default download client (from NZBgeek)' },
+    ]);
+    // Prowlarr binds `DownloadClientId` as `downloadClientId`; client 7 doesn't resolve, so its id shows.
+    const { key, params } = await resolve({
+      method: 'POST',
+      path: '/api/v1/search',
+      body: { Guid: 'g', IndexerId: 1, Title: 'Dune', DownloadClientId: 7 },
+    });
+    await expect(plugin.resolveTargets!({ key, params })).resolves.toEqual([
+      { kind: 'release', id: 'g', name: 'release g ("Dune") → download client 7 (from NZBgeek)' },
     ]);
     const bulk = await targets('POST /api/v1/search/bulk', {
       body: [{ guid: 'a', indexerId: 2, title: 'A', downloadClientId: 99 }, ...Array(10).fill({ guid: 'b' })],
     });
-    expect(bulk[0]).toEqual({ kind: 'release', id: 'a', name: 'A → download client qBit (from PrivateHD)' });
+    expect(bulk[0]).toEqual({
+      kind: 'release',
+      id: 'a',
+      name: 'release a ("A") → download client qBit (from PrivateHD)',
+    });
     expect(bulk.at(-1)).toEqual({ kind: 'release', id: 'more', name: '1 more releases' });
   });
 
@@ -305,7 +322,7 @@ describe('provider fields', () => {
       maskProviderFields({
         implementation: 'Cardigann',
         fields: [
-          field('baseUrl', 'https://site.example/login?key=k'),
+          field('baseUrl', 'https://site.example/login?key=k', 'select'),
           field('pid', 'p-123'),
           field('username', 'me'),
           field('sort', 'seeders', 'select'),
@@ -318,7 +335,7 @@ describe('provider fields', () => {
     ).toEqual({
       implementation: 'Cardigann',
       fields: [
-        field('baseUrl', 'https://site.example/[REDACTED]'),
+        field('baseUrl', 'https://site.example/[REDACTED]', 'select'),
         field('pid', '[REDACTED]'),
         field('username', '[REDACTED]'),
         field('sort', 'seeders', 'select'),
@@ -336,14 +353,25 @@ describe('provider fields', () => {
     });
   });
 
-  it('cuts link-shaped release guids, info and comment links to their origin and keeps the others', () => {
+  it('cuts link-shaped release guids, info and comment links to their origin in any case, and keeps the others', () => {
     expect(
-      maskReleaseLinks([
-        { guid: 'https://t.example/download.php?id=1&passkey=pk', title: 'a' },
-        { guid: 'https://t.example', title: 'b' },
-        { guid: 'abc-123', title: 'c' },
-        { title: 'd', infoUrl: 'https://t.example/details/1', commentUrl: 'https://t.example/c?passkey=pk' },
-      ]),
+      cutLinksDeep(
+        { records: [{ data: { InfoUrl: 'https://t.example/d?passkey=pk', CommentURL: 'https://t.example/c/1' } }] },
+        ['guid', 'infoUrl', 'commentUrl'],
+      ),
+    ).toEqual({
+      records: [{ data: { InfoUrl: 'https://t.example/[REDACTED]', CommentURL: 'https://t.example/[REDACTED]' } }],
+    });
+    expect(
+      cutLinksDeep(
+        [
+          { guid: 'https://t.example/download.php?id=1&passkey=pk', title: 'a' },
+          { guid: 'https://t.example', title: 'b' },
+          { guid: 'abc-123', title: 'c' },
+          { title: 'd', infoUrl: 'https://t.example/details/1', commentUrl: 'https://t.example/c?passkey=pk' },
+        ],
+        ['guid', 'infoUrl', 'commentUrl'],
+      ),
     ).toEqual([
       { guid: 'https://t.example/[REDACTED]', title: 'a' },
       { guid: 'https://t.example', title: 'b' },

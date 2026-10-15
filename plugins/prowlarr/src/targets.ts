@@ -76,7 +76,8 @@ const lookupName = async (get: Get, resource: string, id: string): Promise<Recor
 };
 
 /** A grab: the release, its indexer, and the download client Prowlarr sends it to (the one in the body for a single
- * grab, else the indexer's, else Prowlarr's default). The release itself comes from Prowlarr's search cache. */
+ * grab, else the indexer's, else Prowlarr's default). Prowlarr takes the release from its search cache by `indexerId`
+ * and `guid` and ignores the body `title`, so the guid leads and the title is shown as the caller's claim. */
 async function grabs(get: Get, body: unknown, many: boolean): Promise<ResolvedTarget[]> {
   const items = (many ? (Array.isArray(body) ? body : []) : [body]).filter(isPlainObject);
   const shown = await Promise.all(
@@ -84,13 +85,15 @@ async function grabs(get: Get, body: unknown, many: boolean): Promise<ResolvedTa
       const indexerId = stringOr(r.indexerId);
       const indexer = indexerId ? await lookupName(get, 'indexer', indexerId) : undefined;
       const clientId = (many ? undefined : stringOr(r.downloadClientId)) ?? stringOr(indexer?.downloadClientId);
-      const client = clientId && clientId !== '0' ? await lookupName(get, 'downloadclient', clientId) : undefined;
-      const to = client ? `download client ${safe(client.name) ?? safe(clientId)}` : 'the default download client';
+      const set = clientId !== undefined && clientId !== '0';
+      const client = set ? await lookupName(get, 'downloadclient', clientId) : undefined;
+      const to = set ? `download client ${safe(client?.name) ?? safe(clientId)}` : 'the default download client';
       const from = safe(indexer?.name) ?? `indexer ${safe(indexerId) ?? '?'}`;
+      const title = safe(r.title);
       return {
         kind: 'release',
         id: safe(r.guid) ?? '?',
-        name: `${safe(r.title) ?? safe(r.guid) ?? 'release'} → ${to} (from ${from})`,
+        name: `release ${safe(r.guid) ?? '?'}${title ? ` ("${title}")` : ''} → ${to} (from ${from})`,
       };
     }),
   );

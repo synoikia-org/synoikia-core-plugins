@@ -136,7 +136,7 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
       [
         'GET /api/v1/history',
         { path: '/api/v1/history' },
-        [SECRETS.indexerApiKey, SECRETS.trackerPasskey, SECRETS.grabPasskey],
+        [SECRETS.indexerApiKey, SECRETS.trackerPasskey, SECRETS.grabPasskey, SECRETS.infoPasskey],
       ],
     ])('%s', async (key, request, secrets) => {
       allow(key, 'read');

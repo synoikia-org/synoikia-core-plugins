@@ -129,6 +129,7 @@
         {
           "data": {
             "GrabTitle": "Dune.2021.720p",
+            "InfoUrl": "https://privatehd.example/[REDACTED]",
             "Url": "[REDACTED]"
           },
           "eventType": "releaseGrabbed",
@@ -185,8 +186,8 @@
           {
             "name": "baseUrl",
             "privacy": "normal",
-            "type": "textbox",
-            "value": "https://privatehd.example/"
+            "type": "select",
+            "value": "https://privatehd.example/[REDACTED]"
           },
           {
             "name": "username",
