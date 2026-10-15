@@ -110,10 +110,13 @@ export async function resolveTargets(
   const pathParams = isPlainObject(p.path) ? p.path : {};
   const body = p.body;
   if (key.startsWith('PUT /api/v3/config/mediamanagement/{id}')) {
-    if (!isPlainObject(body) || !('useScriptImport' in body || 'scriptImportPath' in body)) return [];
-    const stored = 'useScriptImport' in body && 'scriptImportPath' in body ? {} : await fetchConfig(get);
-    const on = ('useScriptImport' in body ? body.useScriptImport : stored.useScriptImport) === true;
-    const path = safe('scriptImportPath' in body ? body.scriptImportPath : stored.scriptImportPath) || '(none)';
+    // Servarr keeps the stored value for a field the body leaves out, sends as null or, for the path, empty.
+    const set = (k: string) => isPlainObject(body) && body[k] !== undefined && body[k] !== null && body[k] !== '';
+    if (!set('useScriptImport') && !set('scriptImportPath')) return [];
+    const b = body as Record<string, unknown>;
+    const stored = set('useScriptImport') && set('scriptImportPath') ? {} : await fetchConfig(get);
+    const on = (set('useScriptImport') ? b.useScriptImport : stored.useScriptImport) === true;
+    const path = safe(set('scriptImportPath') ? b.scriptImportPath : stored.scriptImportPath) || '(none)';
     return [{ kind: 'script', id: 'scriptImportPath', name: `import script ${on ? 'on' : 'off'}: ${path}` }];
   }
   if (key.startsWith('POST /api/v3/rootfolder') && isPlainObject(body)) {

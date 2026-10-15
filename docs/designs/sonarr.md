@@ -48,6 +48,6 @@ All other locks (host config, shutdown, restart, backups, providers, notificatio
 
 - Series calls: `Title (year) at <folder>`, plus `→ <new folder>` for a PUT. The editor and the season pass list up to 10 series, then `<n> more series`.
 - Episode file deletes: `Title (year): <file path>`, up to 10 for the bulk delete.
-- Media management: `import script on|off: <path>` when the body sets the import script.
+- Media management: `import script on|off: <path>` when the body sets the import script. A field the body leaves out or sends as null (or an empty path) comes from the stored settings.
 - New root folder: `root folder <path>`.
 - Provider calls and release push: as in Radarr.

@@ -72,7 +72,7 @@ Quick commands, the ordinary `POST /api/v3/command`: searches (`MoviesSearch`, `
 - movie calls: `Title (year) at <folder>`, plus `→ <new folder>` for a PUT; the movie editor lists up to 10 movies and the new root folder;
 - provider calls: `<kind> <name> (<implementation>) → <destinations>`: `host:port`, URL origins only (no path, query or credentials), e-mail server and recipients, read by exact field name, first match, as Servarr does; from the body, else the stored provider;
 - release push: the title and the origin of the download URL;
-- media management: `import script on|off: <path>` when the body sets `useScriptImport` or `scriptImportPath`; a field the body leaves out comes from the stored settings;
+- media management: `import script on|off: <path>` when the body sets `useScriptImport` or `scriptImportPath`; a field the body leaves out or sends as null (or an empty path) comes from the stored settings;
 - root folders: `root folder <path>` on create; `root folder <stored path> → <new path>` on a PUT.
 
 Model-written strings in targets are escaped (control, bidi and zero-width characters).
