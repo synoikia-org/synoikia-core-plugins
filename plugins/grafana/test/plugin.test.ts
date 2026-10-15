@@ -149,6 +149,45 @@ describe('Grafana plugin', () => {
     );
   });
 
+  it('refuses keys Go would bind to the same field: case variants at any depth, and non-ASCII keys', async () => {
+    const resolve = (method: string, path: string, body: unknown, query?: Record<string, unknown>) =>
+      plugin.resolveOperation({ fn: 'request', args: [{ method, path, query, body }] });
+    for (const [method, path, body] of [
+      ['POST', '/ds/query', { queries: [{ datasource: { uid: 'prom' }, Datasource: { uid: 'mysql-prod' } }] }],
+      ['POST', '/ds/query', { queries: [{ datasource: { uid: 'prom', UID: 'mysql-prod' } }] }],
+      ['POST', '/datasources', { name: 'loki', url: 'http://loki:3100', URL: 'http://evil.example.net' }],
+      ['PUT', '/datasources/uid/prom', { name: 'p', url: 'http://prometheus:9090', Url: 'http://evil.example.net' }],
+      ['POST', '/v1/provisioning/contact-points', { settings: { url: 'https://a.example' }, ſettings: {} }],
+      ['PUT', '/reports/7', { recipients: 'a@example.net', recipientſ: 'x@evil.example.net' }],
+      ['POST', '/licensing/token', { token: 'a', ['toKen']: 'b' }],
+    ] as const)
+      await expect(resolve(method, path, body), JSON.stringify(body)).rejects.toMatchObject({
+        code: ErrorCodes.InvalidParams,
+      });
+    await expect(resolve('GET', '/search', undefined, { query: 'a', Query: 'b' })).rejects.toMatchObject({
+      code: ErrorCodes.InvalidParams,
+    });
+  });
+
+  it('renames a lone case variant to the spelling targets and summaries read', async () => {
+    const query = await plugin.resolveOperation({
+      fn: 'request',
+      args: [{ method: 'POST', path: '/ds/query', body: { Queries: [{ DataSource: { UID: 'prom' }, expr: 'up' }] } }],
+    });
+    expect(query.params).toEqual({ body: { queries: [{ datasource: { uid: 'prom' }, expr: 'up' }] } });
+    await expect(plugin.resolveTargets!(query)).resolves.toEqual([
+      { kind: 'datasource', id: 'prom', name: 'Prometheus (prometheus, http://prometheus:9090)' },
+    ]);
+    const ds = await plugin.resolveOperation({
+      fn: 'request',
+      args: [{ method: 'POST', path: '/datasources', body: { name: 'loki', URL: 'http://loki.example.net:3100' } }],
+    });
+    expect(ds.params).toEqual({ body: { name: 'loki', url: 'http://loki.example.net:3100' } });
+    await expect(plugin.summarize({ ...ds, targets: [] })).resolves.toMatchObject({
+      text: expect.stringContaining('[to url="http://loki.example.net:3100"]'),
+    });
+  });
+
   it('reports a rejected token without throwing', async () => {
     const bad = createGrafanaPlugin();
     await bad.init({ ...connection(), secrets: { token: 'wrong' }, sdkVersion: '1' });

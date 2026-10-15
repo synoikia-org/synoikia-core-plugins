@@ -64,6 +64,8 @@ A `DELETE *` rule locks every delete, including any a newer spec adds (the locke
 
 **Destinations.** Approvals put the body's destination fields first, ahead of the body cut at 1000 characters, so padding cannot hide them: `url`, `settings.addresses`, `recipients`, `emails`, `external`, `receiver` (`plugin.destinationFields`). Targets (`capabilities.targets`) add the rest: a non-GET call on `/datasources/{id}` or `/datasources/uid/{uid}` names the stored data source as `<name> (<type>, <url>)`; `POST /ds/query` names each data source it queries; a contact point create or update names only the host of `settings.url` (`hooks.slack.com (contact point URL)`), since Slack, Discord, Teams and webhook URLs carry their token in the path.
 
+**Key spelling.** Grafana is Go: `encoding/json` binds body keys case-insensitively (the last match wins) and folds `ſ` to `s` and the Kelvin sign to `k`. A `POST /ds/query` with `{"datasource": {"uid": "prom"}, "Datasource": {"uid": "mysql-prod"}}` would show `prom` and query `mysql-prod`. So `resolveOperation` refuses with `INVALID_PARAMS` any query or body that has, at any depth, two keys equal under case-folding, or a key that is not printable ASCII. A lone key in another case (`URL`) is renamed to the spelling the plugin reads: the destination fields' names and `plugin.canonicalKeys`. Summaries, literals, targets and masking then read what Grafana binds.
+
 ## Secrets
 
 - Manifest `sensitiveKeys`: `token`, `key`, `apiKey`, `api_key`, `password`, `basicAuthPassword`, `secret`, `secureJsonData`. Core masks these by name in params, results and the audit log (`key` also covers `deleteKey`; `token` covers `authToken` and `accessToken`).

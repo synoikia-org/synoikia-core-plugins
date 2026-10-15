@@ -301,6 +301,21 @@ plugin:
     - { path: /frontend/settings, field: /buildInfo/version }
   # Body fields that say where data goes, shown ahead of the truncated body in approvals.
   destinationFields: [/url, /settings/addresses, /recipients, /emails, /external, /receiver]
+  # Keys Grafana would also bind in another case, renamed to this spelling (with the destination fields' names)
+  # before summaries, targets and masking read them.
+  canonicalKeys:
+    - queries
+    - datasource
+    - uid
+    - secureJsonData
+    - basicAuthPassword
+    - password
+    - oldPassword
+    - newPassword
+    - clientSecret
+    - privateKey
+    - authToken
+    - token
   # Oldest Grafana major the plugin supports.
   minMajor: 12
   # Refuse a spec with fewer operations: a truncated one must not replace the catalog.

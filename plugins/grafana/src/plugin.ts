@@ -17,6 +17,7 @@ import type { CompiledRules, InitParams, PluginHandlers } from '@synoikia/plugin
 import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
+import { normalizeRequest } from './request.js';
 import { withDestinations } from './summary.js';
 import { resolveTargets, withTargets } from './targets.js';
 import { grafanaVersion } from './version.js';
@@ -43,6 +44,8 @@ export const settings = parsePluginSettings(raw, {
       !p.destinationFields.every((f) => typeof f === 'string' && f.startsWith('/'))
     )
       throw new Error('plugin.yaml plugin.destinationFields must be a list of JSON pointers');
+    if (!Array.isArray(p.canonicalKeys) || !p.canonicalKeys.every((k) => typeof k === 'string' && /^\w+$/.test(k)))
+      throw new Error('plugin.yaml plugin.canonicalKeys must be a list of keys');
     if (!Array.isArray(p.versionSources) || !p.versionSources.length)
       throw new Error('plugin.yaml plugin.versionSources must be a non-empty list');
     return {
@@ -55,6 +58,10 @@ export const settings = parsePluginSettings(raw, {
       minMajor: positive('minMajor'),
       minOperations: positive('minOperations'),
       destinationFields: p.destinationFields as string[],
+      canonicalKeys: [
+        ...(p.canonicalKeys as string[]),
+        ...(p.destinationFields as string[]).flatMap((f) => f.slice(1).split('/')),
+      ],
     };
   },
 });
@@ -116,6 +123,7 @@ export function createGrafanaPlugin(): PluginHandlers {
         client: api,
         stripPrefix: settings.plugin.apiPath,
         maxSummaryBody: 1000,
+        adjust: ({ params }) => normalizeRequest(params, settings.plugin.canonicalKeys),
       });
       return {
         async syncCatalog() {

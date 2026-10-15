@@ -190,6 +190,27 @@ describe('Grafana end to end (fake Grafana)', () => {
     });
   });
 
+  it.each([
+    ['Datasource', '/ds/query', { queries: [{ datasource: { uid: 'prom' }, Datasource: { uid: 'mysql-prod' } }] }],
+    ['URL', '/datasources', { name: 'loki', url: 'http://loki:3100', URL: 'http://evil.example.net' }],
+    ['ſettings', '/v1/provisioning/contact-points', { settings: { url: 'https://a.example' }, ſettings: {} }],
+  ])('refuses a body with a %s key before any approval or upstream call', async (_name, path, body) => {
+    const key = `POST ${path}`;
+    h.setOperationLevel(key, 'ask');
+    const before = fake.requests.filter((r) => r.method === 'POST').length;
+    let asked = false;
+    const r = await h.execute(call({ method: 'POST', path, body }), {
+      onApproval: (a) => {
+        asked = true;
+        a.approve(ORG);
+      },
+    });
+    h.setOperationLevel(key, null);
+    expect(r).toMatchObject({ ok: false, error: { code: 'INVALID_PARAMS' } });
+    expect(asked).toBe(false);
+    expect(fake.requests.filter((q) => q.method === 'POST')).toHaveLength(before);
+  });
+
   it('reports a Grafana denial as UPSTREAM_DENIED', async () => {
     allow('GET /folders', 'read');
     fake.denied.add('/api/folders');
