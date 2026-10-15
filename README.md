@@ -15,17 +15,18 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 
 ## Plugins
 
-| Plugin          | Upstream                                                                        | Catalog from                                | Design                                                           |
-| --------------- | ------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
-| `truenas`       | [TrueNAS](https://www.truenas.com/)                                             | the instance's JSON-RPC introspection       | [`docs/designs/truenas.md`](docs/designs/truenas.md)             |
-| `seerr`         | [Seerr](https://github.com/seerr-team/seerr)                                    | `seerr-api.yml` for the instance's release  | [`docs/designs/seerr.md`](docs/designs/seerr.md)                 |
-| `homeassistant` | [Home Assistant](https://www.home-assistant.io/)                                | the WebSocket API's services and registries | [`docs/designs/homeassistant.md`](docs/designs/homeassistant.md) |
-| `mealie`        | [Mealie](https://github.com/mealie-recipes/mealie)                              | the OpenAPI spec the instance serves        | [`docs/designs/mealie.md`](docs/designs/mealie.md)               |
-| `profilarr`     | [Profilarr](https://github.com/Dictionarry-Hub/profilarr) v2                    | the OpenAPI spec the instance serves        | [`docs/designs/profilarr.md`](docs/designs/profilarr.md)         |
-| `npm`           | [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager) | the OpenAPI spec the instance serves        | [`docs/designs/npm.md`](docs/designs/npm.md)                     |
-| `grafana`       | [Grafana](https://github.com/grafana/grafana) 12+, self-hosted or a Cloud stack | the OpenAPI spec the instance serves        | [`docs/designs/grafana.md`](docs/designs/grafana.md)             |
-| `backstage`     | [Backstage](https://backstage.io/)                                              | the OpenAPI specs its backend plugins serve | [`docs/designs/backstage.md`](docs/designs/backstage.md)         |
-| `radarr`        | [Radarr](https://github.com/Radarr/Radarr)                                      | `openapi.json` for the instance's release   | [`docs/designs/radarr.md`](docs/designs/radarr.md)               |
+| Plugin          | Upstream                                                                                                               | Catalog from                                           | Design                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------- |
+| `truenas`       | [TrueNAS](https://www.truenas.com/)                                                                                    | the instance's JSON-RPC introspection                  | [`docs/designs/truenas.md`](docs/designs/truenas.md)             |
+| `seerr`         | [Seerr](https://github.com/seerr-team/seerr)                                                                           | `seerr-api.yml` for the instance's release             | [`docs/designs/seerr.md`](docs/designs/seerr.md)                 |
+| `homeassistant` | [Home Assistant](https://www.home-assistant.io/)                                                                       | the WebSocket API's services and registries            | [`docs/designs/homeassistant.md`](docs/designs/homeassistant.md) |
+| `mealie`        | [Mealie](https://github.com/mealie-recipes/mealie)                                                                     | the OpenAPI spec the instance serves                   | [`docs/designs/mealie.md`](docs/designs/mealie.md)               |
+| `profilarr`     | [Profilarr](https://github.com/Dictionarry-Hub/profilarr) v2                                                           | the OpenAPI spec the instance serves                   | [`docs/designs/profilarr.md`](docs/designs/profilarr.md)         |
+| `npm`           | [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager)                                        | the OpenAPI spec the instance serves                   | [`docs/designs/npm.md`](docs/designs/npm.md)                     |
+| `grafana`       | [Grafana](https://github.com/grafana/grafana) 12+, self-hosted or a Cloud stack                                        | the OpenAPI spec the instance serves                   | [`docs/designs/grafana.md`](docs/designs/grafana.md)             |
+| `backstage`     | [Backstage](https://backstage.io/)                                                                                     | the OpenAPI specs its backend plugins serve            | [`docs/designs/backstage.md`](docs/designs/backstage.md)         |
+| `radarr`        | [Radarr](https://github.com/Radarr/Radarr)                                                                             | `openapi.json` for the instance's release              | [`docs/designs/radarr.md`](docs/designs/radarr.md)               |
+| `grafanacloud`  | [Grafana Cloud](https://grafana.com/docs/grafana-cloud/developer-resources/api-reference/cloud-api/) (grafana.com API) | the spec grafana.com publishes, with a GitHub fallback | [`docs/designs/grafanacloud.md`](docs/designs/grafanacloud.md)   |
 
 ## Layout
 
