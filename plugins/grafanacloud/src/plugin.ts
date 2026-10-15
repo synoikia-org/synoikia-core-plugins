@@ -15,6 +15,7 @@ import type { CompiledRules, InitParams, Lazy, OpenApiCatalog, PluginHandlers, R
 import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
+import { normalizeRequest } from './request.js';
 import { loadSpec } from './spec.js';
 import type { LoadedSpec } from './spec.js';
 import { withFields, withTargets } from './summary.js';
@@ -39,6 +40,8 @@ export const settings = parsePluginSettings(raw, {
       return v;
     };
     if (!Array.isArray(spec.urls) || !spec.urls.length) throw new Error('plugin.yaml plugin.spec.urls must be a list');
+    if (!Array.isArray(p.canonicalKeys) || !p.canonicalKeys.every((k) => typeof k === 'string' && /^\w+$/.test(k)))
+      throw new Error('plugin.yaml plugin.canonicalKeys must be a list of keys');
     if (!Array.isArray(p.summaryFields) || !p.summaryFields.every((f) => typeof f === 'string' && f.startsWith('/')))
       throw new Error('plugin.yaml plugin.summaryFields must be a list of JSON pointers');
     return {
@@ -49,6 +52,10 @@ export const settings = parsePluginSettings(raw, {
         timeoutMs: positive(spec.timeoutMs, 'spec.timeoutMs'),
       },
       summaryFields: p.summaryFields as string[],
+      canonicalKeys: [
+        ...(p.canonicalKeys as string[]),
+        ...(p.summaryFields as string[]).map((f) => f.slice(1).split('/')[0]!),
+      ],
       minOperations: positive(p.minOperations, 'minOperations'),
     };
   },
@@ -159,6 +166,7 @@ export function createGrafanaCloudPlugin(): PluginHandlers {
         client: api,
         stripPrefix: '/api',
         maxSummaryBody: 1000,
+        adjust: ({ params }) => normalizeRequest(params, settings.plugin.canonicalKeys),
       });
       return {
         async syncCatalog() {

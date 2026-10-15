@@ -122,6 +122,46 @@ describe('Grafana Cloud golden record', () => {
     await expect(stable(out)).toMatchFileSnapshot('__golden__/fields.json');
   });
 
+  // grafana.com (Go) binds keys case-insensitively and folds ſ and the Kelvin sign: such requests are refused.
+  it('requests grafana.com would bind to another field than the approval shows', async () => {
+    const calls = {
+      AccessPolicyId: {
+        method: 'POST',
+        path: '/v1/tokens',
+        query: { region: REGION },
+        body: { name: 'ci', accessPolicyId: 'ap-1', AccessPolicyId: 'admin-policy' },
+      },
+      Scopes: {
+        method: 'POST',
+        path: '/v1/accesspolicies',
+        query: { region: REGION },
+        body: { name: 'r', scopes: ['metrics:read'], Scopes: ['accesspolicies:write'], realms: [] },
+      },
+      ſcopes: {
+        method: 'POST',
+        path: '/v1/accesspolicies',
+        query: { region: REGION },
+        body: { name: 'r', scopes: ['metrics:read'], ſcopes: ['accesspolicies:write'], realms: [] },
+      },
+      'lone AccessPolicyID': {
+        method: 'POST',
+        path: '/v1/tokens',
+        query: { region: REGION },
+        body: { name: 'ci', AccessPolicyID: 'ap-1' },
+      },
+    };
+    const out: Record<string, unknown> = {};
+    for (const [name, request] of Object.entries(calls)) {
+      try {
+        out[name] = { approval: await approval(request) };
+      } catch (err) {
+        const e = err as { code?: unknown; message?: unknown };
+        out[name] = { refused: { code: e.code, message: e.message } };
+      }
+    }
+    await expect(stable(out)).toMatchFileSnapshot('__golden__/case-folding.json');
+  });
+
   it('results with secrets, as core masks them by descriptor', async () => {
     const calls = [
       { method: 'GET', path: '/instances' },

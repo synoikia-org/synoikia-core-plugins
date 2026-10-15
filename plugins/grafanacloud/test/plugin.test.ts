@@ -142,6 +142,39 @@ describe('Grafana Cloud plugin', () => {
       });
   });
 
+  it('refuses keys Go would bind to the same field: case variants at any depth, and non-ASCII keys', async () => {
+    const resolve = (path: string, body: unknown, query: Record<string, unknown> = { region: REGION }) =>
+      plugin.resolveOperation({ fn: 'request', args: [{ method: 'POST', path, query, body }] });
+    for (const [path, body] of [
+      ['/v1/tokens', { name: 'ci', accessPolicyId: 'ap-1', AccessPolicyId: 'admin-policy' }],
+      ['/v1/accesspolicies', { name: 'r', scopes: ['metrics:read'], Scopes: ['accesspolicies:write'], realms: [] }],
+      ['/v1/accesspolicies', { name: 'r', scopes: ['metrics:read'], ſcopes: ['accesspolicies:write'] }],
+      ['/v1/accesspolicies', { name: 'r', scopes: [], realms: [{ type: 'stack', Type: 'org', identifier: '1' }] }],
+      ['/v1/stacks', { slug: 'a', Slug: 'b', name: 'n', region: REGION, org: ORG }],
+      ['/instances/acme-prod/api/serviceaccounts', { name: 'ci', role: 'Viewer', ROLE: 'Admin' }],
+      ['/orgs/acme/settings', { mfaRequired: true, ['mfaKequired']: false }],
+    ] as const)
+      await expect(resolve(path, body), JSON.stringify(body)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+    await expect(
+      resolve('/v1/tokens', { name: 'ci', accessPolicyId: 'ap-1' }, { region: REGION, Region: 'x' }),
+    ).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+  });
+
+  it('renames a lone case variant to the spelling approvals read', async () => {
+    const { key, params } = await plugin.resolveOperation({
+      fn: 'request',
+      args: [
+        { method: 'POST', path: '/v1/tokens', query: { Region: REGION }, body: { NAME: 'ci', AccessPolicyID: 'ap-1' } },
+      ],
+    });
+    expect(params).toEqual({ query: { region: REGION }, body: { name: 'ci', accessPolicyId: 'ap-1' } });
+    const targets = await plugin.resolveTargets!({ key, params });
+    await expect(plugin.summarize({ key, params, targets })).resolves.toMatchObject({
+      confirmLiteral: 'stack-readers',
+      text: expect.stringContaining('[accessPolicyId="ap-1", name="ci"]'),
+    });
+  });
+
   it('looks up regional records with the call region, and allows only GETs', async () => {
     const lookup = cloudLookup(() => {
       throw new Error('no client');

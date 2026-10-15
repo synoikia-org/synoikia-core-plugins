@@ -36,8 +36,8 @@ rules:
       - 'POST /v1/tokens'
       - 'POST /v1/tokens/{id}'
     locked: true
-  # A delete a newer spec adds is locked until reviewed.
-  - match: 'DELETE *'
+  # A delete, PUT or PATCH a newer spec adds is locked until reviewed.
+  - match: ['DELETE *', 'PUT *', 'PATCH *']
     locked: true
 
   # The literal an approver types: the stored slug or name of what the call affects, looked up by its id, else
@@ -157,5 +157,8 @@ plugin:
     - /allowedInviteDomains
     - /maxTokenExpirationDays
     - /status
+  # Keys grafana.com would also bind in another case, renamed to this spelling (with the summary fields' names)
+  # before summaries, literals and targets read them.
+  canonicalKeys: [type, identifier, labelPolicies, selector, displayName, secondsToLive, noRestart]
   # Refuse a spec with fewer operations: a truncated one must not replace the catalog.
   minOperations: 45

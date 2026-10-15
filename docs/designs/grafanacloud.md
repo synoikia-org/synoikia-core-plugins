@@ -11,7 +11,7 @@ On every sync the plugin tries, in order and without credentials:
 1. `https://grafana.com/api/openapi.json`
 2. `https://raw.githubusercontent.com/grafana/grafana-com-public-clients/main/openapi.json`
 
-A source that fails to download, is not JSON, has fewer than 45 operations, or lacks any key `plugin.yaml` locks is skipped; when none is usable the sync fails and names each failure. Both URLs are `plugin.spec.urls` in `plugin.yaml`. The connection's optional `specUrl` (a mirror) replaces the list. `sourceRef` is the host the spec came from, `upstreamVersion` its `info.version`.
+A source that fails to download, is not JSON, has fewer than 45 operations, or lacks any key `plugin.yaml` locks is skipped; when none is usable the sync fails and names each failure. Both URLs are `plugin.spec.urls` in `plugin.yaml`. Known limitation: the SDK's `fetchSpec` follows redirects, so a source can redirect the download to another host. No credentials are sent with it, and the locked-key and size checks still apply to what it returns. The connection's optional `specUrl` (a mirror) replaces the list. `sourceRef` is the host the spec came from, `upstreamVersion` its `info.version`.
 
 Operation keys are the spec's paths, relative to its server `/api` (`GET /instances/{instanceId}`). The model may pass the path with or without `/api`. The API base is `plugin.apiUrl`; the connection's optional `apiUrl` replaces it. Both overrides must be `https` (plain `http` is accepted only for a loopback host, for a local mirror or test double).
 
@@ -31,7 +31,7 @@ Excluded: `GET /orgs/{slugOrId}/check-visibility`, a grafana.com UI check of whe
 
 ## Locks
 
-Every write in the pinned spec is locked with a typed confirmation, and `DELETE *` locks a delete a newer spec adds. Literals come from the stored record (a lookup by the path id) or the path, never a body field the model writes, except creates, which confirm on the body field the summary shows first. A failed lookup falls back to the id.
+Every write in the pinned spec is locked with a typed confirmation, and `DELETE *`, `PUT *` and `PATCH *` lock one a newer spec adds. Literals come from the stored record (a lookup by the path id) or the path, never a body field the model writes, except creates, which confirm on the body field the summary shows first. A failed lookup falls back to the id.
 
 | Area | Operations | Literal |
 | --- | --- | --- |
@@ -43,7 +43,11 @@ Every write in the pinned spec is locked with a typed confirmation, and `DELETE 
 | Org settings | `POST /orgs/{slugOrId}/settings` (MFA, token expiry, invite domains) | org slug (lookup) |
 | Access policies | create, update (scopes and realms are privileges), delete | body `name`; policy name (lookup with `region`) |
 | Tokens | `POST /v1/tokens` (takes its policy's privileges), update (an expiry extends them), delete | policy name (lookup of `accessPolicyId`); token name (lookup with `region`) |
-| Newer deletes | `DELETE *` | org slug |
+| Newer operations | `DELETE *`, `PUT *`, `PATCH *` | org slug |
+
+## Request keys
+
+grafana.com is Go: `encoding/json` binds body keys case-insensitively (the last match wins) and folds `ſ` to `s` and the Kelvin sign to `k`. A body `{"accessPolicyId": "readers", "AccessPolicyId": "admin"}` would show `readers` to the approver and grant `admin`. So `resolveOperation` refuses with `INVALID_PARAMS` any query or body that has, at any depth, two keys equal under case-folding, or a key that is not printable ASCII. A lone key in another case (`AccessPolicyID`) is renamed to the spelling the rules read: the summary fields' names and `plugin.canonicalKeys`. Summaries, literals and targets then read what grafana.com binds.
 
 ## Approval context
 

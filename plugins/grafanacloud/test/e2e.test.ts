@@ -133,6 +133,27 @@ describe('Grafana Cloud end to end (fake grafana.com)', () => {
     });
   });
 
+  it.each([
+    ['AccessPolicyId', '/v1/tokens', { name: 'ci', accessPolicyId: 'ap-1', AccessPolicyId: 'admin-policy' }],
+    ['Scopes', '/v1/accesspolicies', { name: 'r', scopes: ['metrics:read'], Scopes: ['accesspolicies:write'] }],
+    ['ſcopes', '/v1/accesspolicies', { name: 'r', scopes: ['metrics:read'], ſcopes: ['stacks:delete'] }],
+  ])('refuses a body with a %s key before any approval or upstream call', async (_name, path, body) => {
+    const key = `POST ${path}`;
+    h.setOperationLevel(key, 'ask');
+    const before = fake.requests.filter((r) => r.method === 'POST').length;
+    let asked = false;
+    const r = await h.execute(call({ method: 'POST', path, query: { region: REGION }, body }), {
+      onApproval: (a) => {
+        asked = true;
+        a.approve('stack-readers');
+      },
+    });
+    h.setOperationLevel(key, null);
+    expect(r).toMatchObject({ ok: false, error: { code: 'INVALID_PARAMS' } });
+    expect(asked).toBe(false);
+    expect(fake.requests.filter((q) => q.method === 'POST')).toHaveLength(before);
+  });
+
   it('reports a grafana.com denial as UPSTREAM_DENIED', async () => {
     allow('GET /stack-regions', 'read');
     fake.denied.add('/api/stack-regions');

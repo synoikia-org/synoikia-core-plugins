@@ -43,12 +43,20 @@ describe('Grafana Cloud catalog (pinned spec)', () => {
     for (const o of catalog.operations) if (o.classification === 'write') expect(o.locked, o.key).toBe(true);
   });
 
-  it('matches at least one operation with every rule pattern', () => {
-    for (const pattern of settings.rules.flatMap((r) => listOf(r.match)))
+  it('matches at least one operation with every rule pattern, but the verbs the spec does not use yet', () => {
+    for (const pattern of settings.rules
+      .flatMap((r) => listOf(r.match))
+      .filter((m) => m !== 'PUT *' && m !== 'PATCH *'))
       expect(
         [...keys].some((k) => globRe(pattern).test(k)),
         pattern,
       ).toBe(true);
+  });
+
+  it('locks every non-GET operation but the stack URL check', () => {
+    for (const o of catalog.operations)
+      if (!o.key.startsWith('GET ') && o.key !== 'POST /v1/stacks/checkUrl')
+        expect(o, o.key).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
   });
 
   it('leaves out only the org visibility check', () => {
@@ -78,13 +86,19 @@ describe('Grafana Cloud catalog (pinned spec)', () => {
       expect(op(key)?.sensitiveResult, key).toEqual({ keys: ['machineLearningLogsToken', 'config'], deep: true });
   });
 
-  it('locks a delete a newer spec adds', () => {
+  it('locks a delete, PUT or PATCH a newer spec adds', () => {
     const spec = specOf();
-    const newer = { ...spec, paths: { ...spec.paths, '/v1/stacks/{idOrSlug}/labels': { delete: { summary: 'x' } } } };
-    expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /v1/stacks/{idOrSlug}/labels')).toMatchObject({
-      locked: true,
-      typedConfirmation: true,
-    });
+    const labels = { delete: { summary: 'x' }, put: { summary: 'x' }, patch: { summary: 'x' } };
+    const newer = { ...spec, paths: { ...spec.paths, '/v1/stacks/{idOrSlug}/labels': labels } };
+    const ops = buildCatalog(newer).operations;
+    for (const verb of ['DELETE', 'PUT', 'PATCH'])
+      expect(
+        ops.find((o) => o.key === `${verb} /v1/stacks/{idOrSlug}/labels`),
+        verb,
+      ).toMatchObject({
+        locked: true,
+        typedConfirmation: true,
+      });
   });
 
   it('refuses a truncated spec', () => {

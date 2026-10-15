@@ -24,6 +24,7 @@ The organization slug and a Cloud access policy token (sent as `Authorization: B
 | `instructions.md` | Agent instructions (API shape, paging, common workflows); not wired in until core supports it |
 | `src/plugin.ts`   | Connection, regional lookups and the binding                                                  |
 | `src/spec.ts`     | Fetches the spec from each source in turn, falling back on any failure                        |
+| `src/request.ts`  | Refuses keys Go would bind to one field (case variants, non-ASCII); one spelling for the rest |
 | `src/summary.ts`  | Privilege and destination fields ahead of the body in approvals                               |
 | `src/targets.ts`  | Names the stack, access policy (scopes and realms) or token an approval acts on               |
 | `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                  |
@@ -32,4 +33,4 @@ The organization slug and a Cloud access policy token (sent as `Authorization: B
 
 ## Locked operations
 
-Every write: stack create, update and delete; plugin install, update and uninstall; stack service accounts and their tokens; org members and settings; access policy and token create, update and delete; and every delete a newer spec adds. Reasons and literals are in the design note and `plugin.yaml`.
+Every write: stack create, update and delete; plugin install, update and uninstall; stack service accounts and their tokens; org members and settings; access policy and token create, update and delete; and every delete, PUT or PATCH a newer spec adds. Reasons and literals are in the design note and `plugin.yaml`.
