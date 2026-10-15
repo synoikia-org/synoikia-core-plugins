@@ -15,7 +15,11 @@ let fake: FakePlex;
 const plugin = createPlexPlugin();
 
 function connection() {
-  return { instanceId: 'plex-1', config: { baseUrl: fake.url, specBaseUrl: fake.specUrl }, secrets: { ...CREDENTIALS } };
+  return {
+    instanceId: 'plex-1',
+    config: { baseUrl: fake.url, specBaseUrl: fake.specUrl },
+    secrets: { ...CREDENTIALS },
+  };
 }
 
 beforeAll(async () => {

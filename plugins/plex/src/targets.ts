@@ -95,7 +95,8 @@ export async function resolveTargets(get: Get, key: string, params: unknown): Pr
   const out: ResolvedTarget[] = [];
   const pathId = (name: string) => stringOr(path[name]);
 
-  if (key.startsWith('PUT /:/prefs')) out.push({ kind: 'settings', id: 'prefs', name: `settings ${settingNames(query).join(', ')}` });
+  if (key.startsWith('PUT /:/prefs'))
+    out.push({ kind: 'settings', id: 'prefs', name: `settings ${settingNames(query).join(', ')}` });
   else if (key.includes(' /library/sections/{sectionId}/collection/{collectionId}') && pathId('collectionId'))
     out.push(...(await items(get, pathId('collectionId')!)));
   else if (key.includes(' /library/sections/{sectionId}') && pathId('sectionId'))

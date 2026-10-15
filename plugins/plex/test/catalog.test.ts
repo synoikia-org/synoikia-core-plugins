@@ -133,7 +133,11 @@ describe('Plex catalog (pinned spec)', () => {
   });
 
   it('hides the URL Plex fetches from approvals', () => {
-    for (const key of ['POST /library/metadata/{ids}/extras', 'PUT /library/metadata/{ids}/{element}', 'POST /media/providers'])
+    for (const key of [
+      'POST /library/metadata/{ids}/extras',
+      'PUT /library/metadata/{ids}/{element}',
+      'POST /media/providers',
+    ])
       expect(op(key)?.sensitiveParams, key).toEqual(['/query/url']);
   });
 
@@ -206,17 +210,12 @@ describe('split predicates', () => {
 
   it('takes #refresh for any async flag that is not plainly off', () => {
     const on = (query?: object) => splitWhen.refresh!(call(query));
-    expect([undefined, { includeChildren: 1 }, { asyncRefreshAnalysis: 0 }, { asyncCheckFiles: 'false' }].map(on)).toEqual([
-      false,
-      false,
-      false,
-      false,
-    ]);
-    expect([{ asyncRefreshAnalysis: 1 }, { asyncAugmentMetadata: 'true' }, { asyncRefreshLocalMediaAgent: true }].map(on)).toEqual([
-      true,
-      true,
-      true,
-    ]);
+    expect(
+      [undefined, { includeChildren: 1 }, { asyncRefreshAnalysis: 0 }, { asyncCheckFiles: 'false' }].map(on),
+    ).toEqual([false, false, false, false]);
+    expect(
+      [{ asyncRefreshAnalysis: 1 }, { asyncAugmentMetadata: 'true' }, { asyncRefreshLocalMediaAgent: true }].map(on),
+    ).toEqual([true, true, true]);
   });
 });
 

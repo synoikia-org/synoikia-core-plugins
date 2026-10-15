@@ -20,12 +20,20 @@ const lock = (key: string, request: LockCase['request'], confirm: string, name =
 export const LOCK_CASES: LockCase[] = [
   lock('DELETE /library/sections/{sectionId}', { method: 'DELETE', path: '/library/sections/1' }, 'Movies'),
   ...(['GET', 'POST', 'PUT'] as const).map((method) =>
-    lock(`${method} /library/sections/{sectionId}/emptyTrash`, { method, path: '/library/sections/1/emptyTrash' }, 'Movies'),
+    lock(
+      `${method} /library/sections/{sectionId}/emptyTrash`,
+      { method, path: '/library/sections/1/emptyTrash' },
+      'Movies',
+    ),
   ),
   lock('PUT /library/sections/{sectionId}/analyze', { method: 'PUT', path: '/library/sections/2/analyze' }, 'TV Shows'),
   lock('GET /library/sections/{sectionId}/unmatch', { method: 'GET', path: '/library/sections/1/unmatch' }, 'Movies'),
   ...(['GET', 'POST'] as const).map((method) =>
-    lock(`${method} /library/sections/{sectionId}/optimize`, { method, path: '/library/sections/1/optimize' }, 'Movies'),
+    lock(
+      `${method} /library/sections/{sectionId}/optimize`,
+      { method, path: '/library/sections/1/optimize' },
+      'Movies',
+    ),
   ),
   ...(['GET', 'POST', 'PUT'] as const).map((method) =>
     lock(`${method} /library/optimize`, { method, path: '/library/optimize' }, INSTANCE),
@@ -102,7 +110,11 @@ export const LOCK_CASES: LockCase[] = [
     { method: 'POST', path: '/media/providers', query: { url: 'https://provider.example/p?key=provider-key-999999' } },
     INSTANCE,
   ),
-  lock('POST /media/grabbers/devices', { method: 'POST', path: '/media/grabbers/devices', query: { uri: 'http://10.0.0.5' } }, INSTANCE),
+  lock(
+    'POST /media/grabbers/devices',
+    { method: 'POST', path: '/media/grabbers/devices', query: { uri: 'http://10.0.0.5' } },
+    INSTANCE,
+  ),
   lock(
     'GET /library/metadata/{ids}#refresh',
     { method: 'GET', path: '/library/metadata/101', query: { asyncRefreshAnalysis: 1 } },

@@ -30,7 +30,12 @@ function canonicalQuery(query: Record<string, unknown>, canonical: readonly stri
     if (other !== undefined)
       refuse(`query: "${other}" and "${key}" name the same parameter; send each key once, in one spelling`);
     seen.set(lower, key);
-    Object.defineProperty(out, byLower.get(lower) ?? key, { value, enumerable: true, writable: true, configurable: true });
+    Object.defineProperty(out, byLower.get(lower) ?? key, {
+      value,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   }
   return out;
 }
