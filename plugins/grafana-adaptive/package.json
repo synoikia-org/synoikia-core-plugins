@@ -1,0 +1,20 @@
+{
+  "name": "@synoikia/plugin-grafana-adaptive",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "synoikia-plugin build",
+    "check": "synoikia-plugin check",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "synoikia-plugin check && synoikia-plugin build && vitest run"
+  },
+  "dependencies": {
+    "@synoikia/plugin-sdk": "^0.4.0"
+  },
+  "devDependencies": {
+    "@synoikia/core": "^0.6.0",
+    "@synoikia/create-plugin": "^0.2.0"
+  }
+}

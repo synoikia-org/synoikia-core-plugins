@@ -1,0 +1,74 @@
+{
+  "id": "grafana-adaptive",
+  "name": "Grafana Adaptive Telemetry",
+  "version": "0.1.0",
+  "sdk": "^0.2.2",
+  "description": "Grafana Adaptive Telemetry for Synoikia.",
+  "entry": "dist/index.js",
+  "binding": {
+    "namespace": "grafanaAdaptive",
+    "functions": [
+      "call"
+    ]
+  },
+  "connection": {
+    "schema": {
+      "type": "object",
+      "required": [
+        "baseUrl",
+        "username",
+        "password"
+      ],
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "title": "Base URL"
+        },
+        "username": {
+          "type": "string",
+          "title": "Username"
+        },
+        "password": {
+          "type": "string",
+          "title": "Password",
+          "writeOnly": true
+        },
+        "verifyTls": {
+          "type": "boolean",
+          "title": "Verify TLS certificate",
+          "default": true
+        }
+      }
+    },
+    "ui": {
+      "baseUrl": {
+        "widget": "url",
+        "placeholder": "https://grafana-adaptive.internal.lan"
+      },
+      "username": {
+        "widget": "text"
+      },
+      "password": {
+        "widget": "secret",
+        "help": "The password of a dedicated, least-privileged user."
+      },
+      "verifyTls": {
+        "widget": "bool"
+      }
+    },
+    "help": "1. In Grafana Adaptive Telemetry, create a dedicated user with only the access Synoikia should have, and its password.\n2. Enter the base URL and credentials, then **Test connection**.\n3. Keep *Verify TLS* on unless Grafana Adaptive Telemetry uses a self-signed certificate on a trusted network.\n\nAfter the first sync, raise groups on the Access page as needed."
+  },
+  "sensitiveKeys": [
+    "password",
+    "apiKey",
+    "api_key",
+    "token",
+    "secret"
+  ],
+  "network": {
+    "hosts": [
+      "{{connection.baseUrl}}"
+    ]
+  }
+}
