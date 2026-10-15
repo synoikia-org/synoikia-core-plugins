@@ -3,13 +3,14 @@ import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
 
 /** What a non-GET call acts on, for the approver: a provider connection (indexer, application, proxy, download
- * client, notification) by name with the hosts it sends to, or the providers a bulk call changes. Lookups that fail
- * leave the id (fail visible, not closed). */
+ * client, notification) by name with the hosts it sends to, the providers a bulk call changes, or the releases a grab
+ * sends to a download client. Lookups that fail leave the id (fail visible, not closed). */
 
 const MAX_BULK = 10;
 const PROVIDER =
   /^(POST|PUT|DELETE) \/api\/v1\/(downloadclient|indexer|indexerproxy|notification|applications)(\/|$|#)/;
 const BULK = /^(PUT|DELETE) \/api\/v1\/(downloadclient|indexer|applications)\/bulk/;
+const GRAB = /^POST \/api\/v1\/search(\/bulk)?$/;
 
 type Get = (path: string) => Promise<unknown>;
 
@@ -65,6 +66,38 @@ async function bulk(get: Get, resource: string, body: unknown): Promise<Resolved
   return [...shown, ...(more > 0 ? [{ kind: resource, id: 'more', name: `${more} more` }] : [])];
 }
 
+const lookupName = async (get: Get, resource: string, id: string): Promise<Record<string, unknown> | undefined> => {
+  try {
+    const stored = await get(`/api/v1/${resource}/${encodeURIComponent(id)}`);
+    return isPlainObject(stored) ? stored : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/** A grab: the release, its indexer, and the download client Prowlarr sends it to (the one in the body for a single
+ * grab, else the indexer's, else Prowlarr's default). The release itself comes from Prowlarr's search cache. */
+async function grabs(get: Get, body: unknown, many: boolean): Promise<ResolvedTarget[]> {
+  const items = (many ? (Array.isArray(body) ? body : []) : [body]).filter(isPlainObject);
+  const shown = await Promise.all(
+    items.slice(0, MAX_BULK).map(async (r): Promise<ResolvedTarget> => {
+      const indexerId = stringOr(r.indexerId);
+      const indexer = indexerId ? await lookupName(get, 'indexer', indexerId) : undefined;
+      const clientId = (many ? undefined : stringOr(r.downloadClientId)) ?? stringOr(indexer?.downloadClientId);
+      const client = clientId && clientId !== '0' ? await lookupName(get, 'downloadclient', clientId) : undefined;
+      const to = client ? `download client ${safe(client.name) ?? safe(clientId)}` : 'the default download client';
+      const from = safe(indexer?.name) ?? `indexer ${safe(indexerId) ?? '?'}`;
+      return {
+        kind: 'release',
+        id: safe(r.guid) ?? '?',
+        name: `${safe(r.title) ?? safe(r.guid) ?? 'release'} → ${to} (from ${from})`,
+      };
+    }),
+  );
+  const more = items.length - shown.length;
+  return [...shown, ...(more > 0 ? [{ kind: 'release', id: 'more', name: `${more} more releases` }] : [])];
+}
+
 export async function resolveTargets(
   client: HttpJsonClient,
   key: string,
@@ -76,6 +109,8 @@ export async function resolveTargets(
   const p = isPlainObject(params) ? params : {};
   const pathParams = isPlainObject(p.path) ? p.path : {};
   const body = p.body;
+  const grab = GRAB.exec(key);
+  if (grab) return grabs(get, body, grab[1] !== undefined);
   const many = BULK.exec(key);
   if (many) return bulk(get, many[2]!, body);
   const match = PROVIDER.exec(key);

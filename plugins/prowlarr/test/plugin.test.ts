@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { checkConformance, ErrorCodes } from '@synoikia/plugin-sdk';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { settings } from '../src/catalog.js';
-import { destinations, maskProviderFields, maskReleaseGuids } from '../src/fields.js';
+import { destinations, maskProviderFields, maskReleaseLinks, redactKeysDeep } from '../src/fields.js';
 import { createProwlarrPlugin } from '../src/plugin.js';
 import { CREDENTIALS, SECRETS, startFakeProwlarr, TAG, VERSION } from './fake-prowlarr.js';
 import type { FakeProwlarr } from './fake-prowlarr.js';
@@ -196,10 +196,17 @@ describe('Prowlarr plugin', () => {
   it('masks provider and Cardigann secrets in results, and link-shaped release guids', async () => {
     await plugin.syncCatalog();
     const indexers = await invoke({ path: '/api/v1/indexer' });
-    for (const secret of [SECRETS.indexerApiKey, SECRETS.cardigannPassword, SECRETS.trackerCookie, SECRETS.twoFactor])
+    for (const secret of [
+      SECRETS.indexerApiKey,
+      SECRETS.cardigannPassword,
+      SECRETS.trackerCookie,
+      SECRETS.twoFactor,
+      SECRETS.trackerPid,
+      SECRETS.trackerPasskey,
+    ])
       expect(indexers).not.toContain(secret);
-    expect(indexers).not.toContain(SECRETS.trackerPasskey);
-    expect(indexers).toContain('"value":"me"');
+    expect(indexers).toContain('"value":"/api"');
+    expect(indexers).not.toContain('"value":"me"');
     const apps = await invoke({ path: '/api/v1/applications' });
     expect(apps).not.toContain(SECRETS.appApiKey);
     expect(apps).toContain('"value":"********"');
@@ -208,6 +215,25 @@ describe('Prowlarr plugin', () => {
     expect(hits).not.toContain(SECRETS.trackerPasskey);
     expect(hits).toContain('"guid":"https://privatehd.example/[REDACTED]"');
     expect(hits).toContain('"guid":"nzbgeek-guid-1"');
+    expect(hits).toContain('"commentUrl":"https://privatehd.example/[REDACTED]"');
+    const history = await invoke({ path: '/api/v1/history' });
+    expect(history).not.toContain(SECRETS.grabPasskey);
+    expect(history).toContain('"Url":"[REDACTED]"');
+  });
+
+  it('names the release, its indexer and the download client a grab sends it to', async () => {
+    const targets = (key: string, params: object) => plugin.resolveTargets!({ key, params });
+    await expect(
+      targets('POST /api/v1/search', { body: { guid: 'g', indexerId: 1, title: 'Dune', downloadClientId: 6 } }),
+    ).resolves.toEqual([{ kind: 'release', id: 'g', name: 'Dune → download client qBit (from NZBgeek)' }]);
+    await expect(targets('POST /api/v1/search', { body: { guid: 'g', indexerId: 1 } })).resolves.toEqual([
+      { kind: 'release', id: 'g', name: 'g → the default download client (from NZBgeek)' },
+    ]);
+    const bulk = await targets('POST /api/v1/search/bulk', {
+      body: [{ guid: 'a', indexerId: 2, title: 'A', downloadClientId: 99 }, ...Array(10).fill({ guid: 'b' })],
+    });
+    expect(bulk[0]).toEqual({ kind: 'release', id: 'a', name: 'A → download client qBit (from PrivateHD)' });
+    expect(bulk.at(-1)).toEqual({ kind: 'release', id: 'more', name: '1 more releases' });
   });
 
   it('reports a rejected key without throwing', async () => {
@@ -268,19 +294,61 @@ describe('provider fields', () => {
     expect(destinations({ fields: [{ name: 'Host', value: 'decoy.example' }] })).toEqual([]);
   });
 
-  it('cuts link-shaped release guids to their origin and keeps the others', () => {
+  it('fails closed on Cardigann settings: every string hidden but the site origin and select or checkbox values', () => {
+    const field = (name: string, value: unknown, type = 'textbox', privacy = 'normal') => ({
+      name,
+      value,
+      type,
+      privacy,
+    });
     expect(
-      maskReleaseGuids([
+      maskProviderFields({
+        implementation: 'Cardigann',
+        fields: [
+          field('baseUrl', 'https://site.example/login?key=k'),
+          field('pid', 'p-123'),
+          field('username', 'me'),
+          field('sort', 'seeders', 'select'),
+          field('freeleech', true, 'checkbox'),
+          field('apiKey', 'k', 'textbox', 'apiKey'),
+          field('tags', ['a', 1]),
+          field('limit', 50),
+        ],
+      }),
+    ).toEqual({
+      implementation: 'Cardigann',
+      fields: [
+        field('baseUrl', 'https://site.example/[REDACTED]'),
+        field('pid', '[REDACTED]'),
+        field('username', '[REDACTED]'),
+        field('sort', 'seeders', 'select'),
+        field('freeleech', true, 'checkbox'),
+        field('apiKey', '********', 'textbox', 'apiKey'),
+        field('tags', ['[REDACTED]', 1]),
+        field('limit', 50),
+      ],
+    });
+  });
+
+  it('hides link keys in any case, at any depth', () => {
+    expect(redactKeysDeep({ records: [{ data: { Url: 'u', URL: 'v', url: '', title: 't' } }] }, ['url'])).toEqual({
+      records: [{ data: { Url: '[REDACTED]', URL: '[REDACTED]', url: '', title: 't' } }],
+    });
+  });
+
+  it('cuts link-shaped release guids, info and comment links to their origin and keeps the others', () => {
+    expect(
+      maskReleaseLinks([
         { guid: 'https://t.example/download.php?id=1&passkey=pk', title: 'a' },
         { guid: 'https://t.example', title: 'b' },
         { guid: 'abc-123', title: 'c' },
-        { title: 'd' },
+        { title: 'd', infoUrl: 'https://t.example/details/1', commentUrl: 'https://t.example/c?passkey=pk' },
       ]),
     ).toEqual([
       { guid: 'https://t.example/[REDACTED]', title: 'a' },
       { guid: 'https://t.example', title: 'b' },
       { guid: 'abc-123', title: 'c' },
-      { title: 'd' },
+      { title: 'd', infoUrl: 'https://t.example/[REDACTED]', commentUrl: 'https://t.example/[REDACTED]' },
     ]);
   });
 });

@@ -34,4 +34,4 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 
 ## Locked operations
 
-Every delete; adding or changing applications, indexers, indexer proxies, download clients and notifications; application tests and actions; provider tests and actions that reuse stored credentials; indexer and application bulk edits; commands that sync applications, clear data or change the application; host settings; shutdown and restart; backup restore; notification tests. Reasons and literals are in the design note and `plugin.yaml`.
+Every delete; adding or changing applications, indexers, indexer proxies, download clients and notifications; application tests and actions (one or all); development (logging) settings; provider tests and actions that reuse stored credentials; indexer and application bulk edits; commands that sync applications, clear data or change the application; host settings; shutdown and restart; backup restore; notification tests. Reasons and literals are in the design note and `plugin.yaml`.

@@ -846,16 +846,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:POST",
+    "classificationReason": "locked:destructive",
     "group": "application",
     "key": "POST /api/v1/applications/testall",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1297,13 +1297,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:PUT",
+    "classificationReason": "locked:destructive",
     "group": "developmentconfig",
     "key": "PUT /api/v1/config/development/{id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",

@@ -24,7 +24,7 @@ describe('Prowlarr catalog (pinned spec)', () => {
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(22);
+    expect(locked).toHaveLength(24);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
@@ -38,7 +38,7 @@ describe('Prowlarr catalog (pinned spec)', () => {
     const named = new Set(lockedKeys(settings.rules));
     const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
     expect(extra).toEqual([]);
-    expect(locked).toHaveLength(43);
+    expect(locked).toHaveLength(45);
   });
 
   it('has a lock case for every named lock and every twin', () => {
@@ -55,6 +55,8 @@ describe('Prowlarr catalog (pinned spec)', () => {
       'PUT /api/v1/applications/{id}',
       'PUT /api/v1/applications/bulk',
       'POST /api/v1/applications/test',
+      'POST /api/v1/applications/testall',
+      'PUT /api/v1/config/development/{id}',
       'POST /api/v1/applications/test#stored',
       'POST /api/v1/applications/action/{name}',
       'POST /api/v1/applications/action/{name}#stored',
@@ -69,7 +71,7 @@ describe('Prowlarr catalog (pinned spec)', () => {
       expect(op(key), key).toMatchObject({ locked: true, typedConfirmation: true });
     for (const key of ['GET /api/v1/search', 'GET /api/v1/history', 'GET /api/v1/indexerstats', 'GET /api/v1/indexer'])
       expect(op(key), key).toMatchObject({ locked: false, classification: 'read' });
-    for (const key of ['POST /api/v1/search', 'POST /api/v1/applications/testall', 'POST /api/v1/indexer/testall'])
+    for (const key of ['POST /api/v1/search', 'POST /api/v1/search/bulk', 'POST /api/v1/indexer/testall'])
       expect(op(key), key).toMatchObject({ locked: false, classification: 'write' });
   });
 

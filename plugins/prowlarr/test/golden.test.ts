@@ -66,9 +66,30 @@ describe('Prowlarr golden record', () => {
     await expect(stable(policy)).toMatchFileSnapshot('__golden__/catalog.json');
   });
 
-  it('summaries and confirm literals of locked operations', async () => {
+  it('summaries and confirm literals of locked operations, and of grabs', async () => {
     const out: Record<string, unknown> = {};
-    for (const c of LOCK_CASES) {
+    const grabs = [
+      {
+        key: 'POST /api/v1/search',
+        request: {
+          method: 'POST',
+          path: '/api/v1/search',
+          body: { guid: 'nzbgeek-guid-1', indexerId: 1, title: 'Dune.2021.1080p', downloadClientId: 6 },
+        },
+      },
+      {
+        key: 'POST /api/v1/search/bulk',
+        request: {
+          method: 'POST',
+          path: '/api/v1/search/bulk',
+          body: [
+            { guid: 'nzbgeek-guid-1', indexerId: 1, title: 'Dune.2021.1080p' },
+            { guid: 'privatehd-guid-7', indexerId: 2, title: 'Dune.2021.2160p' },
+          ],
+        },
+      },
+    ];
+    for (const c of [...LOCK_CASES, ...grabs]) {
       const { key, params } = await plugin.resolveOperation({ fn: 'request', args: [c.request] });
       const declared = operations.find((o) => o.key === key)?.sensitiveParams ?? [];
       const shown = redactPaths(params, declared);

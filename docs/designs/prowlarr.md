@@ -26,25 +26,27 @@ Radarr's locks for host settings, shutdown and restart, backups, download client
 | `POST /api/v1/applications`, `PUT /api/v1/applications/{id}` | Prowlarr pushes every synced indexer to the app's `baseUrl`, with Prowlarr's API key and `prowlarrUrl`, and keeps the app's API key | body `name` on create, stored name on update |
 | `POST /api/v1/applications/test`, `/action/{name}` | Even without an `id`, a test posts a test indexer with Prowlarr's API key to the host in the body | body `name`, else instance name |
 | `POST /api/v1/applications/{test,action/{name}}#stored` | With an `id`, Prowlarr also fills in the stored app API key | stored name |
+| `POST /api/v1/applications/testall` | Posts a test indexer with Prowlarr's API key to every stored application | instance name |
 | `PUT /api/v1/applications/bulk` | Sync level (`fullSync` removes indexers from the apps) and tags of many apps | `<n> applications` |
 | `POST /api/v1/indexer`, `PUT /api/v1/indexer/{id}` | Credentials and site URL; a new indexer is pushed to every synced app | body `name`, stored name |
 | `PUT /api/v1/indexer/bulk`, `DELETE /api/v1/indexer/bulk` | App profile, tags (which apps and proxies apply), enable and seed settings of many indexers | `<n> indexers` |
 | `POST /api/v1/indexerproxy`, `PUT /api/v1/indexerproxy/{id}` | All traffic of the indexers with its tags goes through the proxy (HTTP, SOCKS, FlareSolverr) | body `name`, stored name |
 | `POST /api/v1/indexerproxy/{test,action/{name}}#stored` | As for other providers | stored name |
+| `PUT /api/v1/config/development/{id}` | Turns on logging of indexer responses (session cookies, keys) and SQL to the log files | instance name |
 | `DELETE /api/v1/downloadclient/bulk` | Bulk delete | `<n> download clients` |
 | `POST /api/v1/command#heavy` | Any command not in `plugin.quickCommands`: `ApplicationIndexerSync` (pushes all indexers to every app; `forceSync` overwrites the app side), `ApplicationUpdateCheck` (installs an update when started by hand), `ApplicationUpdate`, `ClearHistory`, `CleanUpHistory`, `ClearLog`, `DeleteLogFiles`, `DeleteUpdateLogFiles`, `ResetApiKey`, `Shutdown`, `Restart`, … and future ones | the command name, else instance name |
 
 Quick commands: `Backup`, `CheckHealth`, `Housekeeping`, `IndexerDefinitionUpdate` (fetches indexer definitions from Prowlarr's own server, as the scheduled task does).
 
-These stay writes: `POST /api/v1/applications/testall` and `POST /api/v1/indexer/testall` (stored destinations only), `PUT /api/v1/downloadclient/bulk` (enable, priority, tags), `POST /api/v1/search` and `/search/bulk` (grab a cached release by `guid` and `indexerId`; no URL from the caller), `PUT /api/v1/config/development/{id}` (log levels), app profiles and tags.
+These stay writes: `POST /api/v1/indexer/testall` (stored indexers only), `PUT /api/v1/downloadclient/bulk` (enable, priority, tags), `POST /api/v1/search` and `/search/bulk` (grab a cached release by `guid` and `indexerId`; no URL from the caller), app profiles and tags.
 
-**Targets.** Provider calls show `<kind> <name> (<implementation>) → <destinations>` as in Radarr; for an application that is its `prowlarrUrl` and `baseUrl`, in field order. A `host` that is a URL (FlareSolverr) shows its origin. Bulk calls list up to 10 providers by stored name.
+**Targets.** Provider calls show `<kind> <name> (<implementation>) → <destinations>` as in Radarr; for an application that is its `prowlarrUrl` and `baseUrl`, in field order. A `host` that is a URL (FlareSolverr) shows its origin. Bulk calls list up to 10 providers by stored name. A grab shows each release (up to 10) as `<title> → download client <name> (from <indexer>)`: the client in the body for a single grab, else the indexer's stored one, else Prowlarr's default.
 
 ## Secrets
 
 As Radarr, plus:
 
-- Cardigann indexer settings come back unmasked (`privacy: normal`). `src/fields.ts` also hides a field whose `type` is `password`, or whose name matches `2fa` or is `pin`, as `[REDACTED]`; cookies, passkeys and API keys already match the secret-name rule.
+- Cardigann indexer settings come back unmasked (`privacy: normal`) and their names vary per definition (`pid`, `passkey`, `cookie`, …). For an `implementation` of `Cardigann`, `src/fields.ts` fails closed: every non-empty string becomes `[REDACTED]`, except `baseUrl` (origin only) and `select` or `checkbox` values. For other providers it also hides a field whose `type` is `password`, or whose name matches `2fa` or is `pin`.
 - Search `downloadUrl` and `magnetUrl` are Prowlarr proxy links with Prowlarr's API key: `sensitiveResult` on `/api/v1/search*`.
-- A history `data.url` is the indexer request URL (Newznab `apikey`) or the download link (passkey): `sensitiveResult` on `url` for `/api/v1/history*`.
-- Cardigann and other indexers use the download link as the release `guid`. Search results keep only the origin of a guid that is a URL. Such a release can't be grabbed through the API (the write guard refuses the masked guid); grab it in Prowlarr or the app.
+- A history `data.url` is the indexer request URL (Newznab `apikey`) or the download link (passkey): `sensitiveResult` on `url` for `/api/v1/history*`. `sensitiveResult` keys match exactly, so `src/plugin.ts` also hides `downloadUrl`, `magnetUrl` and `url` in any case (`Url`) in search and history results.
+- Cardigann and other indexers use the download link as the release `guid`. Search results keep only the origin of a `guid`, `infoUrl` or `commentUrl` that is a URL. Such a release can't be grabbed through the API (the write guard refuses the masked guid); grab it in Prowlarr or the app.

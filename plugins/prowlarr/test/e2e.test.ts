@@ -58,6 +58,7 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
     expect(text).not.toContain(SECRETS.hostApiKey);
     expect(text).not.toContain(SECRETS.trackerPasskey);
     expect(text).toContain('nzbgeek-guid-1');
+    expect(text).toContain('"commentUrl":"https://privatehd.example/[REDACTED]"');
   });
 
   it('runs a quick command once a human approves it at Ask, then polls it', async () => {
@@ -126,12 +127,17 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
           SECRETS.trackerCookie,
           SECRETS.cardigannPassword,
           SECRETS.twoFactor,
+          SECRETS.trackerPid,
         ],
       ],
       ['GET /api/v1/applications', { path: '/api/v1/applications' }, [SECRETS.appApiKey]],
       ['GET /api/v1/indexerproxy', { path: '/api/v1/indexerproxy' }, [SECRETS.socksPassword]],
       ['GET /api/v1/notification', { path: '/api/v1/notification' }, [SECRETS.webhookToken, SECRETS.headerToken]],
-      ['GET /api/v1/history', { path: '/api/v1/history' }, [SECRETS.indexerApiKey, SECRETS.trackerPasskey]],
+      [
+        'GET /api/v1/history',
+        { path: '/api/v1/history' },
+        [SECRETS.indexerApiKey, SECRETS.trackerPasskey, SECRETS.grabPasskey],
+      ],
     ])('%s', async (key, request, secrets) => {
       allow(key, 'read');
       const r = await h.execute(call(request));

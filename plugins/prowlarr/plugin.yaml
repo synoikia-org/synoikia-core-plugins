@@ -31,6 +31,8 @@ rules:
   # Irreversible, bulk, instance-wide, or sends credentials or data to a destination: a human types a confirmation.
   - match:
       - 'PUT /api/v1/config/host/{id}'
+      # Logs indexer responses (with session cookies and keys) and SQL to the log files.
+      - 'PUT /api/v1/config/development/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/system/backup/restore/{id}'
@@ -50,6 +52,8 @@ rules:
       - 'PUT /api/v1/applications/bulk'
       - 'POST /api/v1/applications/test'
       - 'POST /api/v1/applications/action/{name}'
+      # Posts a test indexer with Prowlarr's API key to every stored application.
+      - 'POST /api/v1/applications/testall'
       # Sends a notification to whatever recipient the body names, or to every configured one.
       - 'POST /api/v1/notification/test'
       - 'POST /api/v1/notification/testall'
@@ -91,8 +95,12 @@ rules:
     summaryNote: "(the application gets Prowlarr's indexers and API key)"
   - match: ['POST /api/v1/indexerproxy', 'PUT /api/v1/indexerproxy/{id}']
     summaryNote: '(indexer traffic with its tags goes through this proxy)'
+  - match: 'POST /api/v1/applications/testall'
+    summaryNote: "(sends Prowlarr's API key to every stored application)"
   - match: 'PUT /api/v1/config/host/{id}'
     summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
+  - match: 'PUT /api/v1/config/development/{id}'
+    summaryNote: '(logging of indexer responses and SQL to the log files)'
   - match: 'POST /api/v1/system/backup/restore/{id}'
     summaryNote: '(replaces the database and settings, then restarts)'
 
@@ -104,9 +112,11 @@ rules:
       lookup: { op: 'GET /api/v1/system/backup', find: { field: id, equals: { $param: /path/id } }, field: name }
   - match:
       - 'PUT /api/v1/config/host/{id}'
+      - 'PUT /api/v1/config/development/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/notification/testall'
+      - 'POST /api/v1/applications/testall'
     confirm: instance
   - match: '*#heavy'
     confirm: [{ custom: command }, instance]
@@ -177,7 +187,7 @@ rules:
   - match: '* /api/v1/config/host*'
     sensitiveResult: { keys: [apiKey, password, passwordConfirmation, proxyPassword, sslCertPassword] }
   # Search download and magnet links are Prowlarr proxy links with its API key; a history `url` is the indexer
-  # request or download URL with the indexer's API key or passkey.
+  # request or download URL with the indexer's API key or passkey. src/plugin.ts also hides them in any case.
   - match: ['* /api/v1/search*', '* /api/v1/history*']
     sensitiveResult: { keys: [downloadUrl, magnetUrl, url], deep: true }
 

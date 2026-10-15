@@ -172,6 +172,12 @@
     ],
     "text": "Prowlarr POST /api/v1/applications/test on applications Sonarr (Any) → https://collector.example:443 {\"id\":4,\"name\":\"Sonarr\",\"implementation\":\"Any\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to the host in the body)"
   },
+  "POST /api/v1/applications/testall": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "POST /api/v1/applications/testall",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/applications/testall (sends Prowlarr's API key to every stored application)"
+  },
   "POST /api/v1/command#heavy": {
     "confirmLiteral": "ApplicationIndexerSync",
     "resolved": "POST /api/v1/command#heavy",
@@ -328,6 +334,33 @@
     "targets": [],
     "text": "Prowlarr POST /api/v1/notification/testall"
   },
+  "POST /api/v1/search": {
+    "resolved": "POST /api/v1/search",
+    "targets": [
+      {
+        "id": "nzbgeek-guid-1",
+        "kind": "release",
+        "name": "Dune.2021.1080p → download client qBit (from NZBgeek)"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/search on Dune.2021.1080p → download client qBit (from NZBgeek) {\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\",\"downloadClientId\":6}"
+  },
+  "POST /api/v1/search/bulk": {
+    "resolved": "POST /api/v1/search/bulk",
+    "targets": [
+      {
+        "id": "nzbgeek-guid-1",
+        "kind": "release",
+        "name": "Dune.2021.1080p → the default download client (from NZBgeek)"
+      },
+      {
+        "id": "privatehd-guid-7",
+        "kind": "release",
+        "name": "Dune.2021.2160p → download client qBit (from PrivateHD)"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/search/bulk on Dune.2021.1080p → the default download client (from NZBgeek); Dune.2021.2160p → download client qBit (from PrivateHD) [{\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\"},{\"guid\":\"privatehd-guid-7\",\"indexerId\":2,\"title\":\"Dune.2021.2160p\"}]"
+  },
   "POST /api/v1/system/backup/restore/{id}": {
     "confirmLiteral": "prowlarr_backup_v2.6.5.5623_2026.10.15_10.00.00.zip",
     "resolved": "POST /api/v1/system/backup/restore/{id}",
@@ -369,6 +402,12 @@
       }
     ],
     "text": "Prowlarr PUT /api/v1/applications/4 on applications Renamed (Sonarr) → https://collector.example {\"id\":4,\"name\":\"Renamed\",\"implementation\":\"Sonarr\",\"enable\":true,\"fields\":\"[REDACTED]\"} (the application gets Prowlarr's indexers and API key)"
+  },
+  "PUT /api/v1/config/development/{id}": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "PUT /api/v1/config/development/{id}",
+    "targets": [],
+    "text": "Prowlarr PUT /api/v1/config/development/1 {\"id\":1,\"logIndexerResponse\":true,\"logSql\":true} (logging of indexer responses and SQL to the log files)"
   },
   "PUT /api/v1/config/host/{id}": {
     "confirmLiteral": "Home Prowlarr",

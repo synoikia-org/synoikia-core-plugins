@@ -186,6 +186,20 @@ export const LOCK_CASES: LockCase[] = [
     confirm: INSTANCE,
   },
   {
+    key: 'POST /api/v1/applications/testall',
+    request: { method: 'POST', path: '/api/v1/applications/testall' },
+    confirm: INSTANCE,
+  },
+  {
+    key: 'PUT /api/v1/config/development/{id}',
+    request: {
+      method: 'PUT',
+      path: '/api/v1/config/development/1',
+      body: { id: 1, logIndexerResponse: true, logSql: true },
+    },
+    confirm: INSTANCE,
+  },
+  {
     key: 'POST /api/v1/notification/action/{name}',
     request: {
       method: 'POST',

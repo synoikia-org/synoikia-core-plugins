@@ -28,6 +28,8 @@ export const SECRETS = {
   trackerCookie: 'tracker-cookie-101010',
   twoFactor: 'two-factor-424242',
   socksPassword: 'socks-password-121212',
+  trackerPid: 'tracker-pid-151515',
+  grabPasskey: 'grab-passkey-161616',
 };
 
 type Row = Record<string, unknown> & { id: number };
@@ -67,7 +69,11 @@ export function seed(): Record<string, Row[]> {
           field('cookie', SECRETS.trackerCookie),
           field('passkey', SECRETS.trackerPasskey),
           field('2facode', SECRETS.twoFactor),
+          field('pid', SECRETS.trackerPid),
+          field('freeleech', false, 'normal', 'checkbox'),
+          field('sort', 2, 'normal', 'select'),
         ],
+        downloadClientId: 6,
       },
       {
         id: 3,
@@ -208,6 +214,7 @@ export async function startFakeProwlarr(): Promise<FakeProwlarr> {
       protocol: 'torrent',
       seeders: 40,
       infoUrl: 'https://privatehd.example/details/7',
+      commentUrl: `https://privatehd.example/comments/7?passkey=${SECRETS.trackerPasskey}`,
       downloadUrl: proxyLink(2, 'Dune.2021.2160p'),
       magnetUrl: proxyLink(2, 'Dune.2021.2160p-magnet'),
     },
@@ -249,6 +256,9 @@ export async function startFakeProwlarr(): Promise<FakeProwlarr> {
       [`GET ${API}/system/backup`]: () => ({ body: backups }),
       [`DELETE ${API}/system/backup/{id}`]: () => ({ body: {} }),
       [`POST ${API}/system/backup/restore/{id}`]: () => ({ body: { restartRequired: true } }),
+      [`GET ${API}/config/development`]: () => ({ body: { id: 1, logIndexerResponse: false, logSql: false } }),
+      [`GET ${API}/config/development/{id}`]: () => ({ body: { id: 1, logIndexerResponse: false, logSql: false } }),
+      [`PUT ${API}/config/development/{id}`]: (req) => ({ status: 202, body: req.body }),
       [`GET ${API}/config/host`]: () => ({ body: host }),
       [`GET ${API}/config/host/{id}`]: () => ({ body: host }),
       [`PUT ${API}/config/host/{id}`]: (req) => {
@@ -264,7 +274,7 @@ export async function startFakeProwlarr(): Promise<FakeProwlarr> {
         body: {
           page: 1,
           pageSize: 10,
-          totalRecords: 2,
+          totalRecords: 3,
           records: [
             {
               id: 51,
@@ -285,6 +295,14 @@ export async function startFakeProwlarr(): Promise<FakeProwlarr> {
                 grabTitle: 'Dune.2021.2160p',
                 url: `https://privatehd.example/download.php?id=7&passkey=${SECRETS.trackerPasskey}`,
               },
+            },
+            {
+              id: 53,
+              indexerId: 2,
+              eventType: 'releaseGrabbed',
+              successful: true,
+              // An upstream that stopped camel-casing dictionary keys.
+              data: { GrabTitle: 'Dune.2021.720p', Url: `https://privatehd.example/dl/${SECRETS.grabPasskey}` },
             },
           ],
         },

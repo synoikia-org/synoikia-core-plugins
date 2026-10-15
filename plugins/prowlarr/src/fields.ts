@@ -47,12 +47,34 @@ function maskUrl(value: string): string {
   return rest ? `${url.protocol}//${url.host}/${REDACTED}` : value;
 }
 
-/** Search results: a `guid` that is a URL is cut to its origin, since Cardigann and other indexers use the download
- * link, passkey included, as the guid. Other guids stay, so a release can still be grabbed. */
-export function maskReleaseGuids(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(maskReleaseGuids);
-  if (!isPlainObject(value) || typeof value.guid !== 'string') return value;
-  return { ...value, guid: maskUrl(value.guid) };
+const RELEASE_LINKS = ['guid', 'infoUrl', 'commentUrl'];
+
+/** Search results: a `guid`, `infoUrl` or `commentUrl` that is a URL is cut to its origin, since Cardigann and other
+ * indexers use the download link, passkey included, as the guid. Other guids stay, so a release can still be grabbed. */
+export function maskReleaseLinks(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(maskReleaseLinks);
+  if (!isPlainObject(value)) return value;
+  const out: Record<string, unknown> = { ...value };
+  for (const key of RELEASE_LINKS) if (typeof out[key] === 'string') out[key] = maskUrl(out[key]);
+  return out;
+}
+
+/** `value` with every entry whose key matches one of `keys` in any case hidden, at any depth: a history `Url` must
+ * not slip past `sensitiveResult`, whose keys match exactly. */
+export function redactKeysDeep(value: unknown, keys: readonly string[], depth = 0): unknown {
+  if (depth > MAX_DEPTH) return REDACTED;
+  if (Array.isArray(value)) return value.map((v) => redactKeysDeep(v, keys, depth + 1));
+  if (!isPlainObject(value)) return value;
+  const lower = new Set(keys.map((k) => k.toLowerCase()));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value))
+    Object.defineProperty(out, k, {
+      value: lower.has(k.toLowerCase()) && v !== null && v !== '' ? REDACTED : redactKeysDeep(v, keys, depth + 1),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  return out;
 }
 
 /** Key/value lists (webhook `headers`) and objects inside a field value: every entry's value hidden. */
@@ -75,11 +97,24 @@ function maskEntries(value: unknown): unknown {
 
 const isField = (v: unknown): v is Record<string, unknown> => isPlainObject(v) && 'value' in v && 'name' in v;
 
-function maskField(field: Record<string, unknown>): Record<string, unknown> {
+const KEPT_TYPES = new Set(['select', 'checkbox']);
+
+/** Cardigann settings are free-form per definition and come back unmasked, so every string is hidden except the
+ * site URL (origin) and select or checkbox values. */
+function maskStrict(field: Record<string, unknown>, value: unknown): unknown {
+  const type = typeof field.type === 'string' ? field.type.toLowerCase() : '';
+  if (KEPT_TYPES.has(type)) return value;
+  if (typeof value === 'string') return field.name === 'baseUrl' ? maskUrl(value) : REDACTED;
+  if (Array.isArray(value)) return value.map((v) => (typeof v === 'string' && v !== '' ? REDACTED : v));
+  return isPlainObject(value) ? maskEntries(value) : value;
+}
+
+function maskField(field: Record<string, unknown>, strict: boolean): Record<string, unknown> {
   const { value } = field;
   if (value === null || value === undefined || value === '') return field;
   const privacy = typeof field.privacy === 'string' ? field.privacy.toLowerCase() : '';
   if (PRIVATE.has(privacy)) return { ...field, value: PRIVATE_VALUE };
+  if (strict) return { ...field, value: maskStrict(field, value) };
   // Not marked private, so Servarr would store its mask as is: the write guard refuses `[REDACTED]` instead.
   const secretType = typeof field.type === 'string' && field.type.toLowerCase() === 'password';
   if (secretType || (typeof field.name === 'string' && SECRET_NAME.test(field.name)))
@@ -94,11 +129,12 @@ export function maskProviderFields(value: unknown, depth = 0): unknown {
   if (depth > MAX_DEPTH) return REDACTED;
   if (Array.isArray(value)) return value.map((v) => maskProviderFields(v, depth + 1));
   if (!isPlainObject(value)) return value;
+  const strict = typeof value.implementation === 'string' && value.implementation.toLowerCase() === 'cardigann';
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value)) {
     const masked =
       k === 'fields' && Array.isArray(v)
-        ? v.map((f) => (isField(f) ? maskField(f) : maskProviderFields(f, depth + 1)))
+        ? v.map((f) => (isField(f) ? maskField(f, strict) : maskProviderFields(f, depth + 1)))
         : maskProviderFields(v, depth + 1);
     Object.defineProperty(out, k, { value: masked, enumerable: true, writable: true, configurable: true });
   }

@@ -15,13 +15,16 @@ import {
 import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import { authHeaders } from './auth.js';
 import { buildCatalog, custom, SERVICE, settings, splitWhen } from './catalog.js';
-import { maskProviderFields, maskReleaseGuids, refuseMaskedValues } from './fields.js';
+import { maskProviderFields, maskReleaseLinks, redactKeysDeep, refuseMaskedValues } from './fields.js';
 import { normalizeRequest } from './request.js';
 import { fetchServarrSpec } from './spec.js';
 import { resolveTargets, withTargets } from './targets.js';
 
 /** The Prowlarr plugin: catalog from the OpenAPI spec of the instance's release, keyed by the spec's paths
  * (`/api/v1/...`); the sandbox calls `prowlarr.request({ method, path, query, body })`. */
+
+// Search proxy links carry Prowlarr's API key, history URLs the indexer's key or passkey; matched in any case.
+const LINK_KEYS = ['downloadUrl', 'magnetUrl', 'url'];
 
 export function createProwlarrPlugin(): PluginHandlers {
   return definePlugin({
@@ -83,9 +86,10 @@ export function createProwlarrPlugin(): PluginHandlers {
           return { ...summary, text: withTargets(summary.text, params.targets) };
         },
         async invoke(params) {
-          // Provider fields wherever they appear; release guids that are download links.
+          // Provider fields wherever they appear; search and history links.
           const result = maskProviderFields(await binding.invoke(params));
-          return params.key.includes(' /api/v1/search') ? maskReleaseGuids(result) : result;
+          if (/ \/api\/v1\/search/.test(params.key)) return maskReleaseLinks(redactKeysDeep(result, LINK_KEYS));
+          return / \/api\/v1\/history/.test(params.key) ? redactKeysDeep(result, LINK_KEYS) : result;
         },
       };
     },

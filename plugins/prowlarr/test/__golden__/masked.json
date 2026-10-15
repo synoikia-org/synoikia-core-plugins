@@ -125,9 +125,19 @@
           "id": 52,
           "indexerId": 2,
           "successful": true
+        },
+        {
+          "data": {
+            "GrabTitle": "Dune.2021.720p",
+            "Url": "[REDACTED]"
+          },
+          "eventType": "releaseGrabbed",
+          "id": 53,
+          "indexerId": 2,
+          "successful": true
         }
       ],
-      "totalRecords": 2
+      "totalRecords": 3
     },
     "sensitiveParams": []
   },
@@ -163,13 +173,14 @@
       },
       {
         "definitionName": "privatehd",
+        "downloadClientId": 6,
         "enable": true,
         "fields": [
           {
             "name": "definitionFile",
             "privacy": "normal",
             "type": "textbox",
-            "value": "privatehd"
+            "value": "[REDACTED]"
           },
           {
             "name": "baseUrl",
@@ -181,7 +192,7 @@
             "name": "username",
             "privacy": "normal",
             "type": "textbox",
-            "value": "me"
+            "value": "[REDACTED]"
           },
           {
             "name": "password",
@@ -206,6 +217,24 @@
             "privacy": "normal",
             "type": "textbox",
             "value": "[REDACTED]"
+          },
+          {
+            "name": "pid",
+            "privacy": "normal",
+            "type": "textbox",
+            "value": "[REDACTED]"
+          },
+          {
+            "name": "freeleech",
+            "privacy": "normal",
+            "type": "checkbox",
+            "value": false
+          },
+          {
+            "name": "sort",
+            "privacy": "normal",
+            "type": "select",
+            "value": 2
           }
         ],
         "id": 2,
@@ -343,11 +372,12 @@
   "GET /api/v1/search": {
     "masked": [
       {
+        "commentUrl": "https://privatehd.example/[REDACTED]",
         "downloadUrl": "[REDACTED]",
         "guid": "https://privatehd.example/[REDACTED]",
         "indexer": "PrivateHD",
         "indexerId": 2,
-        "infoUrl": "https://privatehd.example/details/7",
+        "infoUrl": "https://privatehd.example/[REDACTED]",
         "magnetUrl": "[REDACTED]",
         "protocol": "torrent",
         "seeders": 40,
