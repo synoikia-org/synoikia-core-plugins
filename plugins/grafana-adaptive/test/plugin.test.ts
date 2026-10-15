@@ -44,16 +44,26 @@ describe('Grafana Adaptive plugin', () => {
       init: { instanceId: 'adaptive', config: fake.connection(), secrets: { token: TOKEN } },
       samples: [
         { fn: 'call', args: ['traces.policies.list'], expectKey: 'traces.policies.list' },
-        { fn: 'call', args: ['traces.policies.delete', { path: { id: 'pol-1' } }], expectKey: 'traces.policies.delete' },
+        {
+          fn: 'call',
+          args: ['traces.policies.delete', { path: { id: 'pol-1' } }],
+          expectKey: 'traces.policies.delete',
+        },
       ],
-      rejects: [{ fn: 'call', args: ['traces.nope'] }, { fn: 'other', args: [] }],
+      rejects: [
+        { fn: 'call', args: ['traces.nope'] },
+        { fn: 'other', args: [] },
+      ],
     });
     expect(issues).toEqual([]);
   });
 
   describe('connection', () => {
     it('reports the configured services as the version, checking each one', async () => {
-      await expect(plugin.testConnection()).resolves.toEqual({ ok: true, upstreamVersion: 'adaptive (metrics, logs, traces)' });
+      await expect(plugin.testConnection()).resolves.toEqual({
+        ok: true,
+        upstreamVersion: 'adaptive (metrics, logs, traces)',
+      });
       expect(fake.metrics.requests.at(-1)?.path).toBe('/aggregations/recommendations/config');
       expect(fake.logs.requests.at(-1)?.path).toBe('/adaptive-logs/exemptions');
       expect(fake.traces.requests.at(-1)?.path).toBe('/adaptive-traces/api/v1/policies');
@@ -86,7 +96,12 @@ describe('Grafana Adaptive plugin', () => {
     });
 
     it('fails the test on a rejected token', async () => {
-      await plugin.init({ instanceId: 'adaptive', config: fake.connection(), secrets: { token: 'wrong' }, sdkVersion: '1.0.0' });
+      await plugin.init({
+        instanceId: 'adaptive',
+        config: fake.connection(),
+        secrets: { token: 'wrong' },
+        sdkVersion: '1.0.0',
+      });
       await expect(plugin.testConnection()).resolves.toMatchObject({ ok: false });
     });
   });
@@ -100,7 +115,9 @@ describe('Grafana Adaptive plugin', () => {
         ['traces.policies.get', { path: { id: 'a/b' } }],
         ['logs.dropRules.get', {}],
       ] as const)
-        await expect(resolve(key, params), JSON.stringify(params)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+        await expect(resolve(key, params), JSON.stringify(params)).rejects.toMatchObject({
+          code: ErrorCodes.InvalidParams,
+        });
     });
 
     it('refuses undeclared, mistyped and case-duplicate query keys', async () => {
@@ -111,7 +128,9 @@ describe('Grafana Adaptive plugin', () => {
       await expect(resolve('traces.policies.list', { query: { a: 'b' } })).rejects.toMatchObject({
         code: ErrorCodes.InvalidParams,
       });
-      await expect(resolve('metrics.recommendations.list', { query: { action: ['add', 'update'] } })).resolves.toBeTruthy();
+      await expect(
+        resolve('metrics.recommendations.list', { query: { action: ['add', 'update'] } }),
+      ).resolves.toBeTruthy();
     });
 
     it('refuses Go-folded body keys and canonicalizes the ones it reads', async () => {
@@ -147,7 +166,9 @@ describe('Grafana Adaptive plugin', () => {
       await expect(resolve('metrics.rules.replace', { body: [] })).rejects.toMatchObject({
         code: ErrorCodes.InvalidParams,
       });
-      await expect(resolve('metrics.rules.delete', { path: { metric: 'up' }, ifMatch: 'a\r\nX: y' })).rejects.toMatchObject({
+      await expect(
+        resolve('metrics.rules.delete', { path: { metric: 'up' }, ifMatch: 'a\r\nX: y' }),
+      ).rejects.toMatchObject({
         code: ErrorCodes.InvalidParams,
       });
       await expect(
@@ -160,7 +181,10 @@ describe('Grafana Adaptive plugin', () => {
     it('returns the rules with their etag, and recommendations with rulesVersion', async () => {
       await expect(run('metrics.rules.list')).resolves.toMatchObject({ etag: '"v1"', rules: fake.state.rules });
       await expect(run('metrics.recommendations.list')).resolves.toMatchObject({ rulesVersion: '"v1"' });
-      const verbose = (await run('metrics.recommendations.list', { query: { verbose: true } })) as Record<string, unknown>;
+      const verbose = (await run('metrics.recommendations.list', { query: { verbose: true } })) as Record<
+        string,
+        unknown
+      >;
       expect(verbose.rulesVersion).toBeUndefined();
     });
 
@@ -169,9 +193,10 @@ describe('Grafana Adaptive plugin', () => {
         run('metrics.rules.delete', { path: { metric: 'debug_events_total' }, ifMatch: '"v1"' }),
       ).resolves.toEqual({ ok: true, etag: '"v2"' });
       expect(fake.metrics.requests.at(-1)?.headers['if-match']).toBe('"v1"');
-      await expect(
-        run('metrics.rules.replace', { ifMatch: '"v1"', body: [] }),
-      ).rejects.toMatchObject({ code: ErrorCodes.InvalidParams, message: expect.stringContaining('metrics.rules.list') });
+      await expect(run('metrics.rules.replace', { ifMatch: '"v1"', body: [] })).rejects.toMatchObject({
+        code: ErrorCodes.InvalidParams,
+        message: expect.stringContaining('metrics.rules.list'),
+      });
       expect(fake.state.rules).toHaveLength(1);
     });
 
@@ -218,7 +243,9 @@ describe('Grafana Adaptive plugin', () => {
       const r = await resolve('traces.policies.create', { body: { type: 'probabilistic', name: 'a‮b\n', body: {} } });
       const s = await plugin.summarize({ ...r, targets: [] });
       expect(s.text).toContain('policy "a\\u202eb\\n"');
-      expect(s.text.startsWith(`Adaptive Traces traces.policies.create on Adaptive Traces instance ${IDS.traces}:`)).toBe(true);
+      expect(
+        s.text.startsWith(`Adaptive Traces traces.policies.create on Adaptive Traces instance ${IDS.traces}:`),
+      ).toBe(true);
     });
 
     it('confirms on the instance id when a stored object cannot be read', async () => {

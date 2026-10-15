@@ -14,9 +14,11 @@ describe('Grafana Adaptive catalog', () => {
   it('declares the confirmed operations only', () => {
     expect(settings.operations).toHaveLength(36);
     for (const op of settings.operations) {
-      const prefix = { metrics: /^\/(aggregations|v1\/recommendations)\//, logs: /^\/adaptive-logs\//, traces: /^\/adaptive-traces\/api\/v1\// }[
-        op.key.split('.')[0] as 'metrics' | 'logs' | 'traces'
-      ];
+      const prefix = {
+        metrics: /^\/(aggregations|v1\/recommendations)\//,
+        logs: /^\/adaptive-logs\//,
+        traces: /^\/adaptive-traces\/api\/v1\//,
+      }[op.key.split('.')[0] as 'metrics' | 'logs' | 'traces'];
       expect(op.http?.path, op.key).toMatch(prefix);
     }
   });

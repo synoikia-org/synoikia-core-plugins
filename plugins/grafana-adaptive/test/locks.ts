@@ -40,7 +40,11 @@ export const LOCK_CASES: LockCase[] = [
   },
   {
     key: 'metrics.rules.update',
-    params: { ifMatch: ETAG, path: { metric: 'http_requests_total' }, body: { metric: 'http_requests_total', drop: true } },
+    params: {
+      ifMatch: ETAG,
+      path: { metric: 'http_requests_total' },
+      body: { metric: 'http_requests_total', drop: true },
+    },
     confirm: 'http_requests_total',
     shows: 'on http_requests_total: "http_requests_total" dropped entirely',
     done: (s) => s.rules.find((r) => r.metric === 'http_requests_total')?.drop === true,
@@ -49,7 +53,8 @@ export const LOCK_CASES: LockCase[] = [
     key: 'metrics.rules.delete',
     params: { ifMatch: ETAG, path: { metric: 'debug_events_total' } },
     confirm: 'debug_events_total',
-    shows: 'on debug_events_total: removes the rule of "debug_events_total" (now "debug_events_total" dropped entirely)',
+    shows:
+      'on debug_events_total: removes the rule of "debug_events_total" (now "debug_events_total" dropped entirely)',
     done: (s) => !s.rules.some((r) => r.metric === 'debug_events_total'),
   },
   {
@@ -90,7 +95,7 @@ export const LOCK_CASES: LockCase[] = [
       },
     },
     confirm: 'drop-healthz',
-    shows: `on Adaptive Logs instance ${IDS.logs}: drops 1 of the lines of "{app=\\"web\\"}" at levels "info" containing "/healthz"`,
+    shows: `on Adaptive Logs instance ${IDS.logs}: drop_rate 1 on the lines of "{app=\\"web\\"}" at levels "info" containing "/healthz"`,
     done: (s) => [...s.dropRules.values()].some((r) => r.name === 'drop-healthz'),
   },
   {
@@ -100,14 +105,15 @@ export const LOCK_CASES: LockCase[] = [
       body: { version: 1, name: 'drop-debug', body: { drop_rate: 1, stream_selector: '{app="api"}' } },
     },
     confirm: 'drop-debug',
-    shows: 'on drop-debug: drops 1 of the lines of "{app=\\"api\\"}" at every level (rule "drop-debug") (was drops 0.9',
+    shows:
+      'on drop-debug: drop_rate 1 on the lines of "{app=\\"api\\"}" at every level (rule "drop-debug") (was drop_rate 0.9',
     done: (s) => (s.dropRules.get('dr-1')?.body as { drop_rate?: number }).drop_rate === 1,
   },
   {
     key: 'logs.dropRules.delete',
     params: { path: { id: 'dr-1' } },
     confirm: 'drop-debug',
-    shows: 'on drop-debug: removes drop rule drops 0.9 of the lines of "{app=\\"api\\"}"',
+    shows: 'on drop-debug: removes drop rule drop_rate 0.9 on the lines of "{app=\\"api\\"}"',
     done: (s) => !s.dropRules.has('dr-1'),
   },
   {
@@ -140,7 +146,10 @@ export const LOCK_CASES: LockCase[] = [
   },
   {
     key: 'traces.policies.update',
-    params: { path: { id: 'pol-1' }, body: { type: 'probabilistic', name: 'keep-1-percent', body: { sampling_percentage: 1 } } },
+    params: {
+      path: { id: 'pol-1' },
+      body: { type: 'probabilistic', name: 'keep-1-percent', body: { sampling_percentage: 1 } },
+    },
     confirm: 'keep-5-percent',
     shows: 'on keep-5-percent: policy "keep-1-percent" of type "probabilistic"',
     done: (s) => s.policies.get('pol-1')?.name === 'keep-1-percent',
@@ -156,7 +165,7 @@ export const LOCK_CASES: LockCase[] = [
     key: 'traces.recommendations.apply',
     params: { path: { id: 'rec-1' } },
     confirm: IDS.traces,
-    shows: `on Adaptive Traces instance ${IDS.traces}: recommendation "rec-1": "Sample health checks at 1%"`,
+    shows: `on Adaptive Traces instance ${IDS.traces}: recommendation "rec-1": "Sample health checks at 1%"; actions: add policy "health-checks" of type "probabilistic"`,
     done: (s) => s.traceRecommendations[0]?.applied === true,
   },
 ];

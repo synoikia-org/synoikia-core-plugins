@@ -99,8 +99,7 @@ export async function startFakeAdaptive(): Promise<FakeAdaptive> {
         const rule = state.rules.find((r) => r.metric === req.params.metric);
         return rule ? { body: rule, headers: { etag: etag() } } : { status: 404, body: 'rule not found' };
       },
-      'POST /aggregations/rule/{metric}': (req) =>
-        stale(req) ?? (state.rules.push(req.body as Obj), fresh()),
+      'POST /aggregations/rule/{metric}': (req) => stale(req) ?? (state.rules.push(req.body as Obj), fresh()),
       'PUT /aggregations/rule/{metric}': (req) => {
         const refused = stale(req);
         if (refused) return refused;

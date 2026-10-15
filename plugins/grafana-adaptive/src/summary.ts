@@ -27,7 +27,12 @@ const invalid = (message: string) => new PluginError(ErrorCodes.InvalidParams, m
 /** The body fields summaries read, checked for the type the Go service binds, so a summary never shows a value the
  * service reads differently (it refuses those too). */
 export function checkBodyFields(key: string, body: unknown): void {
-  const expect = (obj: Record<string, unknown>, field: string, type: 'string' | 'boolean' | 'number' | 'strings', at: string) => {
+  const expect = (
+    obj: Record<string, unknown>,
+    field: string,
+    type: 'string' | 'boolean' | 'number' | 'strings',
+    at: string,
+  ) => {
     const v = obj[field];
     if (v === undefined) return;
     const ok =
@@ -146,7 +151,7 @@ const rateText = (b: Record<string, unknown>) => {
   const levels = strings(rule.levels);
   const contains = strings(rule.log_line_contains);
   return [
-    `drops ${safe(rule.drop_rate, 20)} of the lines of ${quoted(rule.stream_selector)}`,
+    `drop_rate ${safe(rule.drop_rate, 20)} on the lines of ${quoted(rule.stream_selector)}`,
     levels.length ? `at levels ${list(levels)}` : 'at every level',
     contains.length ? `containing ${list(contains)}` : '',
     `(rule ${quoted(b.name)}${b.disabled === true ? ', disabled' : ''}${b.expires_at ? `, expires ${safe(b.expires_at, 40)}` : ''})`,
@@ -157,6 +162,17 @@ const rateText = (b: Record<string, unknown>) => {
 
 const policyText = (b: Record<string, unknown>) =>
   `policy ${quoted(b.name)} of type ${quoted(b.type)}: ${safe(JSON.stringify(b.body ?? {}), 300)}${b.expires_at ? `, expires ${safe(b.expires_at, 40)}` : ''}`;
+
+/** A trace recommendation's actions: the policies it adds, changes or removes. */
+function actionsText(actions: unknown): string {
+  if (!Array.isArray(actions)) return 'its actions could not be read';
+  const items = actions.filter(isPlainObject).map((a) => {
+    const seed = isPlainObject(a.seed) ? a.seed : undefined;
+    const what = seed ? policyText(seed) : `policy ${quoted(a.policy_id)}`;
+    return `${safe(a.action, 20)} ${what}`;
+  });
+  return items.length ? `actions: ${items.slice(0, MAX_LISTED).join(', ')}` : 'no actions';
+}
 
 /** What a write does, the telemetry it drops or stops protecting first. `stored` is the object it acts on, and
  * `current` the rule set in force (for `metrics.rules.replace`). */
@@ -211,8 +227,10 @@ export function detailText(
     case 'traces.policies.delete':
       return `removes ${stored ? policyText(s) : `policy ${quoted(params.path?.id)}`}`;
     case 'traces.recommendations.apply':
-    case 'traces.recommendations.dismiss':
-      return `recommendation ${quoted(params.path?.id)}${stored ? `: ${quoted(stored.message)}` : ''}`;
+    case 'traces.recommendations.dismiss': {
+      const text = `recommendation ${quoted(params.path?.id)}${stored ? `: ${quoted(stored.message)}` : ''}`;
+      return key.endsWith('.apply') ? `${text}; ${actionsText(stored?.actions)}` : text;
+    }
     default:
       return '';
   }

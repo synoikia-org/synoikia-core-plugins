@@ -97,7 +97,12 @@ export const instanceTarget = (endpoint: Endpoint): ResolvedTarget => ({
 
 /** The confirm literal of a per-object write: the stored object's name, else (a create) the name the call gives,
  * else the instance id. */
-export function subjectLiteral(endpoint: Endpoint, key: string, params: CallParams, targets: readonly ResolvedTarget[]) {
+export function subjectLiteral(
+  endpoint: Endpoint,
+  key: string,
+  params: CallParams,
+  targets: readonly ResolvedTarget[],
+) {
   const target = targets.find((t) => t.kind !== 'instance');
   if (target) return target.name;
   const body = isPlainObject(params.body) ? params.body : {};
