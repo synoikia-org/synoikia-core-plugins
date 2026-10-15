@@ -13,6 +13,7 @@ The original per-server designs the TrueNAS, Seerr and Home Assistant plugins co
 | Grafana             | [`designs/grafana.md`](designs/grafana.md)             |
 | Backstage           | [`designs/backstage.md`](designs/backstage.md)         |
 | Radarr              | [`designs/radarr.md`](designs/radarr.md)               |
+| Prowlarr            | [`designs/prowlarr.md`](designs/prowlarr.md)           |
 | Grafana Cloud       | [`designs/grafanacloud.md`](designs/grafanacloud.md)   |
 | Jenkins             | [`designs/jenkins.md`](designs/jenkins.md)             |
 | Lidarr              | [`designs/lidarr.md`](designs/lidarr.md)               |
