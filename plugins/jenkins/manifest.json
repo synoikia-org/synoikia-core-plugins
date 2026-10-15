@@ -3,16 +3,26 @@
   "name": "Jenkins",
   "version": "0.1.0",
   "sdk": "^0.2.2",
-  "description": "Jenkins for Synoikia.",
+  "description": "Search/execute over Jenkins 2.x: jobs, builds, console logs, test reports, the queue and nodes, from a fixed set of remote access API operations.",
   "entry": "dist/index.js",
   "binding": {
     "namespace": "jenkins",
     "functions": ["call"]
   },
+  "capabilities": {
+    "targets": true
+  },
+  "targets": {
+    "label": "Job, build or instance"
+  },
+  "labels": {
+    "operation": "Operation",
+    "operations": "Operations"
+  },
   "connection": {
     "schema": {
       "type": "object",
-      "required": ["baseUrl", "username", "password"],
+      "required": ["baseUrl", "username", "token"],
       "properties": {
         "baseUrl": {
           "type": "string",
@@ -23,9 +33,9 @@
           "type": "string",
           "title": "Username"
         },
-        "password": {
+        "token": {
           "type": "string",
-          "title": "Password",
+          "title": "API token",
           "writeOnly": true
         },
         "verifyTls": {
@@ -38,22 +48,24 @@
     "ui": {
       "baseUrl": {
         "widget": "url",
-        "placeholder": "https://jenkins.internal.lan"
+        "placeholder": "https://jenkins.internal.lan",
+        "help": "The address you open Jenkins at, with its context path if it has one (https://ci.lan/jenkins)."
       },
       "username": {
-        "widget": "text"
+        "widget": "text",
+        "help": "The Jenkins user the API token belongs to."
       },
-      "password": {
+      "token": {
         "widget": "secret",
-        "help": "The password of a dedicated, least-privileged user."
+        "help": "An API token of that user, not its password. Sent with the username as HTTP Basic."
       },
       "verifyTls": {
         "widget": "bool"
       }
     },
-    "help": "1. In Jenkins, create a dedicated user with only the access Synoikia should have, and its password.\n2. Enter the base URL and credentials, then **Test connection**.\n3. Keep *Verify TLS* on unless Jenkins uses a self-signed certificate on a trusted network.\n\nAfter the first sync, raise groups on the Access page as needed."
+    "help": "1. In Jenkins 2.x, sign in as a dedicated user with only the permissions Synoikia should have (Overall/Read, Job/Read and Job/Build to start builds, Job/Cancel to stop them).\n2. Open the user's **Security** page (**Configure** in older versions), **Add new Token** under *API Token*, and copy it.\n3. Enter the base URL, the username and the token, then **Test connection**.\n4. Keep *Verify TLS* on unless Jenkins uses a self-signed certificate on a trusted network.\n\nThe script console, credentials, plugin manager and job configuration are not reachable through Synoikia. Deletes, disable/enable, quiet-down and safe restart need a typed confirmation: the job's full name, `<job>#<build>`, or the base URL's host name."
   },
-  "sensitiveKeys": ["password", "apiKey", "api_key", "token", "secret"],
+  "sensitiveKeys": ["token", "password", "apiToken", "secret"],
   "network": {
     "hosts": ["{{connection.baseUrl}}"]
   }
