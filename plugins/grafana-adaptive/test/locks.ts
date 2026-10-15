@@ -24,7 +24,7 @@ export const LOCK_CASES: LockCase[] = [
       ],
     },
     confirm: IDS.metrics,
-    shows: `on Adaptive Metrics instance ${IDS.metrics}: drops entirely: "go_gc_duration_seconds"; aggregates: "http_requests_total" aggregated (drop labels "pod"; aggregations sum); removes the rules of "debug_events_total"`,
+    shows: `on Adaptive Metrics instance ${IDS.metrics}: drops entirely: "go_gc_duration_seconds"; aggregates: "http_requests_total" aggregated (drop labels "pod"; aggregations "sum"); removes the rules of "debug_events_total"`,
     done: (s) => s.rules.length === 2 && s.rules.some((r) => r.metric === 'go_gc_duration_seconds'),
   },
   {
@@ -165,7 +165,7 @@ export const LOCK_CASES: LockCase[] = [
     key: 'traces.recommendations.apply',
     params: { path: { id: 'rec-1' } },
     confirm: IDS.traces,
-    shows: `on Adaptive Traces instance ${IDS.traces}: recommendation "rec-1": "Sample health checks at 1%"; actions: add policy "health-checks" of type "probabilistic"`,
+    shows: `on Adaptive Traces instance ${IDS.traces}, recommendation rec-1: recommendation "rec-1": "Sample health checks at 1%"; actions: add policy "health-checks" of type "probabilistic"`,
     done: (s) => s.traceRecommendations[0]?.applied === true,
   },
 ];

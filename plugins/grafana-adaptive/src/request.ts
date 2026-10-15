@@ -115,7 +115,9 @@ function checkQueryValue(op: HttpOperation, key: string, value: unknown, schema:
     return;
   }
   const allowed = enumOf(s);
-  if (typeof value !== 'string' || (allowed ? !allowed.includes(value) : !ID.test(value)))
+  // `__global__` names the tenant-wide segment of Adaptive Logs drop rules.
+  const idOk = (v: string) => ID.test(v) || (key === 'segment_id' && v === '__global__');
+  if (typeof value !== 'string' || (allowed ? !allowed.includes(value) : !idOk(value)))
     throw invalid(`${where} must be ${allowed ? `one of ${allowed.join(', ')}` : 'an id as Grafana returns it'}`);
 }
 

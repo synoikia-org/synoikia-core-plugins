@@ -233,6 +233,64 @@ describe('Grafana Adaptive plugin', () => {
       );
     });
 
+    it('shows the match type of drops and removals, so a prefix drop never reads as one metric', () => {
+      expect(
+        replaceText(
+          [
+            { metric: 'go_', match_type: 'prefix', drop: true },
+            { metric: '_bucket', match_type: 'suffix', drop: true },
+            { metric: 'kube_pod_info', match_type: 'prefix', drop: true },
+          ],
+          [{ metric: 'kube_pod_info', drop: true }],
+        ),
+      ).toBe(
+        'drops entirely: "go_" (prefix match), "_bucket" (suffix match), "kube_pod_info" (prefix match); removes the rules of "kube_pod_info" (kept in full again); 3 rules: 3 added, 0 changed, 1 removed, 0 unchanged',
+      );
+      expect(replaceText([{ metric: 'go_', match_type: 'prefix', drop: true }], undefined)).toContain(
+        'drops entirely: "go_" (prefix match)',
+      );
+      expect(replaceText([{ metric: 'a', match_type: 'exact' }], [{ metric: 'a' }])).toContain('0 changed');
+    });
+
+    it('refuses a match type other than exact, prefix or suffix', async () => {
+      for (const [key, params] of [
+        ['metrics.rules.replace', { ifMatch: '"v1"', body: [{ metric: 'a', match_type: 'regex', drop: true }] }],
+        ['metrics.rules.check', { body: [{ metric: 'a', match_type: '' }] }],
+        ['metrics.exemptions.create', { body: { metric: 'a', match_type: 'Prefix' } }],
+      ] as const)
+        await expect(resolve(key, params)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+    });
+
+    it('lists the keep_labels a settings change removes', async () => {
+      const r = await resolve('metrics.recommendations.updateConfig', { body: { keep_labels: ['team'] } });
+      const s = await plugin.summarize({ ...r, targets: [] });
+      expect(s.text).toContain('stops keeping labels "namespace"');
+    });
+
+    it('confirms a rule update or delete on the instance id when the stored rule cannot be read', async () => {
+      for (const [key, params] of [
+        ['metrics.rules.delete', { ifMatch: '"v1"', path: { metric: 'not_a_rule' } }],
+        ['metrics.rules.update', { ifMatch: '"v1"', path: { metric: 'not_a_rule' }, body: { metric: 'not_a_rule' } }],
+      ] as const) {
+        const r = await resolve(key, params);
+        const targets = (await plugin.resolveTargets?.(r)) ?? [];
+        await expect(plugin.summarize({ ...r, targets })).resolves.toMatchObject({ confirmLiteral: IDS.metrics });
+      }
+    });
+
+    it('ties an applied trace recommendation to its actions', async () => {
+      const r = await resolve('traces.recommendations.apply', { path: { id: 'rec-1' } });
+      const before = (await plugin.resolveTargets?.(r)) ?? [];
+      (fake.state.traceRecommendations[0]!.actions as unknown[]).push({ action: 'remove', policy_id: 'pol-1' });
+      const after = (await plugin.resolveTargets?.(r)) ?? [];
+      expect(before.map((t) => t.kind)).toEqual(['instance', 'trace-recommendation']);
+      expect(after[1]?.id).not.toBe(before[1]?.id);
+    });
+
+    it('takes the __global__ drop rule segment', async () => {
+      await expect(run('logs.dropRules.list', { query: { segment_id: '__global__' } })).resolves.toBeTruthy();
+    });
+
     it('says when the current rules cannot be read', () => {
       expect(replaceText([{ metric: 'x', drop: true }], undefined)).toBe(
         'drops entirely: "x"; the current rules could not be read; 1 rules sent replace them all',

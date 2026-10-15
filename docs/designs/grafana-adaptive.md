@@ -74,8 +74,8 @@ The sandbox calls `grafanaAdaptive.call(key, { path, query, body, ifMatch })`.
 ## Requests
 
 - Path params fill the template only: a metric is a Prometheus metric name, an ID matches `[A-Za-z0-9][A-Za-z0-9_.:-]*` (so `.`, `..` and `/` are refused). A path param the template does not take is refused.
-- Query keys are the declared ones, with their types and enums; keys that differ only by case are refused.
-- A body only where one is declared: a list of rules for `replace`/`check`, an object otherwise. The services are Go: `encoding/json` binds keys case-insensitively, the last match winning, and folds `ſ` and the Kelvin sign. Two keys that differ only in case, or a non-ASCII key, are refused at any depth, and the keys the plugin reads are renamed to one spelling, as in `grafanacloud`. The fields summaries read are type-checked (`drop` boolean, label lists of strings, `drop_rate` number, names and selectors non-empty strings).
+- Query keys are the declared ones, with their types and enums; keys that differ only by case are refused. IDs follow the path ID form; `segment_id` also takes `__global__`, the tenant-wide drop rule segment.
+- A body only where one is declared: a list of rules for `replace`/`check`, an object otherwise. The services are Go: `encoding/json` binds keys case-insensitively, the last match winning, and folds `ſ` and the Kelvin sign. Two keys that differ only in case, or a non-ASCII key, are refused at any depth, and the keys the plugin reads are renamed to one spelling, as in `grafanacloud`. The fields summaries read are type-checked (`drop` boolean, label lists of strings, `drop_rate` number, names and selectors non-empty strings), and `match_type` of rules and metrics exemptions must be `exact`, `prefix` or `suffix` (core does not enforce the `plugin.yaml` enum).
 - `ifMatch` is required on rules writes and refused elsewhere: 1–256 visible ASCII characters. A 412 answer becomes "read them again with `metrics.rules.list` and retry". Successful rules writes return the new `etag`.
 - `metrics.rules.create`/`update` need `body.metric` equal to `path.metric`.
 
@@ -89,15 +89,15 @@ Every write that changes which telemetry is kept is locked, matched by verb (`*.
 
 Only `traces.recommendations.dismiss` is a plain write: it changes no policy.
 
-Literals: instance-wide writes confirm on the service's instance ID. Per-object writes confirm on the stored object read back from the service (metric, stream selector or name); a create confirms on the name in its body. When the stored object cannot be read, the literal is the instance ID.
+Literals: instance-wide writes confirm on the service's instance ID. Per-object writes confirm on the stored object read back from the service (metric, stream selector or name); a create confirms on the metric or name in its call. When the stored object of an update or delete cannot be read, the literal is the instance ID.
 
 ## Targets
 
-Writes name what they act on: `instance` (`<service>:<id>`) for instance-wide writes; `metric-rule`, `metrics-exemption`, `logs-exemption`, `drop-rule` or `policy` with the stored name for updates and deletes. Creates have no target. Targets hold no status, as core resolves them again after the approval wait.
+Writes name what they act on: `instance` (`<service>:<id>`) for instance-wide writes; `metric-rule`, `metrics-exemption`, `logs-exemption`, `drop-rule` or `policy` with the stored name for updates and deletes. `traces.recommendations.apply` also names the recommendation, with a hash of its actions in the id (`rec-1#9b882217f37a`), so a recommendation regenerated during the approval wait changes the target and core refuses the call. Creates have no target. Targets hold no status, as core resolves them again after the approval wait.
 
 ## Summaries
 
-Destination first, then what is dropped, then the request: `Adaptive Metrics metrics.rules.replace on Adaptive Metrics instance 100001: drops entirely: "go_gc_duration_seconds"; aggregates: …; removes the rules of "debug_events_total" (kept in full again); 2 rules: 1 added, 1 changed, 1 removed, 0 unchanged — POST /aggregations/rules`. A replacement is compared with the rule set in force (read for the summary); when that cannot be read, the summary says so and lists the `drop` rules sent. Updates show the stored object as `(was …)`. Drop rates are shown as sent (`drop_rate 0.9`), as the docs and clients do not agree on a scale. Names, selectors and labels are escaped (control, bidi and zero-width characters as `\uXXXX`) and truncated; lists stop after 20.
+Destination first, then what is dropped, then the request: `Adaptive Metrics metrics.rules.replace on Adaptive Metrics instance 100001: drops entirely: "go_gc_duration_seconds"; aggregates: …; removes the rules of "debug_events_total" (kept in full again); 2 rules: 1 added, 1 changed, 1 removed, 0 unchanged — POST /aggregations/rules`. A replacement is compared with the rule set in force (read for the summary), by metric and match type; drops and removals name each rule as `"go_" (prefix match)`, so a prefix or suffix rule never reads as one metric. When the rule set cannot be read, the summary says so and lists the `drop` rules sent. A settings change reads the settings in force and lists the `keep_labels` it removes. Updates show the stored object as `(was …)`. Drop rules show their `segment_id`, exemptions their `expires_at`. Drop rates are shown as sent (`drop_rate 0.9`), as the docs and clients do not agree on a scale. Every model-written value (names, selectors, labels, aggregations, match types, expiry times) is quoted, escaped (control, bidi, zero-width, soft hyphen, U+061C and U+180E as `\uXXXX`) and truncated; lists stop after 20.
 
 ## Results
 

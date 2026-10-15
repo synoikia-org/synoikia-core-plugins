@@ -10,7 +10,7 @@ export function safe(value: unknown, max = 200): string {
   return JSON.stringify(truncate(String(value), max))
     .slice(1, -1)
     .replace(
-      /[\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
+      /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
       (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
     );
 }
@@ -21,6 +21,8 @@ const list = (values: readonly unknown[]) => {
   return values.length > MAX_LISTED ? `${shown} and ${values.length - MAX_LISTED} more` : shown;
 };
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+
+const MATCH_TYPES = ['exact', 'prefix', 'suffix'];
 
 const invalid = (message: string) => new PluginError(ErrorCodes.InvalidParams, message);
 
@@ -42,10 +44,15 @@ export function checkBodyFields(key: string, body: unknown): void {
   const need = (obj: Record<string, unknown>, field: string, at: string) => {
     if (typeof obj[field] !== 'string' || obj[field] === '') throw invalid(`${at}.${field} is required`);
   };
+  // Core does not enforce the plugin.yaml enum, and summaries must not show an unknown match as exact.
+  const matchType = (obj: Record<string, unknown>, at: string) => {
+    if (obj.match_type !== undefined && !MATCH_TYPES.includes(obj.match_type as string))
+      throw invalid(`${at}.match_type must be one of ${MATCH_TYPES.join(', ')}`);
+  };
   const rule = (r: unknown, at: string) => {
     if (!isPlainObject(r)) throw invalid(`${at} must be a rule object`);
     need(r, 'metric', at);
-    expect(r, 'match_type', 'string', at);
+    matchType(r, at);
     expect(r, 'drop', 'boolean', at);
     for (const f of ['keep_labels', 'drop_labels', 'aggregations']) expect(r, f, 'strings', at);
   };
@@ -58,6 +65,7 @@ export function checkBodyFields(key: string, body: unknown): void {
   if (key === 'metrics.rules.create' || key === 'metrics.rules.update') rule(b, 'body');
   else if (key.startsWith('metrics.exemptions.')) {
     need(b, 'metric', 'body');
+    matchType(b, 'body');
     expect(b, 'keep_labels', 'strings', 'body');
     expect(b, 'disable_recommendations', 'boolean', 'body');
   } else if (key === 'metrics.recommendations.updateConfig') {
@@ -87,10 +95,20 @@ export function checkBodyFields(key: string, body: unknown): void {
   }
 }
 
+/** A rule's or exemption's metric with its match type: `"go_" (prefix match)` reaches every metric it starts. */
+const subjectOf = (r: Record<string, unknown>) => {
+  const match = stringOr(r.match_type);
+  return `${quoted(r.metric)}${match && match !== 'exact' ? ` (${safe(match, 20)} match)` : ''}`;
+};
+
+const subjects = (rules: readonly Record<string, unknown>[]) => {
+  const shown = rules.slice(0, MAX_LISTED).map(subjectOf).join(', ');
+  return rules.length > MAX_LISTED ? `${shown} and ${rules.length - MAX_LISTED} more` : shown;
+};
+
 /** One metrics rule in words, what it removes first. */
 function ruleText(r: Record<string, unknown>): string {
-  const match = stringOr(r.match_type);
-  const subject = `${quoted(r.metric)}${match && match !== 'exact' ? ` (${safe(match)} match)` : ''}`;
+  const subject = subjectOf(r);
   if (r.drop === true) return `${subject} dropped entirely`;
   const parts: string[] = [];
   const dropLabels = strings(r.drop_labels);
@@ -98,15 +116,15 @@ function ruleText(r: Record<string, unknown>): string {
   if (dropLabels.length) parts.push(`drop labels ${list(dropLabels)}`);
   if (keepLabels.length) parts.push(`keep only labels ${list(keepLabels)}`);
   const aggs = strings(r.aggregations);
-  if (aggs.length) parts.push(`aggregations ${aggs.map((a) => safe(a, 40)).join(', ')}`);
+  if (aggs.length) parts.push(`aggregations ${list(aggs)}`);
   return `${subject} aggregated${parts.length ? ` (${parts.join('; ')})` : ''}`;
 }
 
 const ruleId = (r: Record<string, unknown>) => `${stringOr(r.match_type) ?? 'exact'}:${String(r.metric)}`;
 
-/** Stable JSON of a rule's effect, ignoring bookkeeping fields, for change detection. */
+/** Stable JSON of a rule's effect, ignoring bookkeeping fields and the match type (part of its id). */
 function effect(r: Record<string, unknown>): string {
-  const { managed_by: _m, ...rest } = r;
+  const { managed_by: _m, match_type: _t, ...rest } = r;
   const sorted = Object.keys(rest)
     .sort()
     .map((k) => [k, rest[k]]);
@@ -118,7 +136,7 @@ export function replaceText(sent: Record<string, unknown>[], current: Record<str
   if (!current) {
     const dropped = sent.filter((r) => r.drop === true);
     return [
-      dropped.length ? `drops entirely: ${list(dropped.map((r) => r.metric))}` : '',
+      dropped.length ? `drops entirely: ${subjects(dropped)}` : '',
       `the current rules could not be read; ${sent.length} rules sent replace them all`,
     ]
       .filter(Boolean)
@@ -136,11 +154,11 @@ export function replaceText(sent: Record<string, unknown>[], current: Record<str
   const drops = touched.filter((r) => r.drop === true);
   const aggregates = touched.filter((r) => r.drop !== true);
   const parts = [
-    drops.length ? `drops entirely: ${list(drops.map((r) => r.metric))}` : '',
+    drops.length ? `drops entirely: ${subjects(drops)}` : '',
     aggregates.length
       ? `aggregates: ${aggregates.slice(0, MAX_LISTED).map(ruleText).join(', ')}${aggregates.length > MAX_LISTED ? ` and ${aggregates.length - MAX_LISTED} more` : ''}`
       : '',
-    removed.length ? `removes the rules of ${list(removed.map((r) => r.metric))} (kept in full again)` : '',
+    removed.length ? `removes the rules of ${subjects(removed)} (kept in full again)` : '',
     `${sent.length} rules: ${added.length} added, ${changed.length} changed, ${removed.length} removed, ${sent.length - touched.length} unchanged`,
   ];
   return parts.filter(Boolean).join('; ');
@@ -154,14 +172,14 @@ const rateText = (b: Record<string, unknown>) => {
     `drop_rate ${safe(rule.drop_rate, 20)} on the lines of ${quoted(rule.stream_selector)}`,
     levels.length ? `at levels ${list(levels)}` : 'at every level',
     contains.length ? `containing ${list(contains)}` : '',
-    `(rule ${quoted(b.name)}${b.disabled === true ? ', disabled' : ''}${b.expires_at ? `, expires ${safe(b.expires_at, 40)}` : ''})`,
+    `(rule ${quoted(b.name)}${b.disabled === true ? ', disabled' : ''}${b.segment_id ? `, segment ${quoted(b.segment_id)}` : ''}${b.expires_at ? `, expires ${quoted(b.expires_at)}` : ''})`,
   ]
     .filter(Boolean)
     .join(' ');
 };
 
 const policyText = (b: Record<string, unknown>) =>
-  `policy ${quoted(b.name)} of type ${quoted(b.type)}: ${safe(JSON.stringify(b.body ?? {}), 300)}${b.expires_at ? `, expires ${safe(b.expires_at, 40)}` : ''}`;
+  `policy ${quoted(b.name)} of type ${quoted(b.type)}: ${safe(JSON.stringify(b.body ?? {}), 300)}${b.expires_at ? `, expires ${quoted(b.expires_at)}` : ''}`;
 
 /** A trace recommendation's actions: the policies it adds, changes or removes. */
 function actionsText(actions: unknown): string {
@@ -175,21 +193,25 @@ function actionsText(actions: unknown): string {
 }
 
 /** What a write does, the telemetry it drops or stops protecting first. `stored` is the object it acts on, and
- * `current` the rule set in force (for `metrics.rules.replace`). */
+ * `current` the rule set (`metrics.rules.replace`) or settings (`updateConfig`) in force. */
 export function detailText(
   key: string,
   params: CallParams,
   stored: Record<string, unknown> | undefined,
-  current: Record<string, unknown>[] | undefined,
+  current: unknown,
 ): string {
   const body = isPlainObject(params.body) ? params.body : {};
   const s = stored ?? {};
   switch (key) {
     case 'metrics.rules.replace':
-      return replaceText((params.body as Record<string, unknown>[]) ?? [], current);
+      return replaceText(
+        (params.body as Record<string, unknown>[]) ?? [],
+        Array.isArray(current) ? current.filter(isPlainObject) : undefined,
+      );
     case 'metrics.rules.create':
-    case 'metrics.rules.update':
       return ruleText(body);
+    case 'metrics.rules.update':
+      return `${ruleText(body)}${stored ? ` (was ${ruleText(s)})` : ''}`;
     case 'metrics.rules.delete':
       return `removes the rule of ${quoted(params.path?.metric)}${stored ? ` (now ${ruleText(s)})` : ''}; the metric is kept in full again`;
     case 'metrics.recommendations.updateConfig': {
@@ -202,15 +224,22 @@ export function detailText(
             ? `auto-apply ON: recommendations change the rules without review${gate ? ` (gate ${quoted(gate)})` : ''}`
             : 'auto-apply off';
       const keep = strings(body.keep_labels);
-      return `${autoText}; keep_labels ${keep.length ? list(keep) : 'none'}`;
+      const was = isPlainObject(current) ? strings(current.keep_labels) : undefined;
+      const removed = was?.filter((l) => !keep.includes(l)) ?? [];
+      const keepText = was
+        ? removed.length
+          ? `stops keeping labels ${list(removed)} (recommendations may aggregate them away)`
+          : 'removes no keep_labels'
+        : 'the current settings could not be read';
+      return `${autoText}; ${keepText}; keep_labels ${keep.length ? list(keep) : 'none'}`;
     }
     case 'metrics.exemptions.create':
     case 'metrics.exemptions.update': {
       const keep = strings(body.keep_labels);
-      return `exempts ${quoted(body.metric)}${body.disable_recommendations === true ? ' from all recommendations' : ''}${keep.length ? `, keeping labels ${list(keep)}` : ''}${stored ? ` (was ${quoted(s.metric)})` : ''}`;
+      return `exempts ${subjectOf(body)}${body.disable_recommendations === true ? ' from all recommendations' : ''}${keep.length ? `, keeping labels ${list(keep)}` : ''}${body.expires_at ? `, expires ${quoted(body.expires_at)}` : ''}${stored ? ` (was ${subjectOf(s)})` : ''}`;
     }
     case 'metrics.exemptions.delete':
-      return `removes the exemption of ${quoted(s.metric ?? params.path?.id)}: recommendations may aggregate or drop it again`;
+      return `removes the exemption of ${stored ? subjectOf(s) : quoted(params.path?.id)}: recommendations may aggregate or drop it again`;
     case 'logs.dropRules.create':
     case 'logs.dropRules.update':
       return `${rateText(body)}${stored ? ` (was ${rateText(s)})` : ''}`;
@@ -218,7 +247,7 @@ export function detailText(
       return `removes drop rule ${stored ? rateText(s) : quoted(params.path?.id)}`;
     case 'logs.exemptions.create':
     case 'logs.exemptions.update':
-      return `never drops the lines of ${quoted(body.stream_selector)}${stored ? ` (was ${quoted(s.stream_selector)})` : ''}`;
+      return `never drops the lines of ${quoted(body.stream_selector)}${body.expires_at ? `, expires ${quoted(body.expires_at)}` : ''}${stored ? ` (was ${quoted(s.stream_selector)})` : ''}`;
     case 'logs.exemptions.delete':
       return `removes the exemption of ${quoted(s.stream_selector ?? params.path?.id)}: its lines may be dropped again`;
     case 'traces.policies.create':

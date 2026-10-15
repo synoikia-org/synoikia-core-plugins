@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { fillTemplate, isPlainObject, stringOr } from '@synoikia/plugin-sdk';
 import type { ResolvedTarget } from '@synoikia/plugin-sdk';
 import { SERVICE_NAMES } from './connection.js';
@@ -79,6 +80,10 @@ export async function writeTargets(
   params: CallParams,
   timeoutMs: number,
 ): Promise<ResolvedTarget[]> {
+  if (key === 'traces.recommendations.apply') {
+    const rec = await traceRecommendation(endpoint, params.path?.id, timeoutMs);
+    return rec ? [instanceTarget(endpoint), recommendationTarget(rec)] : [instanceTarget(endpoint)];
+  }
   if (INSTANCE_WRITES.has(key)) return [instanceTarget(endpoint)];
   const spec = STORED[key];
   if (!spec) return [];
@@ -89,13 +94,38 @@ export async function writeTargets(
   return [{ kind: spec.kind, id, name }];
 }
 
+/** A trace recommendation, read from the list (there is no read by id); undefined when it can't be read. */
+export async function traceRecommendation(
+  endpoint: Endpoint,
+  id: string | undefined,
+  timeoutMs: number,
+): Promise<Record<string, unknown> | undefined> {
+  try {
+    const res = await endpoint.client.raw('GET', '/adaptive-traces/api/v1/recommendations', { timeoutMs });
+    if (res.status !== 200 || !Array.isArray(res.body)) return undefined;
+    return res.body.find((r): r is Record<string, unknown> => isPlainObject(r) && r.id === id);
+  } catch {
+    return undefined;
+  }
+}
+
+/** The recommendation with a hash of its actions in the id, so one regenerated during the approval wait changes the
+ * target and core refuses the call. */
+const recommendationTarget = (rec: Record<string, unknown>): ResolvedTarget => {
+  const hash = createHash('sha256')
+    .update(JSON.stringify(rec.actions ?? null))
+    .digest('hex')
+    .slice(0, 12);
+  return { kind: 'trace-recommendation', id: `${String(rec.id)}#${hash}`, name: `recommendation ${String(rec.id)}` };
+};
+
 export const instanceTarget = (endpoint: Endpoint): ResolvedTarget => ({
   kind: 'instance',
   id: `${endpoint.service}:${endpoint.instanceId}`,
   name: `${SERVICE_NAMES[endpoint.service]} instance ${endpoint.instanceId}`,
 });
 
-/** The confirm literal of a per-object write: the stored object's name, else (a create) the name the call gives,
+/** The confirm literal of a per-object write: the stored object's name, else for a create the name the call gives,
  * else the instance id. */
 export function subjectLiteral(
   endpoint: Endpoint,
@@ -103,17 +133,18 @@ export function subjectLiteral(
   params: CallParams,
   targets: readonly ResolvedTarget[],
 ) {
-  const target = targets.find((t) => t.kind !== 'instance');
+  const target = targets.find((t) => t.kind !== 'instance' && t.kind !== 'trace-recommendation');
   if (target) return target.name;
   const body = isPlainObject(params.body) ? params.body : {};
-  const fromCall = key.startsWith('metrics.rules.')
-    ? params.path?.metric
-    : key === 'metrics.exemptions.create'
-      ? stringOr(body.metric)
-      : key === 'logs.exemptions.create'
-        ? stringOr(body.stream_selector)
-        : key === 'logs.dropRules.create' || key === 'traces.policies.create'
-          ? stringOr(body.name)
-          : undefined;
+  const fromCall =
+    key === 'metrics.rules.create'
+      ? params.path?.metric
+      : key === 'metrics.exemptions.create'
+        ? stringOr(body.metric)
+        : key === 'logs.exemptions.create'
+          ? stringOr(body.stream_selector)
+          : key === 'logs.dropRules.create' || key === 'traces.policies.create'
+            ? stringOr(body.name)
+            : undefined;
   return fromCall ?? endpoint.instanceId;
 }

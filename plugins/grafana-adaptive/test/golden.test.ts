@@ -53,6 +53,16 @@ describe('Grafana Adaptive golden record', () => {
       ...LOCK_CASES.map((c) => ({ key: c.key, params: c.params })),
       { key: 'traces.recommendations.dismiss', params: { path: { id: 'rec-1' } } },
       { key: 'metrics.rules.replace', params: { ifMatch: '"v1"', query: { segment: 'seg-1' }, body: [] } },
+      {
+        key: 'metrics.rules.replace',
+        params: {
+          ifMatch: '"v1"',
+          body: [
+            { metric: 'http_requests_total', match_type: 'prefix', drop_labels: ['pod'] },
+            { metric: 'debug_', match_type: 'prefix', drop: true },
+          ],
+        },
+      },
     ];
     const out: Record<string, unknown> = {};
     for (const [i, c] of cases.entries()) {

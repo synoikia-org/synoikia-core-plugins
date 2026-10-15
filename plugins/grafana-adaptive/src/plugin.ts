@@ -16,7 +16,14 @@ import { connect, endpointFor, SERVICE_NAMES, SERVICES, serviceOf } from './conn
 import type { Endpoint, Endpoints, Service } from './connection.js';
 import { checkParams, requestPath } from './request.js';
 import type { CallParams, HttpOperation } from './request.js';
-import { hasStored, INSTANCE_WRITES, storedObject, subjectLiteral, writeTargets } from './stored.js';
+import {
+  hasStored,
+  INSTANCE_WRITES,
+  storedObject,
+  subjectLiteral,
+  traceRecommendation,
+  writeTargets,
+} from './stored.js';
 import { checkBodyFields, detailText, summaryText } from './summary.js';
 
 /** Grafana Cloud Adaptive Metrics, Logs and Traces: operations declared in plugin.yaml, each sent to its service's
@@ -105,13 +112,11 @@ export function createGrafanaAdaptivePlugin(): PluginHandlers {
       });
       const operations = staticCatalog(rules);
 
-      /** The recommendation a traces apply or dismiss names, for its summary. */
-      const traceRecommendation = async (e: Endpoint, id: string | undefined) => {
+      /** The recommendation settings in force, for a change's summary. */
+      const currentConfig = async (e: Endpoint) => {
         try {
-          const res = await e.client.raw('GET', '/adaptive-traces/api/v1/recommendations', { timeoutMs: lookupMs });
-          return Array.isArray(res.body)
-            ? res.body.find((r): r is Record<string, unknown> => isPlainObject(r) && r.id === id)
-            : undefined;
+          const res = await e.client.raw('GET', '/aggregations/recommendations/config', { timeoutMs: lookupMs });
+          return res.status === 200 && isPlainObject(res.body) ? res.body : undefined;
         } catch {
           return undefined;
         }
@@ -166,8 +171,13 @@ export function createGrafanaAdaptivePlugin(): PluginHandlers {
           if (op.classification === 'write') {
             let stored: Record<string, unknown> | undefined;
             if (hasStored(key)) stored = await storedObject(e, key, p, lookupMs);
-            if (key.startsWith('traces.recommendations.')) stored = await traceRecommendation(e, p.path?.id);
-            const current = key === 'metrics.rules.replace' ? await currentRules(e, p) : undefined;
+            if (key.startsWith('traces.recommendations.')) stored = await traceRecommendation(e, p.path?.id, lookupMs);
+            const current =
+              key === 'metrics.rules.replace'
+                ? await currentRules(e, p)
+                : key === 'metrics.recommendations.updateConfig'
+                  ? await currentConfig(e)
+                  : undefined;
             detail = detailText(key, p, stored, current);
           }
           const text = summaryText({
