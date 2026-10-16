@@ -18,7 +18,7 @@ import raw from '../plugin.yaml';
 import { authHeaders } from './auth.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
 import { normalizeRequest, readTree } from './request.js';
-import { withDestinations } from './summary.js';
+import { visible, withDestinations } from './summary.js';
 import { resolveTargets, STRICT_FIELDS, TARGET_FIELDS, withTargets } from './targets.js';
 import { grafanaVersion } from './version.js';
 
@@ -147,7 +147,8 @@ export function createGrafanaPlugin(): PluginHandlers {
             params.params,
             settings.plugin.destinationFields,
           );
-          return { ...summary, text: withTargets(text, params.targets) };
+          // The SDK's body text leaves bidi and zero-width characters raw.
+          return { ...summary, text: visible(withTargets(text, params.targets)) };
         },
         invoke: (params) => binding.invoke(params),
       };

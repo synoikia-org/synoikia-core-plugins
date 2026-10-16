@@ -12,4 +12,4 @@ Workflows:
 - Shopping: `GET /api/households/shopping/lists` → `POST /api/households/shopping/items` with `{ shoppingListId, note, quantity }`, or `POST /api/households/shopping/lists/{item_id}/recipe/{recipe_id}` to add a recipe's ingredients.
 - Organize: `GET /api/organizers/tags` → `POST /api/recipes/bulk-actions/tag`.
 
-Locked (a person types a confirmation): admin user, group and household changes, AI providers, webhook create/update, group and household preferences, backups, maintenance cleanup, bulk recipe delete, API tokens, passwords, permissions and invitations.
+Locked (a person types a confirmation): every delete (bulk too), admin user, group and household changes, AI providers, webhook create/update, group and household preferences, backups, maintenance cleanup, API tokens, passwords, permissions and invitations.

@@ -15,13 +15,18 @@ import {
 import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import { authHeaders } from './auth.js';
 import { buildCatalog, custom, SERVICE, settings, splitWhen } from './catalog.js';
-import { maskProviderFields, refuseMaskedValues } from './fields.js';
+import { cutLinksDeep, maskProviderFields, redactKeysDeep, refuseMaskedValues } from './fields.js';
 import { normalizeRequest } from './request.js';
 import { fetchServarrSpec } from './spec.js';
 import { resolveTargets, withTargets } from './targets.js';
 
 /** The Lidarr plugin: catalog from the OpenAPI spec of the instance's release, keyed by the spec's paths
  * (`/api/v1/...`); the sandbox calls `lidarr.request({ method, path, query, body })`. */
+
+// Release and history links carry the indexer's API key or the tracker passkey; matched in any case.
+const LINK_KEYS = ['downloadUrl', 'magnetUrl', 'url'];
+// Link-shaped guids, info and comment links (history `nzbInfoUrl` too) are cut to their origin.
+const ORIGIN_KEYS = ['guid', 'infoUrl', 'commentUrl', 'nzbInfoUrl'];
 
 export function createLidarrPlugin(): PluginHandlers {
   return definePlugin({
@@ -83,8 +88,10 @@ export function createLidarrPlugin(): PluginHandlers {
           return { ...summary, text: withTargets(summary.text, params.targets) };
         },
         async invoke(params) {
-          // Provider fields wherever they appear.
-          return maskProviderFields(await binding.invoke(params));
+          // Provider fields wherever they appear; release and history links.
+          const result = maskProviderFields(await binding.invoke(params));
+          if (!/ \/api\/v1\/(release|history)/.test(params.key)) return result;
+          return cutLinksDeep(redactKeysDeep(result, LINK_KEYS), ORIGIN_KEYS);
         },
       };
     },

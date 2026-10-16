@@ -104,8 +104,21 @@ describe('Lidarr catalog (pinned spec)', () => {
       expect.arrayContaining(['/body/apiKey', '/body/password', '/body/proxyPassword']),
     );
     expect(op('GET /api/v1/config/host')?.sensitiveResult).toMatchObject({ keys: expect.arrayContaining(['apiKey']) });
-    expect(op('GET /api/v1/release')?.sensitiveResult).toEqual({ keys: ['downloadUrl'], deep: true });
-    expect(op('POST /api/v1/release/push')?.sensitiveParams).toEqual(['/body/downloadUrl']);
+    expect(op('GET /api/v1/release')?.sensitiveResult).toEqual({
+      keys: ['downloadUrl', 'magnetUrl', 'url'],
+      deep: true,
+    });
+    expect(op('GET /api/v1/history')?.sensitiveResult).toEqual({
+      keys: ['downloadUrl', 'magnetUrl', 'url'],
+      deep: true,
+    });
+    expect(op('POST /api/v1/release/push')?.sensitiveParams).toEqual([
+      '/body/downloadUrl',
+      '/body/magnetUrl',
+      '/body/guid',
+      '/body/infoUrl',
+      '/body/commentUrl',
+    ]);
   });
 
   it('locks a delete a newer spec adds', () => {

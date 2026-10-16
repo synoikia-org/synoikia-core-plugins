@@ -24,8 +24,7 @@ exclude:
   - 'GET /api/v1/log/file*'
   - 'GET /api/v1/mediacover/*'
   - 'GET /api/v1/filesystem*'
-  - 'GET /api/v1/manualimport'
-  - 'POST /api/v1/manualimport'
+  - '* /api/v1/manualimport'
   - 'POST /api/v1/system/backup/restore/upload'
 
 rules:
@@ -222,13 +221,15 @@ rules:
   - match: 'PUT /api/v1/config/host/{id}'
     sensitiveParams:
       [/body/apiKey, /body/password, /body/passwordConfirmation, /body/proxyPassword, /body/sslCertPassword]
-  # A pushed release's URL can carry the indexer's API key.
+  # A pushed release's links and guid can carry the indexer's API key or the tracker passkey.
   - match: 'POST /api/v1/release/push'
-    sensitiveParams: [/body/downloadUrl]
+    sensitiveParams: [/body/downloadUrl, /body/magnetUrl, /body/guid, /body/infoUrl, /body/commentUrl]
   - match: '* /api/v1/config/host*'
     sensitiveResult: { keys: [apiKey, password, passwordConfirmation, proxyPassword, sslCertPassword] }
+  # Release and history links carry the indexer's API key or the tracker passkey. src/plugin.ts also hides them in
+  # any case and cuts link-shaped guids, info and comment links to their origin.
   - match: ['* /api/v1/release*', '* /api/v1/history*']
-    sensitiveResult: { keys: [downloadUrl], deep: true }
+    sensitiveResult: { keys: [downloadUrl, magnetUrl, url], deep: true }
 
 plugin:
   # The spec for the instance's release tag (v<4-part version>), else the fallback branch; the base URL is a
@@ -279,6 +280,9 @@ plugin:
     - addImportListExclusion
     - downloadUrl
     - magnetUrl
+    - guid
+    - infoUrl
+    - commentUrl
     - apiKey
     - password
     - passwordConfirmation

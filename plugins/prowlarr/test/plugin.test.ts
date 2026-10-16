@@ -215,6 +215,8 @@ describe('Prowlarr plugin', () => {
     expect(hits).not.toContain(SECRETS.trackerPasskey);
     expect(hits).toContain('"guid":"https://privatehd.example/[REDACTED]"');
     expect(hits).toContain('"guid":"nzbgeek-guid-1"');
+    expect(hits).not.toContain(SECRETS.magnetGuidPasskey);
+    expect(hits).toContain('"guid":"magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567"');
     expect(hits).toContain('"commentUrl":"https://privatehd.example/[REDACTED]"');
     const history = await invoke({ path: '/api/v1/history' });
     expect(history).not.toContain(SECRETS.grabPasskey);
@@ -345,6 +347,27 @@ describe('provider fields', () => {
         field('limit', 50),
       ],
     });
+  });
+
+  it('cuts a magnet guid to its info hash, and a host without a scheme loses its userinfo', () => {
+    expect(
+      cutLinksDeep(
+        {
+          guid: 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=x&tr=https%3A%2F%2Ft.example%2FPASSKEY',
+        },
+        ['guid'],
+      ),
+    ).toEqual({
+      guid: 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567',
+    });
+    expect(destinations({ fields: [{ name: 'host', value: 'user:pw@socks.lan' }] })).toEqual(['http://socks.lan']);
+  });
+
+  it('drops host userinfo only before the first delimiter, so a fragment or path cannot fake the host', () => {
+    const host = (value: string) => destinations({ fields: [{ name: 'host', value }] });
+    expect(host('user:pw@nas.lan')).toEqual(['http://nas.lan']);
+    for (const value of ['evil.example#@good.example', 'evil.example?@good.example', 'evil.example/@good.example'])
+      expect(host(value)[0], value).toMatch(/^http:\/\/evil\.example/);
   });
 
   it('hides link keys in any case, at any depth', () => {

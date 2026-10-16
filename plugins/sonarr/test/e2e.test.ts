@@ -121,7 +121,22 @@ describe('Sonarr end to end (fake Sonarr)', () => {
         [SECRETS.indexerApiKey, SECRETS.trackerPasskey, SECRETS.trackerCookie],
       ],
       ['GET /api/v3/notification', { path: '/api/v3/notification' }, [SECRETS.webhookToken, SECRETS.headerToken]],
-      ['GET /api/v3/release', { path: '/api/v3/release', query: { seriesId: 1 } }, [SECRETS.releaseApiKey]],
+      [
+        'GET /api/v3/release',
+        { path: '/api/v3/release', query: { seriesId: 1 } },
+        [
+          SECRETS.releaseApiKey,
+          SECRETS.magnetPasskey,
+          SECRETS.guidPasskey,
+          SECRETS.infoPasskey,
+          SECRETS.magnetGuidPasskey,
+        ],
+      ],
+      [
+        'GET /api/v3/history',
+        { path: '/api/v3/history' },
+        [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey, SECRETS.magnetGuidPasskey],
+      ],
     ])('%s', async (key, request, secrets) => {
       allow(key, 'read');
       const r = await h.execute(call(request));

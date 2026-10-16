@@ -304,7 +304,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": true
@@ -859,7 +861,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -875,7 +879,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -891,7 +897,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -1319,7 +1327,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -1335,7 +1345,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -1351,7 +1363,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -1705,7 +1719,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -2044,7 +2060,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -2058,12 +2076,18 @@
     "locked": true,
     "needsReview": false,
     "sensitiveParams": [
-      "/body/downloadUrl"
+      "/body/downloadUrl",
+      "/body/magnetUrl",
+      "/body/guid",
+      "/body/infoUrl",
+      "/body/commentUrl"
     ],
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": true
@@ -2079,7 +2103,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false
@@ -2536,7 +2562,9 @@
     "sensitiveResult": {
       "deep": true,
       "keys": [
-        "downloadUrl"
+        "downloadUrl",
+        "magnetUrl",
+        "url"
       ]
     },
     "typedConfirmation": false

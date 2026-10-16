@@ -31,6 +31,7 @@ export const SECRETS = {
   trackerPid: 'tracker-pid-151515',
   grabPasskey: 'grab-passkey-161616',
   infoPasskey: 'info-passkey-171717',
+  magnetGuidPasskey: 'EXAMPLE-magnet-guid-passkey-222222',
 };
 
 type Row = Record<string, unknown> & { id: number };
@@ -226,6 +227,13 @@ export async function startFakeProwlarr(): Promise<FakeProwlarr> {
       title: 'Dune.2021.1080p',
       protocol: 'usenet',
       downloadUrl: proxyLink(1, 'Dune.2021.1080p'),
+    },
+    {
+      guid: `magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567&dn=EXAMPLE&tr=https%3A%2F%2Ftracker.example%2Fannounce%2F${SECRETS.magnetGuidPasskey}`,
+      indexerId: 2,
+      indexer: 'PrivateHD',
+      title: 'Dune.2021.720p',
+      protocol: 'torrent',
     },
   ];
 

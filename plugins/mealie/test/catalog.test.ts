@@ -21,7 +21,7 @@ describe('Mealie catalog (pinned spec)', () => {
   });
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
-    const locked = ruleKeys((r) => r.locked);
+    const locked = ruleKeys((r) => r.locked).filter((k) => !k.includes('*'));
     expect(locked.length).toBeGreaterThan(0);
     for (const key of locked) {
       expect(key).not.toContain('*');
@@ -109,6 +109,17 @@ describe('Mealie catalog (pinned spec)', () => {
     });
     expect(op('PUT /api/households/webhooks/{item_id}')?.sensitiveParams).toBeUndefined();
     expect(op('PUT /api/groups/ai-providers/providers/{provider_id}')?.sensitiveParams).not.toContain('/body/baseUrl');
+  });
+
+  it('locks every delete, one a newer spec adds included', () => {
+    for (const o of catalog.operations.filter((o) => o.key.startsWith('DELETE ')))
+      expect(o, o.key).toMatchObject({ locked: true, typedConfirmation: true });
+    const spec = JSON.parse(SPEC_TEXT) as { paths: Record<string, unknown> };
+    const newer = { ...spec, paths: { ...spec.paths, '/api/pantry/{item_id}': { delete: { summary: 'Delete' } } } };
+    expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /api/pantry/{item_id}')).toMatchObject({
+      locked: true,
+      typedConfirmation: true,
+    });
   });
 
   it('refuses a truncated spec', () => {

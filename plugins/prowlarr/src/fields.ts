@@ -18,7 +18,7 @@ export function safe(value: unknown): string | undefined {
   return JSON.stringify(text)
     .slice(1, -1)
     .replace(
-      /[\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
+      /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
       (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
     );
 }
@@ -47,9 +47,24 @@ function maskUrl(value: string): string {
   return rest ? `${url.protocol}//${url.host}/${REDACTED}` : value;
 }
 
-/** `value` with every string under one of `keys` (any case, any depth) that is a URL cut to its origin: Cardigann and
- * other indexers use the download link, passkey included, as the guid, and info and comment links can carry it too.
- * Other guids stay, so a release can still be grabbed. */
+/** A magnet link with only its info hash: trackers (`tr`) carry the passkey, and no other parameter is needed. */
+function cutMagnet(value: string): string {
+  const query = value.slice(value.indexOf('?') + 1);
+  const xt = new URLSearchParams(query).getAll('xt');
+  const ok = xt.length > 0 && xt.every((x) => /^urn:(btih:([0-9a-f]{40}|[a-z2-7]{32})|btmh:[0-9a-f]+)$/i.test(x));
+  return ok ? `magnet:?${xt.map((x) => `xt=${x}`).join('&')}` : `magnet:?${REDACTED}`;
+}
+
+/** `value` with every string under one of `keys` (any case, any depth) that is a URL cut to its origin, or a magnet
+ * link cut to its info hash: indexers use the download link, passkey included, as the guid, and info and comment
+ * links can carry it too. Other guids stay; a release whose guid was cut can't be grabbed by it. */
+/** A link cut to its origin or info hash; anything else that looks like an encoded or bare tracker link is hidden. */
+function cutLink(value: string): string {
+  if (/^\s*magnet:/i.test(value)) return cutMagnet(value.trim());
+  const cut = maskUrl(value);
+  return cut === value && /tr=|%3a/i.test(value) ? REDACTED : cut;
+}
+
 export function cutLinksDeep(value: unknown, keys: readonly string[], depth = 0): unknown {
   if (depth > MAX_DEPTH) return REDACTED;
   if (Array.isArray(value)) return value.map((v) => cutLinksDeep(v, keys, depth + 1));
@@ -58,7 +73,7 @@ export function cutLinksDeep(value: unknown, keys: readonly string[], depth = 0)
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value))
     Object.defineProperty(out, k, {
-      value: lower.has(k.toLowerCase()) && typeof v === 'string' ? maskUrl(v) : cutLinksDeep(v, keys, depth + 1),
+      value: lower.has(k.toLowerCase()) && typeof v === 'string' ? cutLink(v) : cutLinksDeep(v, keys, depth + 1),
       enumerable: true,
       writable: true,
       configurable: true,
@@ -176,8 +191,11 @@ export function destinations(body: unknown): string[] {
   for (const f of body.fields)
     if (isField(f) && typeof f.name === 'string' && !byName.has(f.name)) byName.set(f.name, f.value);
   const out = new Set<string>();
-  // A URL in `host` (FlareSolverr) is listed by its origin below.
-  const host = originOf(byName.get('host')) ? undefined : safe(byName.get('host'));
+  // A URL in `host` is listed by its origin below; any other form loses userinfo before the first `/?#\`.
+  const rawHost = byName.get('host');
+  const host = originOf(rawHost)
+    ? undefined
+    : safe(typeof rawHost === 'string' ? rawHost.replace(/^[^/?#\\]*@/, '') : rawHost);
   if (host) {
     const port = safe(byName.get('port'));
     out.add(`${byName.get('useSsl') === true ? 'https' : 'http'}://${host}${port ? `:${port}` : ''}`);

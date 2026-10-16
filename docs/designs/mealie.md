@@ -39,6 +39,9 @@ Each is locked with a typed confirmation. The literal is what the operation affe
 | `POST /api/households/webhooks`, `PUT …/webhooks/{item_id}` | A webhook posts household data to its `url` | group name |
 | `PUT /api/groups/preferences`, `PUT /api/households/preferences` | Privacy flags make recipes public without sign-in | group name |
 | `POST /api/households/invitations`, `…/invitations/email` | Grants someone a way to join | group name, or the invitee's email |
+| Every other `DELETE` (`DELETE *`), and one a newer spec adds | Irreversible: a recipe, food, unit, label, cookbook, meal plan, shopping list or item, organizer, webhook, notifier, comment, share link | the stored name or title (lookup), else the path id or slug; a bulk shopping-item delete, the group name |
+
+A single recipe delete is locked too: the catch-all follows the convention that every plugin in this repository locks all deletes.
 
 Literals never come from a body field the model writes about the target. Core redacts params whose names look secret (`token_id`) before the plugin summarizes them, so no literal is read from such a param.
 

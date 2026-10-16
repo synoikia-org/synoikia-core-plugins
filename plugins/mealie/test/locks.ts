@@ -232,4 +232,114 @@ export const LOCK_CASES: LockCase[] = [
     request: { method: 'PUT', path: '/api/households/preferences', body: { privateHousehold: false } },
     confirm: 'Home',
   },
+  {
+    key: 'DELETE /api/comments/{item_id}',
+    request: { method: 'DELETE', path: '/api/comments/c-1' },
+    confirm: 'c-1',
+  },
+  {
+    key: 'DELETE /api/foods/{item_id}',
+    request: { method: 'DELETE', path: '/api/foods/f-1' },
+    confirm: 'Flour',
+  },
+  {
+    key: 'DELETE /api/units/{item_id}',
+    request: { method: 'DELETE', path: '/api/units/un-1' },
+    confirm: 'cup',
+  },
+  {
+    key: 'DELETE /api/groups/labels/{item_id}',
+    request: { method: 'DELETE', path: '/api/groups/labels/l-1' },
+    confirm: 'Pantry',
+  },
+  {
+    key: 'DELETE /api/groups/reports/{item_id}',
+    request: { method: 'DELETE', path: '/api/groups/reports/rp-1' },
+    confirm: 'Migration report',
+  },
+  {
+    key: 'DELETE /api/households/cookbooks/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/cookbooks/cb-1' },
+    confirm: 'Weeknight',
+  },
+  {
+    key: 'DELETE /api/households/events/notifications/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/events/notifications/n-1' },
+    confirm: 'Phone',
+  },
+  {
+    key: 'DELETE /api/households/mealplans/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/mealplans/1' },
+    confirm: 'Taco night',
+  },
+  {
+    key: 'DELETE /api/households/mealplans/rules/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/mealplans/rules/mr-1' },
+    confirm: 'mr-1',
+  },
+  {
+    key: 'DELETE /api/households/recipe-actions/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/recipe-actions/ra-1' },
+    confirm: 'Open in Kitchen',
+  },
+  {
+    key: 'DELETE /api/households/shopping/items/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/shopping/items/si-1' },
+    confirm: '2 cups flour',
+  },
+  {
+    key: 'DELETE /api/households/shopping/lists/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/shopping/lists/sl-1' },
+    confirm: 'Groceries',
+  },
+  {
+    key: 'DELETE /api/households/webhooks/{item_id}',
+    request: { method: 'DELETE', path: '/api/households/webhooks/w-1' },
+    confirm: 'HA',
+  },
+  {
+    key: 'DELETE /api/organizers/categories/{item_id}',
+    request: { method: 'DELETE', path: '/api/organizers/categories/cat-1' },
+    confirm: 'Dinner',
+  },
+  {
+    key: 'DELETE /api/organizers/tags/{item_id}',
+    request: { method: 'DELETE', path: '/api/organizers/tags/t-1' },
+    confirm: 'Quick',
+  },
+  {
+    key: 'DELETE /api/organizers/tools/{item_id}',
+    request: { method: 'DELETE', path: '/api/organizers/tools/to-1' },
+    confirm: 'Wok',
+  },
+  {
+    key: 'DELETE /api/recipes/timeline/events/{item_id}',
+    request: { method: 'DELETE', path: '/api/recipes/timeline/events/te-1' },
+    confirm: 'Made it',
+  },
+  {
+    key: 'DELETE /api/shared/recipes/{item_id}',
+    request: { method: 'DELETE', path: '/api/shared/recipes/sh-1' },
+    confirm: 'Pasta Fagioli',
+  },
+  {
+    key: 'DELETE /api/recipes/{slug}',
+    request: { method: 'DELETE', path: '/api/recipes/pasta' },
+    confirm: 'Pasta Fagioli',
+  },
+  {
+    key: 'DELETE /api/recipes/{slug}/image',
+    request: { method: 'DELETE', path: '/api/recipes/pasta/image' },
+    confirm: 'pasta',
+  },
+  {
+    key: 'DELETE /api/users/{id}/favorites/{slug}',
+    request: { method: 'DELETE', path: '/api/users/u-1/favorites/pasta' },
+    confirm: 'pasta',
+  },
+  {
+    key: 'DELETE /api/households/shopping/items',
+    request: { method: 'DELETE', path: '/api/households/shopping/items', query: { ids: ['si-1', 'si-2'] } },
+    confirm: 'Home',
+  },
 ];
