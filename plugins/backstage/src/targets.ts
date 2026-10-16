@@ -1,5 +1,13 @@
-import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
+import { isPlainObject, stringOr, truncate } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
+
+/** Text with the control, bidi and zero-width characters JSON leaves raw escaped; `safe` also makes it one line. */
+const visible = (text: string) =>
+  text.replace(
+    /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  );
+const safe = (text: string) => visible(JSON.stringify(truncate(text, 200)).slice(1, -1));
 
 /** What a non-GET call acts on, read back from Backstage so the approver sees the stored entity, location or
  * task rather than an id; no target when it can't be read (the summary then shows the path and body). */
@@ -31,7 +39,7 @@ const TASK = /^POST \/api\/scaffolder\/v2\/tasks\/\{taskId\}\/(cancel|retry)$/;
 const SCAFFOLD = 'POST /api/scaffolder/v2/tasks';
 export const REGISTER = 'POST /api/catalog/locations';
 
-export async function backstageTargets(
+async function rawTargets(
   client: HttpJsonClient,
   key: string,
   params: unknown,
@@ -85,10 +93,19 @@ export async function backstageTargets(
   return [];
 }
 
+export async function backstageTargets(
+  client: HttpJsonClient,
+  key: string,
+  params: unknown,
+  timeoutMs: number,
+): Promise<ResolvedTarget[]> {
+  return (await rawTargets(client, key, params, timeoutMs)).map((t) => ({ ...t, name: safe(t.name) }));
+}
+
 /** The approval text with the targets it acts on; a location register leads with where it ingests from. */
 export function withTargets(text: string, key: string, targets: readonly ResolvedTarget[]) {
-  if (!targets.length) return text;
+  if (!targets.length) return visible(text);
   const names = targets.map((t) => t.name).join(', ');
-  if (key === REGISTER && text.includes(key)) return text.replace(key, `${key} from ${names}:`);
-  return `${text} on ${names}`;
+  if (key === REGISTER && text.includes(key)) return visible(text.replace(key, `${key} from ${names}:`));
+  return visible(`${text} on ${names}`);
 }

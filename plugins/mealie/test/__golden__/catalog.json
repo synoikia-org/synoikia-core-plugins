@@ -75,23 +75,23 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "recipe__comments",
     "key": "DELETE /api/comments/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "recipes__foods",
     "key": "DELETE /api/foods/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -117,111 +117,111 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "groups__multi_purpose_labels",
     "key": "DELETE /api/groups/labels/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "groups__reports",
     "key": "DELETE /api/groups/reports/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__cookbooks",
     "key": "DELETE /api/households/cookbooks/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__event_notifications",
     "key": "DELETE /api/households/events/notifications/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__meal_plans",
     "key": "DELETE /api/households/mealplans/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__meal_plan_rules",
     "key": "DELETE /api/households/mealplans/rules/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__recipe_actions",
     "key": "DELETE /api/households/recipe-actions/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__shopping_list_items",
     "key": "DELETE /api/households/shopping/items",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__shopping_list_items",
     "key": "DELETE /api/households/shopping/items/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__shopping_lists",
     "key": "DELETE /api/households/shopping/lists/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "households__webhooks",
     "key": "DELETE /api/households/webhooks/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
     "sensitiveResult": {
       "deep": true,
@@ -229,57 +229,57 @@
         "url"
       ]
     },
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "organizer__categories",
     "key": "DELETE /api/organizers/categories/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "organizer__tags",
     "key": "DELETE /api/organizers/tags/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "organizer__tools",
     "key": "DELETE /api/organizers/tools/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "recipe__crud",
     "key": "DELETE /api/recipes/{slug}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "recipe__crud",
     "key": "DELETE /api/recipes/{slug}/image",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -293,43 +293,43 @@
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "recipe__timeline",
     "key": "DELETE /api/recipes/timeline/events/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "shared__recipes",
     "key": "DELETE /api/shared/recipes/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "recipes__units",
     "key": "DELETE /api/units/{item_id}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",
-    "classificationReason": "verb:DELETE",
+    "classificationReason": "locked:destructive",
     "group": "users__ratings",
     "key": "DELETE /api/users/{id}/favorites/{slug}",
     "kind": "rest",
-    "locked": false,
+    "locked": true,
     "needsReview": false,
-    "typedConfirmation": false
+    "typedConfirmation": true
   },
   {
     "classification": "write",

@@ -30,6 +30,28 @@ export interface FakeMealie extends FakeHttp {
 
 const ok = (body: unknown = { message: 'ok' }): FakeResponse => ({ body });
 
+/** Stored objects the catch-all `DELETE *` lock looks up for its literal, served for GET and DELETE. */
+const STORED: Record<string, Record<string, unknown>> = {
+  '/api/comments/{item_id}': { id: 'c-1', text: 'Too salty' },
+  '/api/foods/{item_id}': { id: 'f-1', name: 'Flour' },
+  '/api/units/{item_id}': { id: 'un-1', name: 'cup' },
+  '/api/groups/labels/{item_id}': { id: 'l-1', name: 'Pantry' },
+  '/api/groups/reports/{item_id}': { id: 'rp-1', name: 'Migration report' },
+  '/api/households/cookbooks/{item_id}': { id: 'cb-1', name: 'Weeknight' },
+  '/api/households/events/notifications/{item_id}': { id: 'n-1', name: 'Phone' },
+  '/api/households/mealplans/{item_id}': { id: 1, title: 'Taco night' },
+  '/api/households/mealplans/rules/{item_id}': { id: 'mr-1', day: 'monday' },
+  '/api/households/recipe-actions/{item_id}': { id: 'ra-1', title: 'Open in Kitchen' },
+  '/api/households/shopping/items/{item_id}': { id: 'si-1', display: '2 cups flour' },
+  '/api/households/shopping/lists/{item_id}': { id: 'sl-1', name: 'Groceries' },
+  '/api/households/webhooks/{item_id}': { id: 'w-1', name: 'HA', url: SECRETS.webhookUrl },
+  '/api/organizers/categories/{item_id}': { id: 'cat-1', name: 'Dinner' },
+  '/api/organizers/tags/{item_id}': { id: 't-1', name: 'Quick' },
+  '/api/organizers/tools/{item_id}': { id: 'to-1', name: 'Wok' },
+  '/api/recipes/timeline/events/{item_id}': { id: 'te-1', subject: 'Made it' },
+  '/api/shared/recipes/{item_id}': { id: 'sh-1', recipe: { name: 'Pasta Fagioli' } },
+};
+
 export async function startFakeMealie(): Promise<FakeMealie> {
   let spec: unknown = JSON.parse(SPEC_TEXT);
   const users = new Map([
@@ -54,6 +76,21 @@ export async function startFakeMealie(): Promise<FakeMealie> {
       return denied.has(req.path) ? { status: 403, body: { detail: 'Forbidden' } } : undefined;
     },
     routes: {
+      ...Object.fromEntries(
+        Object.entries(STORED).flatMap(([path, row]) => [
+          [`GET ${path}`, () => ok(row)],
+          [`DELETE ${path}`, () => ok(row)],
+        ]),
+      ),
+      'DELETE /api/recipes/{slug}': (req) => {
+        const recipe = recipes.get(req.params.slug ?? '');
+        if (!recipe) return { status: 404, body: { detail: 'Recipe not found' } };
+        recipes.delete(recipe.slug);
+        return ok(recipe);
+      },
+      'DELETE /api/recipes/{slug}/image': () => ok(),
+      'DELETE /api/users/{id}/favorites/{slug}': () => ok(),
+      'DELETE /api/households/shopping/items': () => ok({ deletedItems: [] }),
       'GET /openapi.json': () => ok(spec),
       'GET /api/app/about': () => ok({ version: 'v3.28.0', production: true, allowSignup: false }),
       'GET /api/admin/about': () => ok({ version: 'v3.28.0', dbType: 'postgres', dbUrl: SECRETS.dbUrl }),

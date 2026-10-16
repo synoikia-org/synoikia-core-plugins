@@ -8,7 +8,7 @@ const MAX_VALUE = 300;
  * value can't hide or reorder what the approver reads. */
 const visible = (json: string) =>
   json.replace(
-    /[\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
+    /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
     (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
   );
 

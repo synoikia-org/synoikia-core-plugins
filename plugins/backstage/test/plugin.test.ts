@@ -164,6 +164,24 @@ describe('Backstage plugin', () => {
       await expect(targets(key, params), key).resolves.toEqual([]);
   });
 
+  it('escapes bidi and zero-width characters in target names and the approval text', async () => {
+    const target = 'https://x/a\u202elmay.exe\u200b';
+    const [t] = await plugin.resolveTargets!({
+      key: 'POST /api/catalog/locations',
+      params: { body: { type: 'url', target } },
+    });
+    expect(t).toEqual({ kind: 'location', id: target, name: 'url:https://x/a\\u202elmay.exe\\u200b' });
+    const { text } = await plugin.summarize({
+      key: 'POST /api/catalog/locations',
+      params: { body: { type: 'url', target } },
+      targets: [t!],
+    });
+    expect(text).toMatch(
+      /^Backstage POST \/api\/catalog\/locations from url:https:\/\/x\/a\\u202elmay\.exe\\u200b: \{/,
+    );
+    expect(text).not.toMatch(/[\u200b\u202e]/);
+  });
+
   it('parses entity refs with Backstage defaults', () => {
     expect(parseEntityRef('react-app', 'template')).toEqual({
       kind: 'template',

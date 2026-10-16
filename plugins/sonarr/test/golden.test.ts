@@ -85,6 +85,7 @@ describe('Sonarr golden record', () => {
       { method: 'GET', path: '/api/v3/indexer' },
       { method: 'GET', path: '/api/v3/notification' },
       { method: 'GET', path: '/api/v3/release', query: { seriesId: 1 } },
+      { method: 'GET', path: '/api/v3/history' },
       {
         method: 'POST',
         path: '/api/v3/downloadclient/test',

@@ -489,7 +489,7 @@
     "confirmLiteral": "Main Org.",
     "resolved": "POST /datasources",
     "targets": [],
-    "text": "Grafana POST /datasources [to url=\"http://loki.example.net:3100\"] {\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.example.net:3100\",\"basicAuth\":true,\"basicAuthPassword\":\"[REDACTED]\"} (queries from this data source go to its url with the stored credentials)"
+    "text": "Grafana POST /datasources [to url=loki.example.net:3100 \"http://loki.example.net:3100\"] {\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.example.net:3100\",\"basicAuth\":true,\"basicAuthPassword\":\"[REDACTED]\"} (queries from this data source go to its url with the stored credentials)"
   },
   "POST /folders/{folder_uid}/move": {
     "confirmLiteral": "Ops",
@@ -669,7 +669,7 @@
         "name": "Prometheus (prometheus, http://prometheus:9090)"
       }
     ],
-    "text": "Grafana PUT /datasources/uid/prom [to url=\"http://elsewhere.example.net:9090\"] {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
+    "text": "Grafana PUT /datasources/uid/prom [to url=elsewhere.example.net:9090 \"http://elsewhere.example.net:9090\"] {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
   },
   "PUT /datasources/uid/{uid}/lbac/teams": {
     "confirmLiteral": "Prometheus",
@@ -693,7 +693,7 @@
         "name": "Prometheus (prometheus, http://prometheus:9090)"
       }
     ],
-    "text": "Grafana PUT /datasources/5 [to url=\"http://elsewhere.example.net:9090\"] {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
+    "text": "Grafana PUT /datasources/5 [to url=elsewhere.example.net:9090 \"http://elsewhere.example.net:9090\"] {\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://elsewhere.example.net:9090\"} (queries from this data source go to its url with the stored credentials) on Prometheus (prometheus, http://prometheus:9090)"
   },
   "PUT /groupsync/groups/{group_id}": {
     "confirmLiteral": "ldap-admins",

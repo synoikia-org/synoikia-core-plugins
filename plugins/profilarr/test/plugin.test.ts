@@ -84,6 +84,26 @@ describe('Profilarr plugin', () => {
     });
   });
 
+  it('escapes bidi and zero-width characters in the database target and the approval text', async () => {
+    fake.databases.set(2, {
+      id: 2,
+      name: 'Evil\u202egnp',
+      repository_url: 'https://example.com/\u2066repo',
+      auto_pull: 0,
+      personal_access_token: '',
+    });
+    const targets = await plugin.resolveTargets!({ key: 'POST /databases/{id}/sync', params: { path: { id: '2' } } });
+    expect(targets).toEqual([{ kind: 'database', id: '2', name: 'Evil\\u202egnp (https://example.com/\\u2066repo)' }]);
+    const { text } = await plugin.summarize({
+      key: 'POST /databases/{id}/sync',
+      params: { path: { id: '2' }, body: { note: 'a\u200bb' } },
+      targets,
+    });
+    expect(text).not.toMatch(/[\u200b\u202e\u2066]/);
+    expect(text).toContain('on Evil\\u202egnp');
+    fake.databases.delete(2);
+  });
+
   it('reports a rejected key without throwing', async () => {
     const bad = createProfilarrPlugin();
     await bad.init({ ...connection(), secrets: { apiKey: 'wrong' }, sdkVersion: '1' });

@@ -391,6 +391,13 @@
         "indexerId": 1,
         "protocol": "usenet",
         "title": "Dune.2021.1080p"
+      },
+      {
+        "guid": "magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567",
+        "indexer": "PrivateHD",
+        "indexerId": 2,
+        "protocol": "torrent",
+        "title": "Dune.2021.720p"
       }
     ],
     "sensitiveParams": []

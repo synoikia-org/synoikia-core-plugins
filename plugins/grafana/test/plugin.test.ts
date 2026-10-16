@@ -153,11 +153,42 @@ describe('Grafana plugin', () => {
     await expect(targets(undefined)).resolves.toEqual([]);
   });
 
+  it('escapes bidi and zero-width characters, and lists each address ahead of a padded one', async () => {
+    const addresses = `${' '.repeat(300)}${'x'.repeat(500)}@pad.example;\n evil\u202emoc.example ,ops\u200b@example.net`;
+    const body = { name: 'Mail', url: 'http://loki.example.net\u2066:3100', settings: { addresses } };
+    const { text } = await plugin.summarize({ key: 'POST /datasources', params: { body }, targets: [] });
+    expect(text).toContain(
+      `[to url=an invalid URL "http://loki.example.net\\u2066:3100", settings/addresses=["${'x'.repeat(200)}…", "evil\\u202emoc.example", "ops\\u200b@example.net"]] {`,
+    );
+    expect(text).not.toMatch(/[\u200b\u202e\u2066]/);
+    const many = Array.from({ length: 25 }, (_, i) => `a${i}@example.net`);
+    const listed = await plugin.summarize({
+      key: 'POST /datasources',
+      params: { body: { emails: many } },
+      targets: [],
+    });
+    expect(listed.text).toContain('"a19@example.net" and 5 more]');
+    const targets = await plugin.resolveTargets!({
+      key: 'POST /ds/query',
+      params: { body: { queries: [{ datasource: { uid: 'gone\u202e' } }] } },
+    });
+    expect(targets).toEqual([{ kind: 'datasource', id: 'gone\u202e', name: 'gone\\u202e' }]);
+  });
+
+  it('shows a URL destination by the host Go resolves, ahead of comma or userinfo padding', async () => {
+    const summarize = (url: string) =>
+      plugin.summarize({ key: 'POST /datasources', params: { body: { name: 'P', url } }, targets: [] });
+    const commas = await summarize(`http://prom.internal${',x'.repeat(25)}@evil.example:9090`);
+    expect(commas.text).toMatch(/^Grafana POST \/datasources \[to url=evil\.example:9090 "http:\/\/prom\.internal,x,/);
+    const userinfo = await summarize(`http://${'u'.repeat(300)}@evil.example/`);
+    expect(userinfo.text).toMatch(/^Grafana POST \/datasources \[to url=evil\.example "http:\/\/u+…"/);
+  });
+
   it('shows destination fields ahead of a padded body', async () => {
     const body = { padding: 'x'.repeat(5000), url: 'http://loki.example.net:3100', recipients: 'a@example.net' };
     const { text } = await plugin.summarize({ key: 'POST /datasources', params: { body }, targets: [] });
     expect(text).toMatch(
-      /^Grafana POST \/datasources \[to url="http:\/\/loki\.example\.net:3100", recipients="a@example\.net"\] \{/,
+      /^Grafana POST \/datasources \[to url=loki\.example\.net:3100 "http:\/\/loki\.example\.net:3100", recipients="a@example\.net"\] \{/,
     );
     const report = await plugin.summarize({
       key: 'PUT /reports/{id}',
@@ -165,7 +196,7 @@ describe('Grafana plugin', () => {
       targets: [],
     });
     expect(report.text).toContain(
-      'Grafana PUT /reports/7 [to url="http://loki.example.net:3100", recipients="a@example.net"]',
+      'Grafana PUT /reports/7 [to url=loki.example.net:3100 "http://loki.example.net:3100", recipients="a@example.net"]',
     );
   });
 
@@ -222,7 +253,7 @@ describe('Grafana plugin', () => {
     });
     expect(cp.params).toEqual({ body: { settings: { url: 'https://a.b/c' } } });
     await expect(plugin.summarize({ ...ds, targets: [] })).resolves.toMatchObject({
-      text: expect.stringContaining('[to url="http://loki.example.net:3100"]'),
+      text: expect.stringContaining('[to url=loki.example.net:3100 "http://loki.example.net:3100"]'),
     });
   });
 
