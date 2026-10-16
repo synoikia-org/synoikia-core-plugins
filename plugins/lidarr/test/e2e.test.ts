@@ -125,12 +125,18 @@ describe('Lidarr end to end (fake Lidarr)', () => {
       [
         'GET /api/v1/release',
         { path: '/api/v1/release', query: { albumId: 16 } },
-        [SECRETS.releaseApiKey, SECRETS.magnetPasskey, SECRETS.guidPasskey, SECRETS.infoPasskey],
+        [
+          SECRETS.releaseApiKey,
+          SECRETS.magnetPasskey,
+          SECRETS.guidPasskey,
+          SECRETS.infoPasskey,
+          SECRETS.magnetGuidPasskey,
+        ],
       ],
       [
         'GET /api/v1/history',
         { path: '/api/v1/history' },
-        [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey],
+        [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey, SECRETS.magnetGuidPasskey],
       ],
     ])('%s', async (key, request, secrets) => {
       allow(key, 'read');

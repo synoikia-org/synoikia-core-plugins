@@ -31,6 +31,7 @@ export const SECRETS = {
   guidPasskey: 'EXAMPLE-guid-passkey-191919',
   infoPasskey: 'EXAMPLE-info-passkey-202020',
   grabPasskey: 'EXAMPLE-grab-passkey-212121',
+  magnetGuidPasskey: 'EXAMPLE-magnet-guid-passkey-222222',
 };
 
 type Row = Record<string, unknown> & { id: number };
@@ -279,6 +280,12 @@ export async function startFakeLidarr(): Promise<FakeLidarr> {
             downloadUrl: `https://tracker.example/download.php?id=9&passkey=${SECRETS.guidPasskey}`,
             magnetUrl: `magnet:?xt=urn:btih:EXAMPLE&tr=https://tracker.example/announce?passkey=${SECRETS.magnetPasskey}`,
           },
+          {
+            guid: `magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567&dn=EXAMPLE&tr=https%3A%2F%2Ftracker.example%2Fannounce%2F${SECRETS.magnetGuidPasskey}`,
+            title: 'Radiohead-OK.Computer-1997-MP3',
+            indexerId: 15,
+            protocol: 'torrent',
+          },
         ],
       }),
       [`POST ${API}/release/push`]: () => ({ body: [{ approved: true }] }),
@@ -308,6 +315,14 @@ export async function startFakeLidarr(): Promise<FakeLidarr> {
                 Indexer: 'Tracker',
                 DownloadUrl: `https://tracker.example/dl/${SECRETS.grabPasskey}`,
                 InfoUrl: `https://tracker.example/details/8?passkey=${SECRETS.infoPasskey}`,
+              },
+            },
+            {
+              id: 53,
+              eventType: 'grabbed',
+              data: {
+                indexer: 'Tracker',
+                guid: `magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567&dn=EXAMPLE&tr=https%3A%2F%2Ftracker.example%2Fannounce%2F${SECRETS.magnetGuidPasskey}`,
               },
             },
           ],

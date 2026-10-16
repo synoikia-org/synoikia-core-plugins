@@ -76,6 +76,14 @@
           },
           "eventType": "grabbed",
           "id": 52
+        },
+        {
+          "data": {
+            "guid": "magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567",
+            "indexer": "Tracker"
+          },
+          "eventType": "grabbed",
+          "id": 53
         }
       ]
     },
@@ -226,6 +234,12 @@
         "magnetUrl": "[REDACTED]",
         "protocol": "torrent",
         "title": "Radiohead-OK.Computer-1997-24bit"
+      },
+      {
+        "guid": "magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567",
+        "indexerId": 15,
+        "protocol": "torrent",
+        "title": "Radiohead-OK.Computer-1997-MP3"
       }
     ],
     "sensitiveParams": []

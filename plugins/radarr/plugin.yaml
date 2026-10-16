@@ -206,9 +206,9 @@ rules:
   - match: 'PUT /api/v3/config/host/{id}'
     sensitiveParams:
       [/body/apiKey, /body/password, /body/passwordConfirmation, /body/proxyPassword, /body/sslCertPassword]
-  # A pushed release's URL can carry the indexer's API key or the tracker passkey.
+  # A pushed release's links and guid can carry the indexer's API key or the tracker passkey.
   - match: 'POST /api/v3/release/push'
-    sensitiveParams: [/body/downloadUrl, /body/magnetUrl]
+    sensitiveParams: [/body/downloadUrl, /body/magnetUrl, /body/guid, /body/infoUrl, /body/commentUrl]
   - match: '* /api/v3/config/host*'
     sensitiveResult: { keys: [apiKey, password, passwordConfirmation, proxyPassword, sslCertPassword] }
   # Release and history links carry the indexer's API key or the tracker passkey. src/plugin.ts also hides them in
@@ -268,6 +268,9 @@ plugin:
     - scriptImportPath
     - downloadUrl
     - magnetUrl
+    - guid
+    - infoUrl
+    - commentUrl
     - apiKey
     - password
     - passwordConfirmation

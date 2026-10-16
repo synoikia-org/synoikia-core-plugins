@@ -2078,7 +2078,10 @@
     "needsReview": false,
     "sensitiveParams": [
       "/body/downloadUrl",
-      "/body/magnetUrl"
+      "/body/magnetUrl",
+      "/body/guid",
+      "/body/infoUrl",
+      "/body/commentUrl"
     ],
     "sensitiveResult": {
       "deep": true,

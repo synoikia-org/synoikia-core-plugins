@@ -47,9 +47,16 @@ function maskUrl(value: string): string {
   return rest ? `${url.protocol}//${url.host}/${REDACTED}` : value;
 }
 
-/** `value` with every string under one of `keys` (any case, any depth) that is a URL cut to its origin: Cardigann and
- * other indexers use the download link, passkey included, as the guid, and info and comment links can carry it too.
- * Other guids stay, so a release can still be grabbed. */
+/** A magnet link with only its info hash: trackers (`tr`) carry the passkey, and no other parameter is needed. */
+function cutMagnet(value: string): string {
+  const query = value.slice(value.indexOf('?') + 1);
+  const xt = new URLSearchParams(query).getAll('xt').filter((x) => /^urn:bt(ih|mh):[a-z0-9]+$/i.test(x));
+  return xt.length ? `magnet:?${xt.map((x) => `xt=${x}`).join('&')}` : `magnet:?${REDACTED}`;
+}
+
+/** `value` with every string under one of `keys` (any case, any depth) that is a URL cut to its origin, or a magnet
+ * link cut to its info hash: indexers use the download link, passkey included, as the guid, and info and comment
+ * links can carry it too. Other guids stay; a release whose guid was cut can't be grabbed by it. */
 export function cutLinksDeep(value: unknown, keys: readonly string[], depth = 0): unknown {
   if (depth > MAX_DEPTH) return REDACTED;
   if (Array.isArray(value)) return value.map((v) => cutLinksDeep(v, keys, depth + 1));
@@ -58,7 +65,12 @@ export function cutLinksDeep(value: unknown, keys: readonly string[], depth = 0)
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value))
     Object.defineProperty(out, k, {
-      value: lower.has(k.toLowerCase()) && typeof v === 'string' ? maskUrl(v) : cutLinksDeep(v, keys, depth + 1),
+      value:
+        lower.has(k.toLowerCase()) && typeof v === 'string'
+          ? /^\s*magnet:/i.test(v)
+            ? cutMagnet(v.trim())
+            : maskUrl(v)
+          : cutLinksDeep(v, keys, depth + 1),
       enumerable: true,
       writable: true,
       configurable: true,
@@ -176,8 +188,11 @@ export function destinations(body: unknown): string[] {
   for (const f of body.fields)
     if (isField(f) && typeof f.name === 'string' && !byName.has(f.name)) byName.set(f.name, f.value);
   const out = new Set<string>();
-  // A URL in `host` (FlareSolverr) is listed by its origin below.
-  const host = originOf(byName.get('host')) ? undefined : safe(byName.get('host'));
+  // A URL in `host` is listed by its origin below; any other form loses its userinfo (`user:pw@nas`).
+  const rawHost = byName.get('host');
+  const host = originOf(rawHost)
+    ? undefined
+    : safe(typeof rawHost === 'string' ? rawHost.replace(/^.*@/s, '') : rawHost);
   if (host) {
     const port = safe(byName.get('port'));
     out.add(`${byName.get('useSsl') === true ? 'https' : 'http'}://${host}${port ? `:${port}` : ''}`);

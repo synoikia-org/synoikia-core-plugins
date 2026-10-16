@@ -239,13 +239,20 @@ describe('Sonarr plugin', () => {
       return JSON.stringify(await plugin.invoke({ key, params, context }));
     };
     const releases = await invoke({ path: '/api/v3/release', query: { seriesId: 1 } });
-    for (const secret of [SECRETS.releaseApiKey, SECRETS.magnetPasskey, SECRETS.guidPasskey, SECRETS.infoPasskey])
+    for (const secret of [
+      SECRETS.releaseApiKey,
+      SECRETS.magnetPasskey,
+      SECRETS.guidPasskey,
+      SECRETS.infoPasskey,
+      SECRETS.magnetGuidPasskey,
+    ])
       expect(releases).not.toContain(secret);
+    expect(releases).toContain('"guid":"magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567"');
     expect(releases).toContain('"guid":"nzbgeek-1"');
     expect(releases).toContain('"guid":"https://tracker.example/[REDACTED]"');
     expect(releases).toContain('"magnetUrl":"[REDACTED]"');
     const history = await invoke({ path: '/api/v3/history' });
-    for (const secret of [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey])
+    for (const secret of [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey, SECRETS.magnetGuidPasskey])
       expect(history).not.toContain(secret);
     expect(history).toContain('"DownloadUrl":"[REDACTED]"');
     expect(history).toContain('"nzbInfoUrl":"https://tracker.example/[REDACTED]"');
@@ -323,6 +330,35 @@ describe('provider fields', () => {
     expect(destinations({ fields: [{ name: 'host', value: 'http://user:pw@proxy.example:8191/v1' }] })).toEqual([
       'http://proxy.example:8191',
     ]);
+  });
+
+  it('cuts a magnet link under a guid, info or comment key to its info hash', () => {
+    const keys = ['guid', 'infoUrl', 'commentUrl'];
+    expect(
+      cutLinksDeep(
+        [
+          { guid: ' magnet:?dn=x&xt=urn:btih:ABC123&tr=https%3A%2F%2Ft.example%2Fa%2FPASSKEY&xs=y&as=z' },
+          { InfoURL: 'MAGNET:?tr=https://t.example/a?passkey=PASSKEY' },
+          { commentUrl: 'magnet:?xt=urn:btih:ABC&xt=https://t.example/PASSKEY' },
+        ],
+        keys,
+      ),
+    ).toEqual([
+      { guid: 'magnet:?xt=urn:btih:ABC123' },
+      { InfoURL: 'magnet:?[REDACTED]' },
+      { commentUrl: 'magnet:?xt=urn:btih:ABC' },
+    ]);
+  });
+
+  it('lists a host without a scheme without its userinfo', () => {
+    expect(
+      destinations({
+        fields: [
+          { name: 'host', value: 'user:pw@nas.lan' },
+          { name: 'port', value: 8080 },
+        ],
+      }),
+    ).toEqual(['http://nas.lan:8080']);
   });
 
   it('hides link keys in any case, at any depth', () => {

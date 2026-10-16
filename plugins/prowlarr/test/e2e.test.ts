@@ -53,10 +53,14 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
        const stats = await prowlarr.request({ path: '/api/v1/indexerstats' });
        return { titles: hits.map((x) => x.title), hits, grabs: stats.indexers[0].numberOfGrabs };`,
     );
-    expect(r).toMatchObject({ ok: true, value: { titles: ['Dune.2021.2160p', 'Dune.2021.1080p'], grabs: 3 } });
+    expect(r).toMatchObject({
+      ok: true,
+      value: { titles: ['Dune.2021.2160p', 'Dune.2021.1080p', 'Dune.2021.720p'], grabs: 3 },
+    });
     const text = JSON.stringify(r);
     expect(text).not.toContain(SECRETS.hostApiKey);
     expect(text).not.toContain(SECRETS.trackerPasskey);
+    expect(text).not.toContain(SECRETS.magnetGuidPasskey);
     expect(text).toContain('nzbgeek-guid-1');
     expect(text).toContain('"commentUrl":"https://privatehd.example/[REDACTED]"');
   });

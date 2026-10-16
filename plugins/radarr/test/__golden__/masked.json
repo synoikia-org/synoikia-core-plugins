@@ -76,6 +76,14 @@
           },
           "eventType": "grabbed",
           "id": 52
+        },
+        {
+          "data": {
+            "guid": "magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567",
+            "indexer": "Tracker"
+          },
+          "eventType": "grabbed",
+          "id": 53
         }
       ]
     },
@@ -180,6 +188,12 @@
         "magnetUrl": "[REDACTED]",
         "protocol": "torrent",
         "title": "Inception.2010.2160p"
+      },
+      {
+        "guid": "magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567",
+        "indexerId": 15,
+        "protocol": "torrent",
+        "title": "Inception.2010.720p"
       }
     ],
     "sensitiveParams": []

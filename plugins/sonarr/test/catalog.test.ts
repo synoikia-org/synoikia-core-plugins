@@ -112,7 +112,13 @@ describe('Sonarr catalog (pinned spec)', () => {
       keys: ['downloadUrl', 'magnetUrl', 'url'],
       deep: true,
     });
-    expect(op('POST /api/v3/release/push')?.sensitiveParams).toEqual(['/body/downloadUrl', '/body/magnetUrl']);
+    expect(op('POST /api/v3/release/push')?.sensitiveParams).toEqual([
+      '/body/downloadUrl',
+      '/body/magnetUrl',
+      '/body/guid',
+      '/body/infoUrl',
+      '/body/commentUrl',
+    ]);
   });
 
   it('locks a delete a newer spec adds', () => {
