@@ -198,6 +198,19 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(@synoikia/core@0.14.0)
 
+  plugins/qbittorrent:
+    dependencies:
+      '@synoikia/plugin-sdk':
+        specifier: ^0.5.0
+        version: 0.5.0
+    devDependencies:
+      '@synoikia/core':
+        specifier: ^0.14.0
+        version: 0.14.0
+      '@synoikia/create-plugin':
+        specifier: ^0.3.0
+        version: 0.3.0(@synoikia/core@0.14.0)
+
   plugins/radarr:
     dependencies:
       '@synoikia/plugin-sdk':

@@ -33,6 +33,7 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 | `sonarr`           | [Sonarr](https://github.com/Sonarr/Sonarr)                                                                             | `openapi.json` for the instance's release                         | [`docs/designs/sonarr.md`](docs/designs/sonarr.md)                     |
 | `grafana-adaptive` | [Grafana Cloud Adaptive Telemetry](https://grafana.com/docs/grafana-cloud/adaptive-telemetry/) (Metrics, Logs, Traces) | operations declared in `plugin.yaml` (no spec)                    | [`docs/designs/grafana-adaptive.md`](docs/designs/grafana-adaptive.md) |
 | `plex`             | [Plex Media Server](https://www.plex.tv/)                                                                              | the community spec (`LukeHagar/plex-api-spec`) at a pinned commit | [`docs/designs/plex.md`](docs/designs/plex.md)                         |
+| `qbittorrent`      | [qBittorrent](https://www.qbittorrent.org/) 5.x                                                                        | operations declared in `plugin.yaml` (no spec)                    | [`docs/designs/qbittorrent.md`](docs/designs/qbittorrent.md)           |
 
 ## Layout
 

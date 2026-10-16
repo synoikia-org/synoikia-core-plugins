@@ -17,7 +17,7 @@ Where each plugin gets its catalog, checked against each project's source on 202
 | grafana.com | `grafanacloud` | REST, Cloud access-policy token | n/a | `grafana.com/api/openapi.json`, mirrored in `grafana/grafana-com-public-clients` | published spec |
 | Grafana Adaptive Metrics, Logs, Traces | `grafana-adaptive` | Stack Prometheus, Loki and Tempo endpoints, basic auth with an access-policy token | No | No (prose docs only) | declared in `plugin.yaml` |
 | Jenkins 2.x | `jenkins` | Remote access API (`…/api/json`, `tree=`), API-token basic auth | No (self-describing objects, no OpenAPI) | No | declared in `plugin.yaml` |
-| qBittorrent 5 | `qbittorrent` | WebUI API `/api/v2`, `SID` cookie, form-encoded POSTs | No | No (wiki only) | declared in `plugin.yaml`, after core supports form bodies |
+| qBittorrent 5 | `qbittorrent` | WebUI API `/api/v2`, session cookie (`SID`, or `QBT_SID_<port>` from 5.2), form-encoded POSTs (`torrents/add` multipart) | No | No (wiki only; checked against the source) | declared in `plugin.yaml` |
 
 Not built:
 
