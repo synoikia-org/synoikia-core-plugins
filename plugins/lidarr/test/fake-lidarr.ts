@@ -27,6 +27,10 @@ export const SECRETS = {
   headerToken: 'webhook-header-token-888888',
   trackerPasskey: 'tracker-passkey-999999',
   trackerCookie: 'tracker-cookie-101010',
+  magnetPasskey: 'EXAMPLE-magnet-passkey-181818',
+  guidPasskey: 'EXAMPLE-guid-passkey-191919',
+  infoPasskey: 'EXAMPLE-info-passkey-202020',
+  grabPasskey: 'EXAMPLE-grab-passkey-212121',
 };
 
 type Row = Record<string, unknown> & { id: number };
@@ -265,6 +269,16 @@ export async function startFakeLidarr(): Promise<FakeLidarr> {
             indexerId: 7,
             downloadUrl: `https://api.nzbgeek.info/api?t=get&id=1&apikey=${SECRETS.releaseApiKey}`,
           },
+          {
+            guid: `https://tracker.example/download.php?id=9&passkey=${SECRETS.guidPasskey}`,
+            title: 'Radiohead-OK.Computer-1997-24bit',
+            indexerId: 15,
+            protocol: 'torrent',
+            infoUrl: `https://tracker.example/details/9?passkey=${SECRETS.infoPasskey}`,
+            commentUrl: 'https://tracker.example/comments/9',
+            downloadUrl: `https://tracker.example/download.php?id=9&passkey=${SECRETS.guidPasskey}`,
+            magnetUrl: `magnet:?xt=urn:btih:EXAMPLE&tr=https://tracker.example/announce?passkey=${SECRETS.magnetPasskey}`,
+          },
         ],
       }),
       [`POST ${API}/release/push`]: () => ({ body: [{ approved: true }] }),
@@ -272,7 +286,33 @@ export async function startFakeLidarr(): Promise<FakeLidarr> {
       [`GET ${API}/wanted/missing`]: () => ({
         body: { page: 1, pageSize: 10, totalRecords: 1, records: [{ id: 16 }] },
       }),
-      [`GET ${API}/history`]: () => ({ body: { page: 1, records: [{ id: 51, data: { downloadUrl: 'x' } }] } }),
+      [`GET ${API}/history`]: () => ({
+        body: {
+          page: 1,
+          records: [
+            {
+              id: 51,
+              eventType: 'grabbed',
+              data: {
+                indexer: 'Tracker',
+                downloadUrl: `https://tracker.example/download.php?id=9&passkey=${SECRETS.guidPasskey}`,
+                guid: `https://tracker.example/download.php?id=9&passkey=${SECRETS.guidPasskey}`,
+                nzbInfoUrl: `https://tracker.example/details/9?passkey=${SECRETS.infoPasskey}`,
+              },
+            },
+            {
+              id: 52,
+              eventType: 'grabbed',
+              // An upstream that stopped camel-casing dictionary keys.
+              data: {
+                Indexer: 'Tracker',
+                DownloadUrl: `https://tracker.example/dl/${SECRETS.grabPasskey}`,
+                InfoUrl: `https://tracker.example/details/8?passkey=${SECRETS.infoPasskey}`,
+              },
+            },
+          ],
+        },
+      }),
       [`POST ${API}/{resource}/test`]: () => ({ body: {} }),
       [`POST ${API}/{resource}/testall`]: () => ({ body: [] }),
       [`POST ${API}/{resource}/action/{name}`]: () => ({ body: { options: [] } }),

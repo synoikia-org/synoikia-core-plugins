@@ -54,6 +54,33 @@
       "/body/fields"
     ]
   },
+  "GET /api/v1/history": {
+    "masked": {
+      "page": 1,
+      "records": [
+        {
+          "data": {
+            "downloadUrl": "[REDACTED]",
+            "guid": "https://tracker.example/[REDACTED]",
+            "indexer": "Tracker",
+            "nzbInfoUrl": "https://tracker.example/[REDACTED]"
+          },
+          "eventType": "grabbed",
+          "id": 51
+        },
+        {
+          "data": {
+            "DownloadUrl": "[REDACTED]",
+            "Indexer": "Tracker",
+            "InfoUrl": "https://tracker.example/[REDACTED]"
+          },
+          "eventType": "grabbed",
+          "id": 52
+        }
+      ]
+    },
+    "sensitiveParams": []
+  },
   "GET /api/v1/importlist": {
     "masked": [
       {
@@ -189,6 +216,16 @@
         "guid": "nzbgeek-1",
         "indexerId": 7,
         "title": "Radiohead-OK.Computer-1997-FLAC"
+      },
+      {
+        "commentUrl": "https://tracker.example/[REDACTED]",
+        "downloadUrl": "[REDACTED]",
+        "guid": "https://tracker.example/[REDACTED]",
+        "indexerId": 15,
+        "infoUrl": "https://tracker.example/[REDACTED]",
+        "magnetUrl": "[REDACTED]",
+        "protocol": "torrent",
+        "title": "Radiohead-OK.Computer-1997-24bit"
       }
     ],
     "sensitiveParams": []

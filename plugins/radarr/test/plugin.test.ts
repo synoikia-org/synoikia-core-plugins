@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { checkConformance, ErrorCodes } from '@synoikia/plugin-sdk';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { settings } from '../src/catalog.js';
-import { destinations, maskProviderFields } from '../src/fields.js';
+import { cutLinksDeep, destinations, maskProviderFields, redactKeysDeep } from '../src/fields.js';
 import { createRadarrPlugin } from '../src/plugin.js';
 import { CREDENTIALS, SECRETS, startFakeRadarr, TAG, VERSION } from './fake-radarr.js';
 import type { FakeRadarr } from './fake-radarr.js';
@@ -216,6 +216,26 @@ describe('Radarr plugin', () => {
     expect(hooks).toContain('"value":"https://discord.com/[REDACTED]"');
   });
 
+  it('hides release and history links in any case, and cuts link-shaped guids and info links to their origin', async () => {
+    await plugin.syncCatalog();
+    const invoke = async (request: object) => {
+      const { key, params } = await resolve(request);
+      return JSON.stringify(await plugin.invoke({ key, params, context }));
+    };
+    const releases = await invoke({ path: '/api/v3/release', query: { movieId: 1 } });
+    for (const secret of [SECRETS.releaseApiKey, SECRETS.magnetPasskey, SECRETS.guidPasskey, SECRETS.infoPasskey])
+      expect(releases).not.toContain(secret);
+    expect(releases).toContain('"guid":"nzbgeek-1"');
+    expect(releases).toContain('"guid":"https://tracker.example/[REDACTED]"');
+    expect(releases).toContain('"magnetUrl":"[REDACTED]"');
+    const history = await invoke({ path: '/api/v3/history' });
+    for (const secret of [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey])
+      expect(history).not.toContain(secret);
+    expect(history).toContain('"DownloadUrl":"[REDACTED]"');
+    expect(history).toContain('"nzbInfoUrl":"https://tracker.example/[REDACTED]"');
+    expect(history).toContain('"InfoUrl":"https://tracker.example/[REDACTED]"');
+  });
+
   it('reports a rejected key without throwing', async () => {
     const bad = createRadarrPlugin();
     await bad.init({ ...connection(), secrets: { apiKey: 'wrong' }, sdkVersion: '1' });
@@ -276,6 +296,52 @@ describe('provider fields', () => {
         ],
       }),
     ).toEqual(['http://real.example']);
+  });
+
+  it('hides password-typed fields whatever their name', () => {
+    const field = { name: 'pid', value: 'p-123', privacy: 'normal', type: 'Password' };
+    expect(maskProviderFields({ fields: [field] })).toEqual({ fields: [{ ...field, value: '[REDACTED]' }] });
+  });
+
+  it('lists a URL-shaped host by its origin, without its userinfo', () => {
+    expect(destinations({ fields: [{ name: 'host', value: 'http://user:pw@proxy.example:8191/v1' }] })).toEqual([
+      'http://proxy.example:8191',
+    ]);
+  });
+
+  it('hides link keys in any case, at any depth', () => {
+    expect(
+      redactKeysDeep({ records: [{ data: { Url: 'u', DownloadURL: 'v', url: '', title: 't' } }] }, [
+        'url',
+        'downloadUrl',
+      ]),
+    ).toEqual({
+      records: [{ data: { Url: '[REDACTED]', DownloadURL: '[REDACTED]', url: '', title: 't' } }],
+    });
+  });
+
+  it('cuts link-shaped guids, info and comment links to their origin in any case, and keeps the others', () => {
+    const keys = ['guid', 'infoUrl', 'commentUrl', 'nzbInfoUrl'];
+    expect(
+      cutLinksDeep(
+        [
+          { guid: 'https://t.example/download.php?id=1&passkey=EXAMPLE', title: 'a' },
+          {
+            guid: 'abc-123',
+            CommentURL: 'https://t.example/c/1',
+            data: { NzbInfoUrl: 'https://t.example/d?passkey=EXAMPLE' },
+          },
+        ],
+        keys,
+      ),
+    ).toEqual([
+      { guid: 'https://t.example/[REDACTED]', title: 'a' },
+      {
+        guid: 'abc-123',
+        CommentURL: 'https://t.example/[REDACTED]',
+        data: { NzbInfoUrl: 'https://t.example/[REDACTED]' },
+      },
+    ]);
   });
 });
 

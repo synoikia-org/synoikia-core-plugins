@@ -85,6 +85,7 @@ describe('Lidarr golden record', () => {
       { method: 'GET', path: '/api/v1/indexer' },
       { method: 'GET', path: '/api/v1/notification' },
       { method: 'GET', path: '/api/v1/release', query: { albumId: 16 } },
+      { method: 'GET', path: '/api/v1/history' },
       { method: 'GET', path: '/api/v1/importlist' },
       {
         method: 'POST',

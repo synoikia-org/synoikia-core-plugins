@@ -122,7 +122,16 @@ describe('Lidarr end to end (fake Lidarr)', () => {
       ],
       ['GET /api/v1/importlist', { path: '/api/v1/importlist' }, [SECRETS.listApiKey, SECRETS.spotifyToken]],
       ['GET /api/v1/notification', { path: '/api/v1/notification' }, [SECRETS.webhookToken, SECRETS.headerToken]],
-      ['GET /api/v1/release', { path: '/api/v1/release', query: { albumId: 16 } }, [SECRETS.releaseApiKey]],
+      [
+        'GET /api/v1/release',
+        { path: '/api/v1/release', query: { albumId: 16 } },
+        [SECRETS.releaseApiKey, SECRETS.magnetPasskey, SECRETS.guidPasskey, SECRETS.infoPasskey],
+      ],
+      [
+        'GET /api/v1/history',
+        { path: '/api/v1/history' },
+        [SECRETS.guidPasskey, SECRETS.infoPasskey, SECRETS.grabPasskey],
+      ],
     ])('%s', async (key, request, secrets) => {
       allow(key, 'read');
       const r = await h.execute(call(request));

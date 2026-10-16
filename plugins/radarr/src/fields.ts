@@ -46,6 +46,43 @@ function maskUrl(value: string): string {
   return rest ? `${url.protocol}//${url.host}/${REDACTED}` : value;
 }
 
+/** `value` with every string under one of `keys` (any case, any depth) that is a URL cut to its origin: Cardigann and
+ * other indexers use the download link, passkey included, as the guid, and info and comment links can carry it too.
+ * Other guids stay, so a release can still be grabbed. */
+export function cutLinksDeep(value: unknown, keys: readonly string[], depth = 0): unknown {
+  if (depth > MAX_DEPTH) return REDACTED;
+  if (Array.isArray(value)) return value.map((v) => cutLinksDeep(v, keys, depth + 1));
+  if (!isPlainObject(value)) return value;
+  const lower = new Set(keys.map((k) => k.toLowerCase()));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value))
+    Object.defineProperty(out, k, {
+      value: lower.has(k.toLowerCase()) && typeof v === 'string' ? maskUrl(v) : cutLinksDeep(v, keys, depth + 1),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  return out;
+}
+
+/** `value` with every entry whose key matches one of `keys` in any case hidden, at any depth: a history `Url` must
+ * not slip past `sensitiveResult`, whose keys match exactly. */
+export function redactKeysDeep(value: unknown, keys: readonly string[], depth = 0): unknown {
+  if (depth > MAX_DEPTH) return REDACTED;
+  if (Array.isArray(value)) return value.map((v) => redactKeysDeep(v, keys, depth + 1));
+  if (!isPlainObject(value)) return value;
+  const lower = new Set(keys.map((k) => k.toLowerCase()));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value))
+    Object.defineProperty(out, k, {
+      value: lower.has(k.toLowerCase()) && v !== null && v !== '' ? REDACTED : redactKeysDeep(v, keys, depth + 1),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  return out;
+}
+
 /** Key/value lists (webhook `headers`) and objects inside a field value: every entry's value hidden. */
 function maskEntries(value: unknown): unknown {
   if (Array.isArray(value))
@@ -72,7 +109,9 @@ function maskField(field: Record<string, unknown>): Record<string, unknown> {
   const privacy = typeof field.privacy === 'string' ? field.privacy.toLowerCase() : '';
   if (PRIVATE.has(privacy)) return { ...field, value: PRIVATE_VALUE };
   // Not marked private, so Servarr would store its mask as is: the write guard refuses `[REDACTED]` instead.
-  if (typeof field.name === 'string' && SECRET_NAME.test(field.name)) return { ...field, value: REDACTED };
+  const secretType = typeof field.type === 'string' && field.type.toLowerCase() === 'password';
+  if (secretType || (typeof field.name === 'string' && SECRET_NAME.test(field.name)))
+    return { ...field, value: REDACTED };
   if (typeof value === 'string') return { ...field, value: maskUrl(value) };
   return { ...field, value: maskEntries(value) };
 }
@@ -120,7 +159,8 @@ export function destinations(body: unknown): string[] {
   for (const f of body.fields)
     if (isField(f) && typeof f.name === 'string' && !byName.has(f.name)) byName.set(f.name, f.value);
   const out = new Set<string>();
-  const host = safe(byName.get('host'));
+  // A URL in `host` is listed by its origin below, without its userinfo.
+  const host = originOf(byName.get('host')) ? undefined : safe(byName.get('host'));
   if (host) {
     const port = safe(byName.get('port'));
     out.add(`${byName.get('useSsl') === true ? 'https' : 'http'}://${host}${port ? `:${port}` : ''}`);

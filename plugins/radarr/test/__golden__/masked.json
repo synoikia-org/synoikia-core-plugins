@@ -54,6 +54,33 @@
       "/body/fields"
     ]
   },
+  "GET /api/v3/history": {
+    "masked": {
+      "page": 1,
+      "records": [
+        {
+          "data": {
+            "downloadUrl": "[REDACTED]",
+            "guid": "https://tracker.example/[REDACTED]",
+            "indexer": "Tracker",
+            "nzbInfoUrl": "https://tracker.example/[REDACTED]"
+          },
+          "eventType": "grabbed",
+          "id": 51
+        },
+        {
+          "data": {
+            "DownloadUrl": "[REDACTED]",
+            "Indexer": "Tracker",
+            "InfoUrl": "https://tracker.example/[REDACTED]"
+          },
+          "eventType": "grabbed",
+          "id": 52
+        }
+      ]
+    },
+    "sensitiveParams": []
+  },
   "GET /api/v3/indexer": {
     "masked": [
       {
@@ -143,6 +170,16 @@
         "guid": "nzbgeek-1",
         "indexerId": 7,
         "title": "Inception.2010.1080p"
+      },
+      {
+        "commentUrl": "https://tracker.example/[REDACTED]",
+        "downloadUrl": "[REDACTED]",
+        "guid": "https://tracker.example/[REDACTED]",
+        "indexerId": 15,
+        "infoUrl": "https://tracker.example/[REDACTED]",
+        "magnetUrl": "[REDACTED]",
+        "protocol": "torrent",
+        "title": "Inception.2010.2160p"
       }
     ],
     "sensitiveParams": []

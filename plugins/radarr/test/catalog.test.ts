@@ -104,8 +104,15 @@ describe('Radarr catalog (pinned spec)', () => {
       expect.arrayContaining(['/body/apiKey', '/body/password', '/body/proxyPassword']),
     );
     expect(op('GET /api/v3/config/host')?.sensitiveResult).toMatchObject({ keys: expect.arrayContaining(['apiKey']) });
-    expect(op('GET /api/v3/release')?.sensitiveResult).toEqual({ keys: ['downloadUrl'], deep: true });
-    expect(op('POST /api/v3/release/push')?.sensitiveParams).toEqual(['/body/downloadUrl']);
+    expect(op('GET /api/v3/release')?.sensitiveResult).toEqual({
+      keys: ['downloadUrl', 'magnetUrl', 'url'],
+      deep: true,
+    });
+    expect(op('GET /api/v3/history')?.sensitiveResult).toEqual({
+      keys: ['downloadUrl', 'magnetUrl', 'url'],
+      deep: true,
+    });
+    expect(op('POST /api/v3/release/push')?.sensitiveParams).toEqual(['/body/downloadUrl', '/body/magnetUrl']);
   });
 
   it('locks a delete a newer spec adds', () => {
