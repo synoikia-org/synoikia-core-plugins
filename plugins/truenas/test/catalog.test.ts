@@ -232,8 +232,8 @@ describe('needsPoolRootKey', () => {
     ['/mnt/tank/media/../../other/x', true],
     ['/mnt/tank/media', false],
     ['/mnt/tank/media/tv/', false],
-    [undefined, false],
-    [5, false],
+    [undefined, true],
+    [5, true],
   ])('%s → %s', (path, expected) => {
     expect(needsPoolRootKey(path)).toBe(expected);
   });
