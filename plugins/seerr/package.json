@@ -16,6 +16,6 @@
   },
   "devDependencies": {
     "@synoikia/core": "^0.14.0",
-    "@synoikia/create-plugin": "^0.3.0"
+    "@synoikia/create-plugin": "0.3.0"
   }
 }

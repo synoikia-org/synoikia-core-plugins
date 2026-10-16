@@ -15,7 +15,7 @@ importers:
         specifier: ^0.14.0
         version: 0.14.0
       '@synoikia/create-plugin':
-        specifier: ^0.3.0
+        specifier: 0.3.0
         version: 0.3.0(@synoikia/core@0.14.0)
       '@types/node':
         specifier: ^22.19.0
@@ -101,7 +101,7 @@ importers:
         specifier: ^0.14.0
         version: 0.14.0
       '@synoikia/create-plugin':
-        specifier: ^0.3.0
+        specifier: 0.3.0
         version: 0.3.0(@synoikia/core@0.14.0)
       '@types/ws':
         specifier: ^8.18.1
@@ -224,7 +224,7 @@ importers:
         specifier: ^0.14.0
         version: 0.14.0
       '@synoikia/create-plugin':
-        specifier: ^0.3.0
+        specifier: 0.3.0
         version: 0.3.0(@synoikia/core@0.14.0)
 
   plugins/sonarr:
@@ -253,7 +253,7 @@ importers:
         specifier: ^0.14.0
         version: 0.14.0
       '@synoikia/create-plugin':
-        specifier: ^0.3.0
+        specifier: 0.3.0
         version: 0.3.0(@synoikia/core@0.14.0)
       '@types/ws':
         specifier: ^8.18.1
