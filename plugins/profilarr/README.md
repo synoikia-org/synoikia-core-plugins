@@ -17,15 +17,15 @@ A base URL and the API key from Settings → Security (sent as `X-Api-Key`).
 
 ## Files
 
-| File              | What                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------------------- |
-| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                 |
-| `plugin.yaml`     | Excluded routes, locked operations, confirmation literals, sensitive params and results     |
-| `instructions.md` | Agent instructions (API shape, jobs, common workflows); not wired in until core supports it |
-| `src/plugin.ts`   | Spec discovery and version                                                                  |
-| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                |
-| `src/auth.ts`     | The `X-Api-Key` header                                                                      |
-| `test/`           | A fake Profilarr serving the pinned v2.2.0 spec, unit, golden and e2e tests                 |
+| File              | What                                                                                                |
+| ----------------- | --------------------------------------------------------------------------------------------------- |
+| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                         |
+| `plugin.yaml`     | Excluded routes, locked operations, confirmation literals, sensitive params and results             |
+| `instructions.md` | Agent instructions (API shape, jobs, common workflows); core adds it to the MCP server instructions |
+| `src/plugin.ts`   | Spec discovery and version                                                                          |
+| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                        |
+| `src/auth.ts`     | The `X-Api-Key` header                                                                              |
+| `test/`           | A fake Profilarr serving the pinned v2.2.0 spec, unit, golden and e2e tests                         |
 
 ## Locked operations
 

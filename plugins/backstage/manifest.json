@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over the Backstage backend REST APIs (catalog, scaffolder, search, events, notifications), catalog from the OpenAPI specs the backend plugins serve.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "backstage",
     "functions": ["request"]

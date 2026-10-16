@@ -18,7 +18,7 @@ Email and password of a dedicated NPM user. The plugin signs in with `POST /api/
 
 GET reads, every other verb writes, and anything the rules don't settle stays a write. No GET is flagged for review.
 
-Excluded: sign-in and token refresh (`/tokens`, `/tokens/2fa`), the spec itself, `POST /users/{userID}/login` (impersonation: it returns another user's token), the certificate zip download, and the multipart certificate upload and validation the JSON binding can't send.
+Excluded: sign-in and token refresh (`/tokens`, `/tokens/2fa`), the spec itself, `POST /users/{userID}/login` (impersonation: it returns another user's token), the certificate zip download, and the multipart certificate upload and validation, which carry private keys and certificate files.
 
 ## Locks
 

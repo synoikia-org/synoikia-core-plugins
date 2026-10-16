@@ -10,7 +10,7 @@ defaults:
 instanceName: { op: 'GET /api/groups/self', field: name, fallback: Mealie }
 
 # Plumbing the model has no business calling: sign-in, OIDC, sign-up and password-recovery flows, file
-# serving and download tokens, debug, and multipart or streaming endpoints the JSON binding cannot send.
+# serving and download tokens, debug, and uploads, imports and streams, which carry raw files and backups.
 exclude:
   - '* /api/auth/*'
   - 'POST /api/users/register'

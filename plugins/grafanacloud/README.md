@@ -17,19 +17,19 @@ The organization slug and a Cloud access policy token (sent as `Authorization: B
 
 ## Files
 
-| File              | What                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                   |
-| `plugin.yaml`     | Locked operations, confirmation literals, summary notes, sensitive results, spec URLs         |
-| `instructions.md` | Agent instructions (API shape, paging, common workflows); not wired in until core supports it |
-| `src/plugin.ts`   | Connection, regional lookups and the binding                                                  |
-| `src/spec.ts`     | Fetches the spec from each source in turn, falling back on any failure                        |
-| `src/request.ts`  | Refuses keys Go would bind to one field (case variants, non-ASCII); one spelling for the rest |
-| `src/summary.ts`  | Privilege and destination fields ahead of the body in approvals                               |
-| `src/targets.ts`  | Names the stack, access policy (scopes and realms) or token an approval acts on               |
-| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                  |
-| `src/auth.ts`     | The Bearer header                                                                             |
-| `test/`           | A fake grafana.com serving the pinned spec, unit, golden and e2e tests                        |
+| File              | What                                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                           |
+| `plugin.yaml`     | Locked operations, confirmation literals, summary notes, sensitive results, spec URLs                 |
+| `instructions.md` | Agent instructions (API shape, paging, common workflows); core adds it to the MCP server instructions |
+| `src/plugin.ts`   | Connection, regional lookups and the binding                                                          |
+| `src/spec.ts`     | Fetches the spec from each source in turn, falling back on any failure                                |
+| `src/request.ts`  | Refuses keys Go would bind to one field (case variants, non-ASCII); one spelling for the rest         |
+| `src/summary.ts`  | Privilege and destination fields ahead of the body in approvals                                       |
+| `src/targets.ts`  | Names the stack, access policy (scopes and realms) or token an approval acts on                       |
+| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                          |
+| `src/auth.ts`     | The Bearer header                                                                                     |
+| `test/`           | A fake grafana.com serving the pinned spec, unit, golden and e2e tests                                |
 
 ## Locked operations
 

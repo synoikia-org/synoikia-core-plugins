@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over Jenkins 2.x: jobs, builds, console logs, test reports, the queue and nodes, from a fixed set of remote access API operations.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "jenkins",
     "functions": ["call"]

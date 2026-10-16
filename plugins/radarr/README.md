@@ -25,7 +25,7 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
 | `manifest.json`   | Binding, connection form, targets, `sensitiveKeys` and network hosts                                     |
 | `plugin.yaml`     | Excluded routes, locks, split twins, confirmation literals, sensitive params and results, quick commands |
-| `instructions.md` | Agent instructions (API shape, commands, common workflows); not wired in until core supports it          |
+| `instructions.md` | Agent instructions (API shape, commands, common workflows); core adds it to the MCP server instructions  |
 | `src/spec.ts`     | Servarr spec loader: 4-part version → release tag, fallback branch, mirror                               |
 | `src/catalog.ts`  | Settings, split predicates, custom confirmation sources, catalog build                                   |
 | `src/fields.ts`   | Provider `fields[]`: secret masking in results, destinations, refusing masked values in writes           |

@@ -18,7 +18,7 @@ A long-lived API token (User Profile → API Tokens), sent as `Authorization: Be
 
 GET reads, every other verb writes, and anything the rules don't settle stays a write. The one GET the action heuristic flags, `GET /api/app/about/startup-info` ("start" in its summary), was reviewed and is a read.
 
-Excluded (the model has no business calling them, or the JSON binding can't send them): sign-in, OIDC, token refresh and logout (`/api/auth/*`), sign-up and forgot-password, media and file downloads (`/api/media/*`, `/api/utils/download`, backup and export download tokens), shared-recipe views by token, admin debug, multipart uploads (images, assets, zip and data migrations, backup upload, AI-from-image) and streaming (`…/stream`) endpoints.
+Excluded (the model has no business calling them, or they carry raw files and backups): sign-in, OIDC, token refresh and logout (`/api/auth/*`), sign-up and forgot-password, media and file downloads (`/api/media/*`, `/api/utils/download`, backup and export download tokens), shared-recipe views by token, admin debug, multipart uploads (images, assets, zip and data migrations, backup upload, AI-from-image) and streaming (`…/stream`) endpoints.
 
 ## Locks
 

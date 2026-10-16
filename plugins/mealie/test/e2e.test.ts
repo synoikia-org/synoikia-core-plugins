@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkPluginContract, startPluginHarness } from '@synoikia/core/testing';
@@ -38,6 +39,13 @@ describe('Mealie end to end (fake Mealie)', () => {
       locked: true,
       typedConfirmation: true,
     });
+  });
+
+  it('hands instructions.md to core for the MCP server instructions', () => {
+    // The harness has no MCP endpoint; this is the text core wraps in <plugin-notes> (core design §2.2).
+    const text = readFileSync(path.join(PLUGIN_DIR, 'instructions.md'), 'utf8').trim();
+    expect(h.manifest.instructions).toBe('instructions.md');
+    expect(h.ctx.instances.runtime(h.instanceId).instructions).toBe(text);
   });
 
   it('finds a recipe by search, then reads it by slug, at Read', async () => {

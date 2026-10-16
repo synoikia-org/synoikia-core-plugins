@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over Grafana Cloud Adaptive Metrics, Logs and Traces: aggregation rules and recommendations, log drop rules and exemptions, trace sampling policies.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "grafanaAdaptive",
     "functions": ["call"]
