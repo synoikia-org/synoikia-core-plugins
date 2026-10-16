@@ -5,6 +5,7 @@ Exposes a TrueNAS SCALE system's whole JSON-RPC API through the two MCP tools, `
 ## Requirements
 
 - **TrueNAS 25.04 or newer.** The plugin speaks the JSON-RPC 2.0 API at `wss://<host>/api/current`. The older `/websocket` protocol (24.10 and earlier) is not supported.
+- **Synoikia core 0.14.0 or newer** (since 0.3.0). The plugin ships `instructions.md` (the API shape, how to call it and common workflows), which core adds to the MCP server instructions; older cores reject the manifest field.
 - **An API key.** In TrueNAS: _Credentials → API Keys → Add_. `FULL_ADMIN` is the accepted operating assumption. With a narrower role the plugin still works for what the role allows, and every call it can't make comes back as `UPSTREAM_DENIED` ("TrueNAS denied … insufficient permission"), not a crash.
 
 ## Connection

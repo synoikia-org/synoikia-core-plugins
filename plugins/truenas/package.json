@@ -1,6 +1,6 @@
 {
   "name": "@synoikia/plugin-truenas",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -20,6 +20,6 @@
     "@types/ws": "^8.18.1"
   },
   "synoikia": {
-    "minCoreVersion": "0.6.0"
+    "minCoreVersion": "0.14.0"
   }
 }

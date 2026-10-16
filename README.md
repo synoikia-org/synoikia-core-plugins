@@ -11,7 +11,7 @@ The plugins for [Synoikia](https://github.com/via-justa/synoikia-core), the self
 
 If you removed it, add it back on Synoikia's Plugins → Repositories page as a **signed** repository with that URL, and confirm the public key above. Every install is checked against it: the tarball's sha256 and its minisign signature.
 
-Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<version>.tgz` (`manifest.json`, `package.json` and the `dist/` bundle) and its `.minisig`. `index.json` on the `index` release lists every released version. Released versions are never changed or removed.
+Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<version>.tgz` (`manifest.json`, `package.json`, `instructions.md` and the `dist/` bundle) and its `.minisig`. `index.json` on the `index` release lists every released version. Released versions are never changed or removed.
 
 ## Plugins
 
@@ -36,12 +36,12 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 
 ## Layout
 
-| Path                 | What                                                                                                |
-| -------------------- | --------------------------------------------------------------------------------------------------- |
-| `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `src/`, `test/`, bundled to `dist/index.js` |
-| `docs/`              | The original per-plugin designs                                                                     |
-| `tsconfig.base.json` | Shared compiler options; each plugin's `tsconfig.json` extends it                                   |
-| `vitest.shared.ts`   | Shared Vitest config; each plugin's `vitest.config.ts` re-exports it                                |
+| Path                 | What                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `instructions.md`, `src/`, `test/`, bundled to `dist/index.js` |
+| `docs/`              | The original per-plugin designs                                                                                        |
+| `tsconfig.base.json` | Shared compiler options; each plugin's `tsconfig.json` extends it                                                      |
+| `vitest.shared.ts`   | Shared Vitest config; each plugin's `vitest.config.ts` re-exports it                                                   |
 
 Plugins build against Synoikia's published npm packages, the same way a community plugin would:
 
