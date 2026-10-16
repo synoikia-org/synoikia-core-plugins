@@ -219,6 +219,18 @@
     ],
     "text": "qBittorrent torrents.addTrackers on torrent \"Ubuntu 24.04 Desktop\": add trackers https://new.example"
   },
+  "torrents.createCategory#paths": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "torrents.createCategory#paths",
+    "targets": [
+      {
+        "id": "127.0.0.1",
+        "kind": "instance",
+        "name": "qBittorrent at 127.0.0.1"
+      }
+    ],
+    "text": "qBittorrent torrents.createCategory#paths on category \"archive\": create with save path \"/srv/archive\""
+  },
   "torrents.delete": {
     "confirmLiteral": "Ubuntu 24.04 Desktop",
     "resolved": "torrents.delete",

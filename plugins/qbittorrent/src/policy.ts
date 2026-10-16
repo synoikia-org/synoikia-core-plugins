@@ -9,6 +9,7 @@ export const REQUIRED_LOCKS = [
   'torrents.setLocation',
   'torrents.setSavePath',
   'torrents.editCategory',
+  'torrents.createCategory#paths',
   'torrents.removeCategories',
   'torrents.deleteTags',
   'torrents.addTrackers',

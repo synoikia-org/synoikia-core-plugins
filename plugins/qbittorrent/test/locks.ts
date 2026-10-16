@@ -112,6 +112,14 @@ export const LOCK_CASES: LockCase[] = [
     'on category "linux": save path "/srv/linux"',
     (f) => expect(f.categories.get('linux')?.savePath).toBe('/srv/linux'),
   ),
+  lock(
+    'torrents.createCategory#paths',
+    'torrents.createCategory#paths',
+    { key: 'torrents.createCategory', params: { category: 'archive', savePath: '/srv/archive' } },
+    HOST,
+    'on category "archive": create with save path "/srv/archive"',
+    (f) => expect(f.categories.get('archive')?.savePath).toBe('/srv/archive'),
+  ),
   same('torrents.removeCategories', { categories: 'movies' }, 'movies', 'on category "movies": delete', (f) =>
     expect(f.categories.has('movies')).toBe(false),
   ),

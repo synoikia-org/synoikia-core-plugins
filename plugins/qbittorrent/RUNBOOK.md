@@ -1,10 +1,17 @@
 # qBittorrent runbook
 
-A manual checklist against a real qBittorrent before a release.
+The plugin is tested against a fake qBittorrent. This checklist confirms it against a real one before a release. It takes about 20 minutes.
 
-1. Add an instance with a dedicated user; **Test connection** reports the version.
-2. Sync: the catalog appears, and every group starts at the default level.
-3. Run a read at Read. Check that secrets in its result show as `[REDACTED]`.
-4. A write stays refused until its group is raised.
-5. A locked operation asks for approval and requires the typed confirmation literal.
-6. Check the audit log lists each call.
+**Before you start:** a qBittorrent 5.x test instance (the `lscr.io/linuxserver/qbittorrent` image is fine) with the WebUI on, and a second one on 5.0 or 5.1 for step 2. Add two small legal torrents (a Linux ISO magnet with a public tracker, and one with a private-looking tracker URL such as `https://tracker.example/announce?passkey=EXAMPLE`), categories `linux` and `movies` with save paths, a tag `iso`, an RSS feed and a search plugin. Do not use an instance with real data: step 8 deletes torrents and files.
+
+1. **Connect.** New endpoint → **qBittorrent**, the WebUI base URL, username and password. **Test connection** reports `v5.x.y (WebUI API 2.x.y)`. A wrong password fails the test with "rejected the username or password"; after five wrong attempts qBittorrent bans the address for a while, and the test says so.
+2. **Releases.** Connect the 5.0/5.1 instance too: the sign-in works with its `SID` cookie. A 4.x instance fails with "not supported".
+3. **Host validation.** With _Enable Host header validation_ on and the base URL's host missing from _Server domains_, calls fail; add it and they work. With _CSRF protection_ on, writes work (the plugin sends neither `Origin` nor `Referer`).
+4. **Session.** Set _Session timeout_ to 60 s, wait, and run a read: it signs in again once, without an error.
+5. **Reads.** With every read group at Read: `torrents.info` with `filter: 'downloading'`, `torrents.properties`, `torrents.files`, `torrents.trackers`, `sync.maindata` with and without `rid`, `transfer.info`, `log.main`, `rss.items` with `withData`, `rss.rules`, `search.plugins`. Tracker, web seed, feed and search URLs show as `https://host/<masked:…>`; the passkey appears in no result. `app.preferences` shows the API key, passwords, autorun programs and tracker lists as `[REDACTED]`.
+6. **Writes.** With `torrents` at Ask: `torrents.stop` and `torrents.start` on one hash ask for a plain approval that names the torrent. `torrents.setCategory` to `movies` names the category's save path; an auto-managed torrent moves there. `torrents.addTags`, `torrents.setDownloadLimit`, `torrents.filePrio`, `torrents.renameFile` work. `hashes: 'all'` resolves to the locked `#all` twin and asks to type `all <n> torrents`.
+7. **Params.** `torrents.stop` with `Hashes` (capital H), with `hashes: 'ALL'`, with an array, or with a short hash is refused; so is `torrents.add` with a file path or `file://` URL, and `torrents.renameFile` with `..` in `newPath`.
+8. **Locks.** `torrents.delete` with `deleteFiles: false` asks for the torrent's name; a wrong value is refused; the files stay. With `deleteFiles: true` it is `torrents.delete#with-files` and the files go. `torrents.setLocation` leads with the new path. `torrents.removeTrackers` with the masked tracker URL from `torrents.trackers` removes the real one; the approval shows only its origin.
+9. **Search and add.** `search.start` (locked, host name) returns an id; poll `search.status`; `search.results` shows masked `fileUrl`s. `torrents.add` with one of them leads with the save path and shows the URL's origin; the torrent appears.
+10. **Preferences.** `app.setPreferences` with `{ json: { autorun_program: '/bin/true' } }` shows the program and "runs a program", and asks for the host name. Set it back.
+11. **Audit.** The audit log lists each call; the WebUI password, the session cookie, passkeys and the API key appear nowhere.

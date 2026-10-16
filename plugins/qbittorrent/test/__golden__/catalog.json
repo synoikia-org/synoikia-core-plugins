@@ -1388,6 +1388,41 @@
   {
     "attestationRequired": false,
     "classification": "write",
+    "classificationReason": "locked:destructive",
+    "docs": {
+      "summary": "Create a category, optionally with its own save path."
+    },
+    "group": "categories",
+    "key": "torrents.createCategory#paths",
+    "kind": "command",
+    "locked": true,
+    "paramsSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "downloadPath": {
+          "type": "string"
+        },
+        "downloadPathEnabled": {
+          "type": "boolean"
+        },
+        "savePath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "category"
+      ],
+      "type": "object"
+    },
+    "typedConfirmation": true
+  },
+  {
+    "attestationRequired": false,
+    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
       "summary": "Create tags."

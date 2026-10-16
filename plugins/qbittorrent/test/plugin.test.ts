@@ -190,6 +190,10 @@ describe('params', () => {
       params: { hashes: HASH.ubuntu },
     });
     expect((await resolve('torrents.stop', { hashes: 'all' })).key).toBe('torrents.stop#all');
+    expect((await resolve('torrents.createCategory', { category: 'a' })).key).toBe('torrents.createCategory');
+    expect((await resolve('torrents.createCategory', { category: 'a', savePath: '/x' })).key).toBe(
+      'torrents.createCategory#paths',
+    );
     expect((await resolve('torrents.delete', { hashes: HASH.ubuntu, deleteFiles: true })).key).toBe(
       'torrents.delete#with-files',
     );

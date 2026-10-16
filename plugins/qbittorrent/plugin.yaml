@@ -715,6 +715,9 @@ rules:
   # Deleting the downloaded data as well is its own locked twin.
   - match: torrents.delete
     split: with-files
+  # A new category with its own save path decides where setCategory later moves data.
+  - match: torrents.createCategory
+    split: paths
   # A share limit that removes torrents when it is reached is a delayed delete.
   - match: torrents.setShareLimits
     split: remove

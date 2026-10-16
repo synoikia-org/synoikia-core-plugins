@@ -79,6 +79,7 @@ const SPLIT_WHEN: Record<string, (params: CallParams) => boolean> = {
   'with-files': (p) => p.deleteFiles === true,
   remove: (p) => p.shareLimitAction === 'Remove' || p.shareLimitAction === 'RemoveWithContent',
   all: (p) => p.hashes === 'all',
+  paths: (p) => Boolean(p.savePath) || Boolean(p.downloadPath) || p.downloadPathEnabled === true,
 };
 
 const MAX_URLS = 100;

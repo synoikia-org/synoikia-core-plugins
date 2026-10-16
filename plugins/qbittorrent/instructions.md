@@ -36,7 +36,7 @@ their hash and name.
 
 ## Locked and excluded
 
-Removing torrents (`deleteFiles: true` deletes data), adding torrents, moving data, editing categories' paths,
+Removing torrents (`deleteFiles: true` deletes data), adding torrents, moving data, setting categories' paths,
 deleting categories or tags, tracker edits, preferences, shutdown, RSS writes, starting a search (it runs search
 plugins) and search plugin changes need a human who types a confirmation. Sign-in, cookies, the API key, torrent file export
 and uploads from disk are not available.
