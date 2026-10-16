@@ -276,7 +276,8 @@ describe('URLs in results', () => {
       await invoke('log.main'),
     ];
     const text = JSON.stringify(results);
-    for (const s of SECRET_VALUES) expect(text).not.toContain(s);
+    // The TLS key in a rule is core's to mask (`sensitiveResult`), checked end to end.
+    for (const s of SECRET_VALUES.filter((v) => v !== SECRETS.sslKey)) expect(text).not.toContain(s);
     expect(text).toContain('https://tracker.example/<masked:');
     expect(text).toContain('udp://open.example:1337/<masked:');
     expect(text).toContain(`magnet:?xt=urn:btih:${HASH.ubuntu}&dn=Ubuntu%2024.04%20Desktop&<masked:`);
@@ -470,6 +471,15 @@ describe('category names', () => {
     await expect(resolve(key, params)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
   });
 
+  it.each(['.. ', 'a/ ..', 'x.', 'a/b ', ' . /c'])(
+    'refuses %j: Windows trims trailing spaces and dots',
+    async (category) => {
+      await expect(resolve('torrents.createCategory', { category })).rejects.toMatchObject({
+        code: ErrorCodes.InvalidParams,
+      });
+    },
+  );
+
   it('still takes nested names and no category', async () => {
     await expect(resolve('torrents.createCategory', { category: 'tv/shows/kids' })).resolves.toMatchObject({
       key: 'torrents.createCategory',
@@ -511,6 +521,31 @@ describe('where data goes', () => {
     const targets = (await plugin.resolveTargets?.({ key: r.key, params: r.params })) ?? [];
     return (await plugin.summarize({ key: r.key, params: r.params, targets })).text;
   };
+
+  it("cleans a rule's save path and names its download path and share limit action", async () => {
+    const text = await summarize('rss.setRule', {
+      ruleName: 'New',
+      ruleDef: {
+        torrentParams: {
+          save_path: '/downloads/../srv/./iso',
+          download_path: '/tmp/incoming/../dl',
+          share_limit_action: 'RemoveWithContent',
+        },
+      },
+    });
+    expect(text).toContain(
+      'saves to "/srv/iso", downloads in "/tmp/dl", removed with its files when its share limit is reached',
+    );
+  });
+
+  it("names add's download path and any share limit action", async () => {
+    const urls = `magnet:?xt=urn:btih:${'dd'.repeat(20)}&dn=Fedora`;
+    expect(
+      await summarize('torrents.add', { urls, savepath: '/a/../b', downloadPath: 'tmp', shareLimitAction: 'Stop' }),
+    ).toContain(
+      'into "/b" on qBittorrent at 127.0.0.1: 1 source(s): magnet "Fedora"; downloads in "tmp" (under the default download path), share limit action "Stop"',
+    );
+  });
 
   it.each([
     ['an explicit path', 'movies', '"/downloads/movies"'],

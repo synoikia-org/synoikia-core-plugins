@@ -426,6 +426,14 @@
     "key": "rss.rules",
     "kind": "command",
     "locked": false,
+    "sensitiveResult": {
+      "deep": true,
+      "keys": [
+        "ssl_private_key",
+        "ssl_certificate",
+        "ssl_dh_params"
+      ]
+    },
     "typedConfirmation": false
   },
   {
@@ -2173,7 +2181,10 @@
       "type": "object"
     },
     "sensitiveParams": [
-      "/ruleDef/affectedFeeds"
+      "/ruleDef/affectedFeeds",
+      "/ruleDef/torrentParams/ssl_private_key",
+      "/ruleDef/torrentParams/ssl_certificate",
+      "/ruleDef/torrentParams/ssl_dh_params"
     ],
     "typedConfirmation": true
   },

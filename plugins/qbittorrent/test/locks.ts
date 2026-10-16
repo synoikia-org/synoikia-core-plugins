@@ -264,7 +264,7 @@ export const LOCK_CASES: LockCase[] = [
       params: { ruleName: 'Debian', ruleDef: { enabled: true, mustContain: 'debian', affectedFeeds: [FEED.keyed] } },
     },
     HOST,
-    'on new rule "Debian" on qBittorrent at 127.0.0.1: saves to the default save path, from feeds https://feeds.example',
+    'on new rule "Debian" on qBittorrent at 127.0.0.1: saves to "/downloads" (the default save path), from feeds https://feeds.example',
     (f) => expect(f.rssRules.Debian).toMatchObject({ affectedFeeds: [FEED.keyed] }),
   ),
   same('rss.removeRule', { ruleName: 'Ubuntu' }, 'Ubuntu', 'on rule "Ubuntu": delete', (f) =>

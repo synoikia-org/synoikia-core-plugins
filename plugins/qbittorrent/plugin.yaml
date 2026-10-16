@@ -768,7 +768,14 @@ rules:
   - match: ['rss.addFeed', 'rss.setFeedURL']
     sensitiveParams: [/url]
   - match: rss.setRule
-    sensitiveParams: [/ruleDef/affectedFeeds]
+    sensitiveParams:
+      - /ruleDef/affectedFeeds
+      - /ruleDef/torrentParams/ssl_private_key
+      - /ruleDef/torrentParams/ssl_certificate
+      - /ruleDef/torrentParams/ssl_dh_params
+  # A rule's torrentParams can hold a torrent's TLS key pair.
+  - match: rss.rules
+    sensitiveResult: { keys: [ssl_private_key, ssl_certificate, ssl_dh_params], deep: true }
   - match: app.setPreferences
     sensitiveParams:
       - /json/web_ui_password

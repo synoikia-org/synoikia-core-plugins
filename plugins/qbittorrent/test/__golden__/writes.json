@@ -9,6 +9,11 @@
     "resolved": "torrents.add",
     "text": "qBittorrent torrents.add into \"/downloads/tv\" (automatic management, category \"tv\"; savepath \"/elsewhere\" is ignored) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora\"; category \"tv\""
   },
+  "add (download path, share limit action)": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "torrents.add",
+    "text": "qBittorrent torrents.add into \"/b\" on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora\"; downloads in \"/tmp/dl\", removed with its files when its share limit is reached"
+  },
   "add (magnet keys in any case: TR, tr., WS, x.pe, dht)": {
     "confirmLiteral": "127.0.0.1",
     "resolved": "torrents.add",
@@ -51,5 +56,15 @@
   "setCategory (unknown)": {
     "resolved": "torrents.setCategory",
     "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"nope\"; torrents in automatic management move to the path of category \"nope\", which does not exist"
+  },
+  "setRule (automatic management, category)": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "rss.setRule",
+    "text": "qBittorrent rss.setRule on new rule \"New\" on qBittorrent at 127.0.0.1: saves to \"/downloads/tv\" (automatic management, category \"tv\"), category \"tv\", from no feeds; matching articles download without another approval"
+  },
+  "setRule (save path cleaned, download path, share limit action)": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "rss.setRule",
+    "text": "qBittorrent rss.setRule on new rule \"New\" on qBittorrent at 127.0.0.1: saves to \"/srv/iso\", downloads in \"/tmp/dl\", share limit action \"Stop\", from no feeds; matching articles download without another approval"
   }
 }

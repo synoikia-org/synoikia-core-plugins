@@ -108,6 +108,31 @@ describe('qBittorrent golden record', () => {
         { hashes: HASH.ubuntu, category: 'films/x' },
       ],
       ['editCategory (to implicit)', 'torrents.editCategory', { category: 'movies', savePath: '' }],
+      [
+        'add (download path, share limit action)',
+        'torrents.add',
+        { urls, savepath: '/a/../b', downloadPath: '/tmp/x/../dl', shareLimitAction: 'RemoveWithContent' },
+      ],
+      [
+        'setRule (save path cleaned, download path, share limit action)',
+        'rss.setRule',
+        {
+          ruleName: 'New',
+          ruleDef: {
+            affectedFeeds: [],
+            torrentParams: {
+              save_path: '/downloads/../srv/./iso',
+              download_path: '/tmp/dl',
+              share_limit_action: 'Stop',
+            },
+          },
+        },
+      ],
+      [
+        'setRule (automatic management, category)',
+        'rss.setRule',
+        { ruleName: 'New', ruleDef: { torrentParams: { category: 'tv', use_auto_tmm: true } } },
+      ],
     ];
     const out: Record<string, unknown> = {};
     for (const [name, key, raw] of cases) {

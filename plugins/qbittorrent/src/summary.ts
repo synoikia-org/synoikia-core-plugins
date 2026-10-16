@@ -1,5 +1,6 @@
 import { isPlainObject, REDACTED } from '@synoikia/plugin-sdk';
 import type { ResolvedTarget } from '@synoikia/plugin-sdk';
+import { downloadPathText } from './paths.js';
 import { SERVICE } from './session.js';
 import { quote, quotedList, safe } from './text.js';
 
@@ -80,6 +81,14 @@ function shareText(p: Record<string, unknown>): string {
   return parts.join(', ');
 }
 
+/** What happens when a share limit is reached, when the call sets it; removals spelled out. */
+function shareActionText(action: unknown): string | undefined {
+  if (typeof action !== 'string' || !action) return undefined;
+  if (action === 'Remove') return 'removed when its share limit is reached';
+  if (action === 'RemoveWithContent') return 'removed with its files when its share limit is reached';
+  return `share limit action ${quote(action)}`;
+}
+
 function addDetail(p: Record<string, unknown>): string {
   const parts: string[] = [];
   if (typeof p.category === 'string' && p.category) parts.push(`category ${quote(p.category)}`);
@@ -88,10 +97,10 @@ function addDetail(p: Record<string, unknown>): string {
   if (p.stopped === true) parts.push('stopped');
   if (p.forced === true) parts.push('forced');
   if (p.skip_checking === true) parts.push('without checking existing data');
-  if (p.shareLimitAction === 'Remove' || p.shareLimitAction === 'RemoveWithContent')
-    parts.push(
-      `removed${p.shareLimitAction === 'RemoveWithContent' ? ' with its files' : ''} when its share limit is reached`,
-    );
+  const download = p.useDownloadPath === false ? undefined : downloadPathText(p.downloadPath);
+  if (download) parts.push(`downloads in ${download}`);
+  const share = shareActionText(p.shareLimitAction);
+  if (share) parts.push(share);
   return parts.length ? `; ${parts.join(', ')}` : '';
 }
 
@@ -105,15 +114,16 @@ function preferencesText(json: unknown, notes: SummaryInput['preferenceNotes']):
     .join(', ');
 }
 
-function ruleText(p: Record<string, unknown>, targets: readonly ResolvedTarget[]): string {
+function ruleText(p: Record<string, unknown>, targets: readonly ResolvedTarget[], destination?: string): string {
   const def = isPlainObject(p.ruleDef) ? p.ruleDef : {};
   const params = isPlainObject(def.torrentParams) ? def.torrentParams : {};
-  const savePath = params.save_path ?? def.savePath;
   const category = params.category ?? def.assignedCategory;
-  const parts = [
-    typeof savePath === 'string' && savePath ? `saves to ${quote(savePath)}` : 'saves to the default save path',
-  ];
+  const parts = [`saves to ${destination ?? 'a save path qBittorrent did not report'}`];
+  const download = params.use_download_path === false ? undefined : downloadPathText(params.download_path);
+  if (download) parts.push(`downloads in ${download}`);
   if (typeof category === 'string' && category) parts.push(`category ${quote(category)}`);
+  const share = shareActionText(params.share_limit_action);
+  if (share) parts.push(share);
   if (def.enabled === false) parts.push('disabled');
   const feeds = origins(targets, 'feed-url');
   parts.push(feeds ? `from feeds ${feeds}` : 'from no feeds');
@@ -230,7 +240,7 @@ export function summaryText(s: SummaryInput): string {
     case 'rss.setRule': {
       const stored = of(targets, 'rss-rule')[0];
       const dest = stored ? `rule ${quote(stored.name)} (replaced)` : `new rule ${quote(p.ruleName)} on ${instance}`;
-      return on(dest, `${ruleText(p, targets)}; matching articles download without another approval`);
+      return on(dest, `${ruleText(p, targets, s.destination)}; matching articles download without another approval`);
     }
     case 'rss.removeRule':
       return on(namesText('rule', 'rules', targets, 'rss-rule', max), 'delete');

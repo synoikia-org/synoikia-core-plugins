@@ -118,7 +118,7 @@
         "name": "https://feeds.example"
       }
     ],
-    "text": "qBittorrent rss.setRule on new rule \"Debian\" on qBittorrent at 127.0.0.1: saves to the default save path, from feeds https://feeds.example, mustContain \"debian\"; matching articles download without another approval"
+    "text": "qBittorrent rss.setRule on new rule \"Debian\" on qBittorrent at 127.0.0.1: saves to \"/downloads\" (the default save path), from feeds https://feeds.example, mustContain \"debian\"; matching articles download without another approval"
   },
   "search.enablePlugin": {
     "confirmLiteral": "example",

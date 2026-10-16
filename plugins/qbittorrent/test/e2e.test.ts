@@ -143,7 +143,7 @@ describe('qBittorrent end to end (fake qBittorrent)', () => {
       ['sync.maindata', undefined, [SECRETS.passkey, SECRETS.privatePasskey]],
       ['torrents.webseeds', { hash: HASH.ubuntu }, [SECRETS.webSeedKey]],
       ['rss.items', { withData: true }, [SECRETS.feedKey]],
-      ['rss.rules', undefined, [SECRETS.feedKey]],
+      ['rss.rules', undefined, [SECRETS.feedKey, SECRETS.sslKey]],
       ['search.results', { id: 7 }, [SECRETS.searchKey]],
       ['log.main', undefined, [SECRETS.privatePasskey]],
     ] as const)('%s', async (key, params, secrets) => {

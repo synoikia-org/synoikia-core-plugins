@@ -22,7 +22,7 @@ import { checkCategoryName, checkInnerPath, checkParams, invalid } from './param
 import type { CallParams, HttpOperation } from './params.js';
 import { checkPolicy } from './policy.js';
 import { QbtApi, QbtSession, SERVICE } from './session.js';
-import { addDestination, categoryPath, pathSettings } from './paths.js';
+import { addDestination, categoryPath, pathSettings, ruleDestination } from './paths.js';
 import { rssItems, storedUrl, trackerUrls } from './stored.js';
 import type { Lookups } from './stored.js';
 import { summaryText } from './summary.js';
@@ -310,12 +310,15 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
           const op = operation(key);
           const p = isPlainObject(params) ? params : {};
           if (op.classification === 'read') return { text: `${SERVICE} ${key} on qBittorrent at ${host()}` };
-          const paths = ['torrents.add', 'torrents.setCategory', 'torrents.editCategory'].includes(op.key)
+          const paths = ['torrents.add', 'torrents.setCategory', 'torrents.editCategory', 'rss.setRule'].includes(
+            op.key,
+          )
             ? await pathSettings(lookups())
             : undefined;
           const category = typeof p.category === 'string' ? p.category : '';
           let destination: string | undefined;
           if (op.key === 'torrents.add') destination = addDestination(paths, p);
+          else if (op.key === 'rss.setRule') destination = ruleDestination(paths, p.ruleDef);
           else if (paths && op.key === 'torrents.setCategory')
             destination =
               category && !paths.categories.has(category)

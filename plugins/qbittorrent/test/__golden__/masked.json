@@ -96,11 +96,19 @@
         "mustNotContain": "",
         "torrentParams": {
           "category": "linux",
-          "save_path": "/downloads/linux"
+          "save_path": "/downloads/linux",
+          "ssl_private_key": "[REDACTED]"
         }
       }
     },
-    "sensitiveResult": null
+    "sensitiveResult": {
+      "deep": true,
+      "keys": [
+        "ssl_private_key",
+        "ssl_certificate",
+        "ssl_dh_params"
+      ]
+    }
   },
   "search.results": {
     "result": {

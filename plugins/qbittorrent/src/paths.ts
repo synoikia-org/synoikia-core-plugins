@@ -42,7 +42,7 @@ const isAbsolute = (p: string) => p.startsWith('/') || p.startsWith('\\\\') || /
 const join = (base: string, rel: string) => `${base.replace(/[\\/]+$/, '')}/${rel}`;
 
 /** `QDir::cleanPath` as `Path` applies it: separators collapsed, `.` dropped, `..` resolved. */
-function clean(path: string): string {
+export function clean(path: string): string {
   const root = /^(\/|[A-Za-z]:\/)/.exec(path.replace(/\\/g, '/'))?.[0] ?? '';
   const out: string[] = [];
   for (const seg of path.replace(/\\/g, '/').slice(root.length).split('/')) {
@@ -70,6 +70,26 @@ function rawCategoryPath(s: PathSettings, name: string): string {
   if (!s.nested) return join(s.defaultPath, validPath(name));
   const sep = name.lastIndexOf('/');
   return join(rawCategoryPath(s, sep < 0 ? '' : name.slice(0, sep)), validPath(name.slice(sep + 1)));
+}
+
+/** A download path as shown: absolute and cleaned, or relative to the download path qBittorrent picks. */
+export function downloadPathText(path: unknown): string | undefined {
+  if (typeof path !== 'string' || !path.trim()) return undefined;
+  const p = path.trim();
+  return isAbsolute(p) ? quote(clean(p)) : `${quote(clean(p))} (under the default download path)`;
+}
+
+/** Where an RSS rule's downloads land: its `torrentParams` (or the legacy `savePath` and `assignedCategory`) read as
+ * `torrents/add` params, since qBittorrent adds each match with them. */
+export function ruleDestination(s: PathSettings | undefined, ruleDef: unknown): string {
+  const def = isPlainObject(ruleDef) ? ruleDef : {};
+  const tp = isPlainObject(def.torrentParams) ? def.torrentParams : {};
+  return addDestination(s, {
+    savepath: tp.save_path ?? def.savePath,
+    downloadPath: tp.download_path,
+    category: tp.category ?? def.assignedCategory,
+    autoTMM: tp.use_auto_tmm,
+  });
 }
 
 /** Where `torrents/add` saves, destination text for the approval. With automatic management (asked for, or the

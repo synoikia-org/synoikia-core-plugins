@@ -142,11 +142,16 @@ const NOT_IN_CATEGORY = /[\\\x00-\x1f\x7f]/;
 
 /** A category name that names a directory under the save root, whatever the subcategory setting: 5.0 and 5.1
  * accept `../x` as a name, and their save path for it leaves the root once `QDir::cleanPath` resolves the `..`. So no
- * leading `/`, backslash, control character, or empty, `.` or `..` segment (split on `/`). Empty means no category. */
+ * leading `/`, backslash, control character, or empty, `.` or `..` segment (split on `/`), nor a segment that trims
+ * to one or ends in a space or dot. Empty means no category. */
 export function checkCategoryName(op: HttpOperation, where: string, value: unknown): void {
   if (value === undefined || value === '') return;
   const name = typeof value === 'string' ? value : '';
-  const bad = !name || NOT_IN_CATEGORY.test(name) || name.split('/').some((s) => s === '' || s === '.' || s === '..');
+  // Win32 path normalization also drops trailing spaces and dots, so `.. ` and `x.` are refused too.
+  const bad =
+    !name ||
+    NOT_IN_CATEGORY.test(name) ||
+    name.split('/').some((s) => s === '' || ['.', '..'].includes(s.trim()) || /[ .]$/.test(s));
   if (bad)
     throw invalid(
       `${op.key} ${where} must be a category name: segments joined with /, none empty, . or .., no backslash or control characters`,

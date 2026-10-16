@@ -24,6 +24,7 @@ export const SECRETS = {
   feedKey: 'EXAMPLE-feed-key',
   searchKey: 'EXAMPLE-search-key',
   webSeedKey: 'EXAMPLE-webseed-key',
+  sslKey: 'EXAMPLE-ssl-private-key',
 } as const;
 
 export const TRACKER = {
@@ -153,7 +154,7 @@ function initial() {
         mustContain: 'ubuntu',
         mustNotContain: '',
         affectedFeeds: [FEED.keyed],
-        torrentParams: { save_path: '/downloads/linux', category: 'linux' },
+        torrentParams: { save_path: '/downloads/linux', category: 'linux', ssl_private_key: SECRETS.sslKey },
       },
     } as Record<string, Record<string, unknown>>,
     plugins: [
