@@ -153,6 +153,28 @@ describe('Grafana plugin', () => {
     await expect(targets(undefined)).resolves.toEqual([]);
   });
 
+  it('escapes bidi and zero-width characters, and lists each address ahead of a padded one', async () => {
+    const addresses = `${' '.repeat(300)}${'x'.repeat(500)}@pad.example;\n evil\u202emoc.example ,ops\u200b@example.net`;
+    const body = { name: 'Mail', url: 'http://loki.example.net\u2066:3100', settings: { addresses } };
+    const { text } = await plugin.summarize({ key: 'POST /datasources', params: { body }, targets: [] });
+    expect(text).toContain(
+      `[to url="http://loki.example.net\\u2066:3100", settings/addresses=["${'x'.repeat(200)}…", "evil\\u202emoc.example", "ops\\u200b@example.net"]] {`,
+    );
+    expect(text).not.toMatch(/[\u200b\u202e\u2066]/);
+    const many = Array.from({ length: 25 }, (_, i) => `a${i}@example.net`);
+    const listed = await plugin.summarize({
+      key: 'POST /datasources',
+      params: { body: { emails: many } },
+      targets: [],
+    });
+    expect(listed.text).toContain('"a19@example.net" and 5 more]');
+    const targets = await plugin.resolveTargets!({
+      key: 'POST /ds/query',
+      params: { body: { queries: [{ datasource: { uid: 'gone\u202e' } }] } },
+    });
+    expect(targets).toEqual([{ kind: 'datasource', id: 'gone\u202e', name: 'gone\\u202e' }]);
+  });
+
   it('shows destination fields ahead of a padded body', async () => {
     const body = { padding: 'x'.repeat(5000), url: 'http://loki.example.net:3100', recipients: 'a@example.net' };
     const { text } = await plugin.summarize({ key: 'POST /datasources', params: { body }, targets: [] });

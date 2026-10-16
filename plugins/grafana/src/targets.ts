@@ -1,5 +1,6 @@
 import { ErrorCodes, isPlainObject, PluginError, readPointer, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
+import { safe } from './summary.js';
 
 /** Most data sources one `POST /ds/query` may name; more are refused rather than shown in part. */
 const MAX_QUERY_SOURCES = 20;
@@ -16,8 +17,8 @@ async function dataSource(client: HttpJsonClient, path: string, id: string | und
   if (!isPlainObject(ds)) return undefined;
   const key = id ?? stringOr(ds.uid);
   if (!key) return undefined;
-  const name = stringOr(ds.name) ?? key;
-  const detail = [stringOr(ds.type), stringOr(ds.url)].filter(Boolean).join(', ');
+  const name = safe(stringOr(ds.name) ?? key);
+  const detail = [stringOr(ds.type), stringOr(ds.url)].flatMap((v) => (v ? [safe(v)] : [])).join(', ');
   return { kind: 'datasource', id: key, name: detail ? `${name} (${detail})` : name } satisfies ResolvedTarget;
 }
 
@@ -73,10 +74,10 @@ export async function resolveTargets(
         const found = await dataSource(client, `/datasources/${ref}`, uid, timeoutMs);
         if (found) return found;
         // An unknown uid is shown as itself; a name or id that can't be read has no uid to scope rules on.
-        if (uid) return { kind: 'datasource', id: uid, name: uid };
+        if (uid) return { kind: 'datasource', id: uid, name: safe(uid) };
         throw new PluginError(
           ErrorCodes.TargetResolutionFailed,
-          `POST /ds/query names data source ${label}, which can't be read`,
+          `POST /ds/query names data source ${safe(label)}, which can't be read`,
         );
       }),
     );
