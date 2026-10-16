@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { checkConformance, ErrorCodes } from '@synoikia/plugin-sdk';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { settings } from '../src/catalog.js';
-import { cutLinksDeep, destinations, maskProviderFields, redactKeysDeep } from '../src/fields.js';
+import { cutLinksDeep, destinations, maskProviderFields, redactKeysDeep, safe } from '../src/fields.js';
 import { createRadarrPlugin } from '../src/plugin.js';
 import { CREDENTIALS, SECRETS, startFakeRadarr, TAG, VERSION } from './fake-radarr.js';
 import type { FakeRadarr } from './fake-radarr.js';
@@ -296,6 +296,10 @@ describe('provider fields', () => {
         ],
       }),
     ).toEqual(['http://real.example']);
+  });
+
+  it('escapes the soft hyphen, Arabic letter mark and Mongolian vowel separator', () => {
+    expect(safe('a\u00adb\u061cc\u180ed')).toBe('a\\u00adb\\u061cc\\u180ed');
   });
 
   it('hides password-typed fields whatever their name', () => {

@@ -60,7 +60,7 @@ function safe(value: unknown): string | undefined {
   return JSON.stringify(text)
     .slice(1, -1)
     .replace(
-      /[\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
+      /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,
       (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
     );
 }
