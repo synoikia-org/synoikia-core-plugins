@@ -17,17 +17,17 @@ A base URL and a service account token (sent as `Authorization: Bearer`). The se
 
 ## Files
 
-| File              | What                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                   |
-| `plugin.yaml`     | Excluded routes, locked operations, confirmation literals, sensitive params and results       |
-| `instructions.md` | Agent instructions (API shape, paging, common workflows); not wired in until core supports it |
-| `src/plugin.ts`   | Spec discovery and the two clients (spec at the base URL, API under `/api`)                   |
-| `src/version.ts`  | Version from `/api/health` or the frontend settings; refuses Grafana below 12                 |
-| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                  |
-| `src/targets.ts`  | Names the stored data source (type and URL) in data source approvals                          |
-| `src/auth.ts`     | The Bearer header                                                                             |
-| `test/`           | A fake Grafana serving the pinned v12.4.13 spec, unit, golden and e2e tests                   |
+| File              | What                                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                           |
+| `plugin.yaml`     | Excluded routes, locked operations, confirmation literals, sensitive params and results               |
+| `instructions.md` | Agent instructions (API shape, paging, common workflows); core adds it to the MCP server instructions |
+| `src/plugin.ts`   | Spec discovery and the two clients (spec at the base URL, API under `/api`)                           |
+| `src/version.ts`  | Version from `/api/health` or the frontend settings; refuses Grafana below 12                         |
+| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                          |
+| `src/targets.ts`  | Names the stored data source (type and URL) in data source approvals                                  |
+| `src/auth.ts`     | The Bearer header                                                                                     |
+| `test/`           | A fake Grafana serving the pinned v12.4.13 spec, unit, golden and e2e tests                           |
 
 ## Locked operations
 

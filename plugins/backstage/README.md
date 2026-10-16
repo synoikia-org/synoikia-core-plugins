@@ -24,7 +24,7 @@ The backend URL, a static external-access token (sent as a Bearer token), and th
 | ----------------- | ------------------------------------------------------------------------------------------------------ |
 | `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                            |
 | `plugin.yaml`     | Excluded routes, read POSTs, locked operations, confirmation literals, sensitive params and results    |
-| `instructions.md` | Agent instructions (API shape, paging, common workflows); not wired in until core supports it          |
+| `instructions.md` | Agent instructions (API shape, paging, common workflows); core adds it to the MCP server instructions  |
 | `src/plugin.ts`   | Discovery, version and the binding                                                                     |
 | `src/spec.ts`     | Loads each plugin's spec (skipping missing ones) and merges them, each confined to its `/api/<plugin>` |
 | `src/targets.ts`  | The stored entity, location, task or template an approval names                                        |

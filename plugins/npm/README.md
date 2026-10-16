@@ -17,14 +17,14 @@ A base URL (the admin UI, port 81 by default), and the email and password of a d
 
 ## Files
 
-| File              | What                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------------------- |
-| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                 |
-| `plugin.yaml`     | Excluded plumbing, locked operations, the `#advanced` split, confirmation literals, secrets |
-| `instructions.md` | Agent instructions (API shape, common workflows); not wired in until core supports it       |
-| `src/plugin.ts`   | Spec discovery, version, probe, the `advanced_config` split and destinations in summaries   |
-| `src/auth.ts`     | Sign-in with email and password, JWT renewal                                                |
-| `test/`           | A fake Nginx Proxy Manager serving the pinned v2.16.0 spec, unit, golden and e2e tests      |
+| File              | What                                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                   |
+| `plugin.yaml`     | Excluded plumbing, locked operations, the `#advanced` split, confirmation literals, secrets   |
+| `instructions.md` | Agent instructions (API shape, common workflows); core adds it to the MCP server instructions |
+| `src/plugin.ts`   | Spec discovery, version, probe, the `advanced_config` split and destinations in summaries     |
+| `src/auth.ts`     | Sign-in with email and password, JWT renewal                                                  |
+| `test/`           | A fake Nginx Proxy Manager serving the pinned v2.16.0 spec, unit, golden and e2e tests        |
 
 ## Locked operations
 

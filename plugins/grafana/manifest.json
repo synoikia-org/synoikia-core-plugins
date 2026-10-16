@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over the Grafana 12+ HTTP API (self-hosted or a Grafana Cloud stack), catalog from the OpenAPI spec the instance serves.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "grafana",
     "functions": ["request"]

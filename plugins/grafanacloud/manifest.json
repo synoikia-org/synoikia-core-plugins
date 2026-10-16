@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over the grafana.com Cloud API (stacks, orgs, access policies, tokens, regions, stack plugins), catalog from the OpenAPI spec grafana.com publishes.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "grafanacloud",
     "functions": ["request"]

@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over the Plex Media Server HTTP API, catalog from the pinned community OpenAPI spec.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "plex",
     "functions": ["request"]

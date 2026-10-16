@@ -17,7 +17,7 @@ const PINNED_SHA256 = 'ff8801eb6c7904e6298215dd789521750e4af0f18b5fde0999bb544d1
 /** A copy of the built plugin that expects the reduced fixture's digest; the real bundle stays untouched. */
 function stageTestCopy(): string {
   const dir = mkdtempSync(path.join(tmpdir(), 'plex-e2e-'));
-  for (const name of ['manifest.json', 'package.json', 'dist'])
+  for (const name of ['manifest.json', 'package.json', 'instructions.md', 'dist'])
     cpSync(path.join(PLUGIN_DIR, name), path.join(dir, name), { recursive: true });
   const entry = path.join(dir, 'dist', 'index.js');
   const bundle = readFileSync(entry, 'utf8');

@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over the Lidarr v1 REST API, catalog from the OpenAPI spec of the instance's release.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "lidarr",
     "functions": ["request"]

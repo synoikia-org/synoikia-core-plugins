@@ -17,14 +17,14 @@ A base URL and a long-lived API token (User Profile → API Tokens) of a dedicat
 
 ## Files
 
-| File              | What                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                   |
-| `plugin.yaml`     | Excluded plumbing, locked operations, confirmation literals, sensitive params and results     |
-| `instructions.md` | Agent instructions (API shape, paging, common workflows); not wired in until core supports it |
-| `src/plugin.ts`   | Spec discovery, version and connection probe                                                  |
-| `src/auth.ts`     | The bearer header                                                                             |
-| `test/`           | A fake Mealie serving the pinned v3.28.0 spec, unit, golden and e2e tests                     |
+| File              | What                                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `manifest.json`   | Binding, connection form, `sensitiveKeys` and network hosts                                           |
+| `plugin.yaml`     | Excluded plumbing, locked operations, confirmation literals, sensitive params and results             |
+| `instructions.md` | Agent instructions (API shape, paging, common workflows); core adds it to the MCP server instructions |
+| `src/plugin.ts`   | Spec discovery, version and connection probe                                                          |
+| `src/auth.ts`     | The bearer header                                                                                     |
+| `test/`           | A fake Mealie serving the pinned v3.28.0 spec, unit, golden and e2e tests                             |
 
 ## Locked operations
 

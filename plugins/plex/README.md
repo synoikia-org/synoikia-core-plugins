@@ -25,7 +25,7 @@ The server's own address (usually port 32400), an `X-Plex-Token`, and optionally
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
 | `manifest.json`   | Binding, connection form, targets, `sensitiveKeys` and network hosts                                      |
 | `plugin.yaml`     | Excluded routes, locks, the `#refresh` twin, reviewed GETs, confirmation literals, the pinned spec commit |
-| `instructions.md` | Agent instructions (API shape, paging, common workflows); not wired in until core supports it             |
+| `instructions.md` | Agent instructions (API shape, paging, common workflows); core adds it to the MCP server instructions     |
 | `src/spec.ts`     | Spec loader at the pinned commit; drops plex.tv and cloud operations                                      |
 | `src/catalog.ts`  | Settings, split predicate, custom confirmation sources, catalog build with `:` paths                      |
 | `src/request.ts`  | Query keys: refuses case duplicates, a token and masked values; renames the keys the rules read           |

@@ -5,6 +5,7 @@
   "sdk": "^0.2.2",
   "description": "Search/execute over the Sonarr v4 REST API (/api/v3), catalog from the OpenAPI spec of the instance's release.",
   "entry": "dist/index.js",
+  "instructions": "instructions.md",
   "binding": {
     "namespace": "sonarr",
     "functions": ["request"]
