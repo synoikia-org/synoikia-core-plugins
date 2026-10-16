@@ -75,6 +75,9 @@ rules:
       - 'PUT /api/groups/preferences'
       - 'PUT /api/households/preferences'
     locked: true
+  # Every other delete, and one a newer spec adds: a human types the stored name, else the path id.
+  - match: 'DELETE *'
+    locked: true
 
   # The literal an approver types: the thing the operation affects.
   # The stored user, never the body's username: the model writes the body.
@@ -115,6 +118,94 @@ rules:
         op: 'GET /api/groups/members/{username_or_id}'
         args: [{ username_or_id: { $param: /body/userId } }]
         field: [username, fullName]
+
+  # Deletes the catch-all locks: the stored object's name (the lookup falls back to the path id).
+  - match: 'DELETE /api/recipes/{slug}'
+    confirm:
+      lookup: { op: 'GET /api/recipes/{slug}', args: [{ slug: { $param: /path/slug } }], field: name }
+  - match: 'DELETE /api/foods/{item_id}'
+    confirm:
+      lookup: { op: 'GET /api/foods/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/units/{item_id}'
+    confirm:
+      lookup: { op: 'GET /api/units/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/groups/labels/{item_id}'
+    confirm:
+      lookup: { op: 'GET /api/groups/labels/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/groups/reports/{item_id}'
+    confirm:
+      lookup: { op: 'GET /api/groups/reports/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/households/cookbooks/{item_id}'
+    confirm:
+      lookup:
+        { op: 'GET /api/households/cookbooks/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/households/events/notifications/{item_id}'
+    confirm:
+      lookup:
+        {
+          op: 'GET /api/households/events/notifications/{item_id}',
+          args: [{ item_id: { $param: /path/item_id } }],
+          field: name,
+        }
+  - match: 'DELETE /api/households/mealplans/{item_id}'
+    confirm:
+      lookup:
+        { op: 'GET /api/households/mealplans/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: title }
+  - match: 'DELETE /api/households/recipe-actions/{item_id}'
+    confirm:
+      lookup:
+        {
+          op: 'GET /api/households/recipe-actions/{item_id}',
+          args: [{ item_id: { $param: /path/item_id } }],
+          field: title,
+        }
+  - match: 'DELETE /api/households/shopping/items/{item_id}'
+    confirm:
+      lookup:
+        {
+          op: 'GET /api/households/shopping/items/{item_id}',
+          args: [{ item_id: { $param: /path/item_id } }],
+          field: [display, note],
+        }
+  - match: 'DELETE /api/households/shopping/lists/{item_id}'
+    confirm:
+      lookup:
+        {
+          op: 'GET /api/households/shopping/lists/{item_id}',
+          args: [{ item_id: { $param: /path/item_id } }],
+          field: name,
+        }
+  - match: 'DELETE /api/households/webhooks/{item_id}'
+    confirm:
+      lookup:
+        { op: 'GET /api/households/webhooks/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/organizers/categories/{item_id}'
+    confirm:
+      lookup:
+        { op: 'GET /api/organizers/categories/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/organizers/tags/{item_id}'
+    confirm:
+      lookup: { op: 'GET /api/organizers/tags/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/organizers/tools/{item_id}'
+    confirm:
+      lookup: { op: 'GET /api/organizers/tools/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: name }
+  - match: 'DELETE /api/recipes/timeline/events/{item_id}'
+    confirm:
+      lookup:
+        {
+          op: 'GET /api/recipes/timeline/events/{item_id}',
+          args: [{ item_id: { $param: /path/item_id } }],
+          field: subject,
+        }
+  - match: 'DELETE /api/shared/recipes/{item_id}'
+    confirm:
+      lookup:
+        { op: 'GET /api/shared/recipes/{item_id}', args: [{ item_id: { $param: /path/item_id } }], field: /recipe/name }
+  - match: ['DELETE /api/recipes/{slug}/image', 'DELETE /api/users/{id}/favorites/{slug}']
+    confirm: { param: /path/slug }
+  # No name to show: a comment, a meal plan rule, or one a newer spec adds.
+  - match: 'DELETE */{item_id}'
+    confirm: { param: /path/item_id }
 
   # GETs the action heuristic flags that were reviewed and only read.
   - match: 'GET /api/app/about/startup-info' # "start" in the summary; returns first-login and demo flags

@@ -76,6 +76,7 @@ describe('Mealie end to end (fake Mealie)', () => {
   describe('every locked operation needs its literal typed', () => {
     beforeEach(() => {
       fake.users.set(ALEX.id, { ...ALEX });
+      fake.recipes.set('pasta', { id: 'r-1', slug: 'pasta', name: 'Pasta Fagioli' });
     });
 
     it.each(LOCK_CASES)('$key → "$confirm"', async ({ key, request, confirm }) => {
