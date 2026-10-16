@@ -8,7 +8,7 @@ defaults:
   timeouts: { request: 15000, lookup: 10000 }
 
 # Sign-in and token refresh (the plugin signs in itself), the spec, impersonation (it returns another user's
-# token), and the certificate zip download and multipart uploads the JSON binding cannot send.
+# token), and the certificate zip download, upload and validate, which carry private keys and certificate files.
 exclude:
   - '* /tokens'
   - '* /tokens/*'

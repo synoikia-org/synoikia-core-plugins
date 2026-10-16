@@ -10,7 +10,7 @@ defaults:
 # /status names no instance, so the literal is the fallback.
 instanceName: { op: 'GET /status', field: name, fallback: Profilarr }
 
-# The spec itself, and the binary download and multipart upload the JSON binding cannot carry.
+# The spec itself, and the backup download and upload, which carry the whole database as a file.
 exclude:
   - 'GET /openapi.json'
   - 'GET /backups/{filename}'
