@@ -383,6 +383,35 @@ describe('URLs Node and qBittorrent would read differently', () => {
     ).resolves.toMatchObject({ key: 'torrents.addTrackers' });
   });
 
+  const hash = 'dd'.repeat(20);
+  const enc = encodeURIComponent;
+  it.each([
+    ['TR= (any case)', `TR=${enc('https://a.example\\@evil.example/announce')}`],
+    ['tr.= (bare dot suffix)', `tr.=${enc('https://a.example\\@evil.example/announce')}`],
+    ['Tr.7= (digit suffix)', `Tr.7=${enc('file:///etc/passwd')}`],
+    ['a tracker that is not a URL', `tr=${enc('10.0.0.1/announce')}`],
+    ['WS= that is not http(s)', `WS=${enc('ftp://seed.example/f')}`],
+    ['x.pe= that is not host:port', `x.pe=${enc('10.0.0.2 6881')}`],
+    ['dht= that is not host:port', `dht=${enc('router.example')}`],
+  ])('refuses a magnet with %s', async (_label, param) => {
+    await expect(resolve('torrents.add', { urls: `magnet:?xt=urn:btih:${hash}&${param}` })).rejects.toMatchObject({
+      code: ErrorCodes.InvalidParams,
+    });
+  });
+
+  it('lists the trackers, web seeds, peers and DHT nodes libtorrent reads, whatever their case or suffix', async () => {
+    const magnet = `magnet:?xt=urn:btih:${hash}&TR=${enc('http://10.0.0.1/admin')}&tr.=${enc('udp://open.example:1337/a')}&WS=${enc('https://seed.example/f')}&X.PE=10.0.0.2:6881&dht.1=router.example:6881`;
+    const r = await resolve('torrents.add', { urls: magnet });
+    const targets = (await plugin.resolveTargets?.({ key: r.key, params: r.params })) ?? [];
+    expect(targets.filter((t) => t.kind === 'magnet-url').map((t) => t.name)).toEqual([
+      'http://10.0.0.1',
+      'udp://open.example:1337',
+      'https://seed.example',
+      'peer 10.0.0.2:6881',
+      'DHT node router.example:6881',
+    ]);
+  });
+
   it("lists a magnet link's trackers and sources as targets", async () => {
     const magnet = `magnet:?xt=urn:btih:${'dd'.repeat(20)}&dn=Fedora&tr=${encodeURIComponent(TRACKER.private)}&ws=${encodeURIComponent('https://seed.example/f')}`;
     const r = await resolve('torrents.add', { urls: magnet });
@@ -428,6 +457,7 @@ describe('where data goes', () => {
     ['an explicit path', 'movies', '"/downloads/movies"'],
     ['an implicit path', 'tv', '"/downloads/tv"'],
     ['a subcategory', 'tv/shows', '"/downloads/tv/shows"'],
+    ['reserved characters in an implicit segment', 'tv/odd:name?', '"/downloads/tv/odd name "'],
     ['clearing the category', '', '"/downloads"'],
   ])('names the move on setCategory with %s', async (_label, category, path) => {
     expect(await summarize('torrents.setCategory', { hashes: HASH.ubuntu, category })).toContain(

@@ -85,7 +85,7 @@ export const LOCK_CASES: LockCase[] = [
     'torrents.add',
     { urls: MAGNET, category: 'linux', tags: 'iso' },
     HOST,
-    'into "/downloads" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet "Fedora 42"; magnet trackers and sources: https://private.example',
+    'into "/downloads" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet "Fedora 42"; magnet trackers, sources, peers and DHT nodes: https://private.example',
     (f) => {
       expect(f.torrents.get('dd'.repeat(20))).toMatchObject({ name: 'Fedora 42', category: 'linux' });
       expect(lastCall(f, 'torrents/add')?.fields.urls).toBe(MAGNET);

@@ -2,7 +2,7 @@ import { isPlainObject } from '@synoikia/plugin-sdk';
 import type { ResolvedTarget } from '@synoikia/plugin-sdk';
 import type { UrlMasker } from './mask.js';
 import { selection } from './params.js';
-import { magnetUrls } from './urls.js';
+import { magnetEndpoints, magnetUrls } from './urls.js';
 import type { CallParams } from './params.js';
 import {
   categories,
@@ -47,13 +47,17 @@ function urlTarget(masker: UrlMasker, kind: string, given: string, i: number): R
   };
 }
 
-/** A source to add, and for a magnet link each tracker and source URL in it that qBittorrent will contact. */
+/** A source to add, and for a magnet link each tracker, web seed and source URL (by origin) and each peer and DHT
+ * node (`host:port`) in it that qBittorrent will contact. */
 function sourceTargets(masker: UrlMasker, given: string, i: number): ResolvedTarget[] {
   const real = masker.unmask(given);
-  const inner = real && /^magnet:/i.test(real) ? magnetUrls(real) : [];
+  const magnet = real && /^magnet:/i.test(real) ? real : undefined;
+  const urls = magnet ? magnetUrls(magnet) : [];
+  const endpoints = magnet ? magnetEndpoints(magnet) : [];
   return [
     urlTarget(masker, 'source', given, i),
-    ...inner.map((u, j) => ({ kind: 'magnet-url', id: `magnet-url:${i}:${j}:${masker.url(u)}`, name: origin(u) })),
+    ...urls.map((u, j) => ({ kind: 'magnet-url', id: `magnet-url:${i}:${j}:${masker.url(u)}`, name: origin(u) })),
+    ...endpoints.map((e, j) => ({ kind: 'magnet-url', id: `magnet-endpoint:${i}:${j}:${e}`, name: e })),
   ];
 }
 

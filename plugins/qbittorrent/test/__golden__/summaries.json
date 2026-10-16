@@ -232,7 +232,7 @@
         "name": "https://private.example"
       }
     ],
-    "text": "qBittorrent torrents.add into \"/downloads\" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora 42\"; magnet trackers and sources: https://private.example; category \"linux\", tags \"iso\""
+    "text": "qBittorrent torrents.add into \"/downloads\" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora 42\"; magnet trackers, sources, peers and DHT nodes: https://private.example; category \"linux\", tags \"iso\""
   },
   "torrents.add (automatic management)": {
     "confirmLiteral": "127.0.0.1",

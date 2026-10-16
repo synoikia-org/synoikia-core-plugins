@@ -171,7 +171,7 @@ export function summaryText(s: SummaryInput): string {
       return `${head} to ${quote(p.path)} for ${torrentsText(targets, max)}: moves the data of those in manual management`;
     case 'torrents.add': {
       const inner = origins(targets, 'magnet-url');
-      return `${head} into ${s.destination ?? 'an unknown save path'} on ${instance}: ${of(targets, 'source').length} source(s): ${origins(targets, 'source')}${inner ? `; magnet trackers and sources: ${inner}` : ''}${addDetail(p)}`;
+      return `${head} into ${s.destination ?? 'an unknown save path'} on ${instance}: ${of(targets, 'source').length} source(s): ${origins(targets, 'source')}${inner ? `; magnet trackers, sources, peers and DHT nodes: ${inner}` : ''}${addDetail(p)}`;
     }
     case 'torrents.addTrackers':
       return torrentsOn(`add trackers ${origins(targets, 'new-tracker')}`);

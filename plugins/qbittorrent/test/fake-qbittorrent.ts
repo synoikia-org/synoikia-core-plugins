@@ -115,6 +115,7 @@ function initial() {
       // Implicit paths: `<default>/tv` and `<tv's path>/shows`.
       ['tv', { name: 'tv', savePath: '' }],
       ['tv/shows', { name: 'tv/shows', savePath: '' }],
+      ['tv/odd:name?', { name: 'tv/odd:name?', savePath: '' }],
     ]),
     tags: new Set(['iso', 'keep']),
     preferences: {

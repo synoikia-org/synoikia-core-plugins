@@ -43,7 +43,9 @@ export function categoryPath(s: PathSettings, name: string): string {
   const own = s.categories.get(name) ?? '';
   if (own) return isAbsolute(own) ? own : join(s.defaultPath, own);
   const sep = name.lastIndexOf('/');
-  return join(categoryPath(s, sep < 0 ? '' : name.slice(0, sep)), name.slice(sep + 1));
+  // `Utils::Fs::toValidPath`: runs of `:?"*<>|` become one space.
+  const segment = name.slice(sep + 1).replace(/[:?"*<>|]+/g, ' ');
+  return join(categoryPath(s, sep < 0 ? '' : name.slice(0, sep)), segment);
 }
 
 /** Where `torrents/add` saves, destination text for the approval. With automatic management (asked for, or the

@@ -94,6 +94,14 @@ describe('qBittorrent golden record', () => {
         { urls, category: 'tv', savepath: '/elsewhere', autoTMM: true },
       ],
       ['add (autoTMM, no category)', 'torrents.add', { urls, autoTMM: true }],
+      [
+        'add (magnet keys in any case: TR, tr., WS, x.pe, dht)',
+        'torrents.add',
+        {
+          urls: `${urls}&TR=${encodeURIComponent('http://10.0.0.1/admin')}&tr.=${encodeURIComponent('udp://open.example:1337/a')}&WS=${encodeURIComponent('https://seed.example/f')}&x.pe=10.0.0.2:6881&dht=router.example:6881`,
+        },
+      ],
+      ['setCategory (reserved characters)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'tv/odd:name?' }],
       ['editCategory (to implicit)', 'torrents.editCategory', { category: 'movies', savePath: '' }],
     ];
     const out: Record<string, unknown> = {};

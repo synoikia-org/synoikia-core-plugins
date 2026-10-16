@@ -5,6 +5,7 @@ import type { UrlMasker } from './mask.js';
 import type { HashSelection } from './params.js';
 import type { QbtApi } from './session.js';
 import { quote } from './text.js';
+import { magnetParams } from './urls.js';
 
 /** Reads of what a write acts on, as qBittorrent stores it: torrents, categories, tags, RSS items and rules,
  * search plugins and trackers. Each returns undefined when the read fails, so callers fail closed. */
@@ -128,7 +129,7 @@ export function storedUrl(masker: UrlMasker, stored: readonly string[], given: s
 /** A URL's scheme, host and port, for summaries; never its path, query or credentials. */
 export function origin(url: string): string {
   if (/^magnet:/i.test(url)) {
-    const dn = new URLSearchParams(url.slice(url.indexOf('?') + 1)).get('dn');
+    const dn = magnetParams(url).find((p) => p.key === 'dn')?.value;
     return dn ? `magnet ${quote(dn, 120)}` : 'a magnet link';
   }
   try {
