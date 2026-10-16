@@ -16,16 +16,31 @@ export const visible = (json: string) =>
 /** A string as one visible line, cut to `max`. */
 export const safe = (text: string, max = MAX_VALUE) => visible(JSON.stringify(truncate(text, max)).slice(1, -1));
 
-/** One destination field: each address on its own (Grafana splits on `;`, `,` and newlines and trims them) and
- * cut one by one, so padding in one can't push the others past the cut. */
-function destination(value: unknown): string {
+/** `https://hooks.slack.com/services/…` → `hooks.slack.com`: where it posts, without the token in its path. */
+export function hostOf(value: unknown): string {
+  try {
+    return new URL(String(value)).host || 'an invalid URL';
+  } catch {
+    return 'an invalid URL';
+  }
+}
+
+/** Pointers that hold address lists, which Grafana splits on `;`, `,` and newlines and trims. */
+const ADDRESS_LISTS = new Set(['/settings/addresses', '/recipients', '/emails']);
+
+/** One destination: a URL leads with its host as WHATWG (and Go) parse it, so userinfo padding can't hide it. */
+function item(text: string): string {
+  const quoted = `"${safe(text)}"`;
+  return /^\s*[a-z][a-z0-9+.-]*:\/\//i.test(text) ? `${safe(hostOf(text))} ${quoted}` : quoted;
+}
+
+/** One destination field: each address of a list on its own, cut one by one, so padding in one can't push the
+ * others past the cut. */
+function destination(pointer: string, value: unknown): string {
+  const split = ADDRESS_LISTS.has(pointer);
   const items = (Array.isArray(value) ? value : [value]).flatMap((v) =>
     typeof v === 'string'
-      ? v
-          .split(/[;,\n]/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .map((s) => `"${safe(s)}"`)
+      ? (split ? v.split(/[;,\n]/).map((s) => s.trim()) : [v]).filter(Boolean).map(item)
       : [truncate(visible(JSON.stringify(v) ?? String(v)), MAX_VALUE)],
   );
   const shown = items.slice(0, MAX_LISTED).join(', ');
@@ -39,7 +54,7 @@ export function withDestinations(text: string, service: string, key: string, par
   const p = isPlainObject(params) ? params : {};
   const shown = pointers.flatMap((pointer) => {
     const v = readPointer(p.body, pointer);
-    return v === undefined || v === null || v === '' ? [] : [`${pointer.slice(1)}=${destination(v)}`];
+    return v === undefined || v === null || v === '' ? [] : [`${pointer.slice(1)}=${destination(pointer, v)}`];
   });
   if (!shown.length) return text;
   const [method = '', template = ''] = baseKey(key).split(' ');

@@ -1,6 +1,6 @@
 import { ErrorCodes, isPlainObject, PluginError, readPointer, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
-import { safe } from './summary.js';
+import { hostOf, safe } from './summary.js';
 
 /** Most data sources one `POST /ds/query` may name; more are refused rather than shown in part. */
 const MAX_QUERY_SOURCES = 20;
@@ -20,15 +20,6 @@ async function dataSource(client: HttpJsonClient, path: string, id: string | und
   const name = safe(stringOr(ds.name) ?? key);
   const detail = [stringOr(ds.type), stringOr(ds.url)].flatMap((v) => (v ? [safe(v)] : [])).join(', ');
   return { kind: 'datasource', id: key, name: detail ? `${name} (${detail})` : name } satisfies ResolvedTarget;
-}
-
-/** `https://hooks.slack.com/services/…` → `hooks.slack.com`: where it posts, without the token in its path. */
-export function hostOf(value: unknown): string {
-  try {
-    return new URL(String(value)).host || 'an invalid URL';
-  } catch {
-    return 'an invalid URL';
-  }
 }
 
 /** Body pointers the targets and destinations read; anything under `queries` is checked whole. */
