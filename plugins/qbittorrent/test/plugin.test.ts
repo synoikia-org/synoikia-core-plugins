@@ -176,6 +176,11 @@ describe('params', () => {
     ['a plugin over http', 'search.installPlugin', { sources: 'http://plugins.example/x.py' }],
     ['a path out of the torrent', 'torrents.renameFile', { hash: HASH.ubuntu, oldPath: 'a.iso', newPath: '../b.iso' }],
     ['an absolute path', 'torrents.renameFolder', { hash: HASH.ubuntu, oldPath: '/etc', newPath: 'b' }],
+    ['a drive-relative path', 'torrents.renameFile', { hash: HASH.ubuntu, oldPath: 'a.iso', newPath: 'C:b.iso' }],
+    ['a colon in a segment', 'torrents.renameFolder', { hash: HASH.ubuntu, oldPath: 'dir', newPath: 'x/d:e' }],
+    ['a line break in a name', 'torrents.rename', { hash: HASH.ubuntu, name: 'a\nb' }],
+    ['a CR in a category', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'linux\r' }],
+    ['a CR in a URL list', 'torrents.removeCategories', { categories: 'linux\r\nmovies' }],
     ['a redacted value written back', 'app.setPreferences', { json: { proxy_password: '[REDACTED]' } }],
     ['an empty tag list', 'torrents.removeTags', { hashes: HASH.ubuntu, tags: '' }],
     ['a missing required name', 'torrents.delete', { hashes: HASH.ubuntu }],
@@ -340,7 +345,110 @@ describe('targets and literals', () => {
   });
 
   it('escapes and quotes model-written strings', async () => {
-    const s = await summarize('torrents.rename', { hash: HASH.ubuntu, name: 'evil\u202e"\nname' });
-    expect(s.text).toBe(`qBittorrent torrents.rename on torrent "${NAMES.ubuntu}": rename to "evil\\u202e\\"\\nname"`);
+    const s = await summarize('torrents.rename', { hash: HASH.ubuntu, name: 'evil\u202e"\tname' });
+    expect(s.text).toBe(`qBittorrent torrents.rename on torrent "${NAMES.ubuntu}": rename to "evil\\u202e\\"\\tname"`);
+  });
+});
+
+describe('URLs Node and qBittorrent would read differently', () => {
+  const BAD = {
+    backslash: 'https://github.com\\@evil.example/x.py',
+    tab: 'https://github.com\t@evil.example/x.py',
+    cr: 'https://github.com\r@evil.example/x.py',
+    userinfo: 'https://github.com@evil.example/x.py',
+  };
+  const calls = (url: string): [string, Record<string, unknown>][] => [
+    ['torrents.add', { urls: url }],
+    ['torrents.addTrackers', { hash: HASH.ubuntu, urls: url }],
+    ['torrents.editTracker', { hash: HASH.ubuntu, url: TRACKER.udp, newUrl: url }],
+    ['rss.addFeed', { path: 'New', url }],
+    ['rss.setFeedURL', { path: 'Public', url }],
+    ['search.installPlugin', { sources: url }],
+  ];
+  it.each(Object.entries(BAD))('refuses a %s before the host on every fetching operation', async (_label, url) => {
+    for (const [key, params] of calls(url))
+      await expect(resolve(key, params), key).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+    expect(fake.calls).toEqual([]);
+  });
+
+  it('refuses a magnet whose tracker would be read differently, and keeps explicit default ports', async () => {
+    const tr = encodeURIComponent('https://tracker.example\\@evil.example/announce');
+    await expect(
+      resolve('torrents.add', { urls: `magnet:?xt=urn:btih:${'dd'.repeat(20)}&tr=${tr}` }),
+    ).rejects.toMatchObject({
+      code: ErrorCodes.InvalidParams,
+    });
+    await expect(
+      resolve('torrents.addTrackers', { hash: HASH.ubuntu, urls: 'http://Tracker.Example:80/announce' }),
+    ).resolves.toMatchObject({ key: 'torrents.addTrackers' });
+  });
+
+  it("lists a magnet link's trackers and sources as targets", async () => {
+    const magnet = `magnet:?xt=urn:btih:${'dd'.repeat(20)}&dn=Fedora&tr=${encodeURIComponent(TRACKER.private)}&ws=${encodeURIComponent('https://seed.example/f')}`;
+    const r = await resolve('torrents.add', { urls: magnet });
+    const targets = (await plugin.resolveTargets?.({ key: r.key, params: r.params })) ?? [];
+    expect(targets.filter((t) => t.kind === 'magnet-url').map((t) => t.name)).toEqual([
+      'https://private.example',
+      'https://seed.example',
+    ]);
+    expect(JSON.stringify(targets)).not.toContain(SECRETS.privatePasskey);
+  });
+});
+
+describe('errors that are not an ended session', () => {
+  it('neither signs in again nor repeats a write refused with 403', async () => {
+    await invoke('torrents.tags');
+    const logins = fake.logins;
+    await expect(invoke('torrents.setSavePath', { id: HASH.bunny, path: '/readonly' })).rejects.toMatchObject({
+      code: ErrorCodes.UpstreamDenied,
+      message: expect.stringContaining('Cannot write to directory'),
+    });
+    expect(fake.logins).toBe(logins);
+    expect(fake.calls.filter((c) => c.path === 'torrents/setSavePath')).toHaveLength(1);
+  });
+
+  it('reports Host header validation as such, not as wrong credentials', async () => {
+    const other = await startFakeQbittorrent({ refuseHost: true });
+    const p = createQbittorrentPlugin();
+    await p.init({ ...connection(other.url), sdkVersion: '1' });
+    expect(await p.testConnection()).toMatchObject({ ok: false, message: expect.stringContaining('Server domains') });
+    await p.shutdown?.();
+    await other.close();
+  });
+});
+
+describe('where data goes', () => {
+  const summarize = async (key: string, params: unknown) => {
+    const r = await resolve(key, params);
+    const targets = (await plugin.resolveTargets?.({ key: r.key, params: r.params })) ?? [];
+    return (await plugin.summarize({ key: r.key, params: r.params, targets })).text;
+  };
+
+  it.each([
+    ['an explicit path', 'movies', '"/downloads/movies"'],
+    ['an implicit path', 'tv', '"/downloads/tv"'],
+    ['a subcategory', 'tv/shows', '"/downloads/tv/shows"'],
+    ['clearing the category', '', '"/downloads"'],
+  ])('names the move on setCategory with %s', async (_label, category, path) => {
+    expect(await summarize('torrents.setCategory', { hashes: HASH.ubuntu, category })).toContain(
+      `torrents in automatic management move to ${path}`,
+    );
+  });
+
+  it('uses the category path when add asks for automatic management, whatever savepath says', async () => {
+    const urls = `magnet:?xt=urn:btih:${'dd'.repeat(20)}&dn=Fedora`;
+    expect(await summarize('torrents.add', { urls, category: 'tv', savepath: '/elsewhere', autoTMM: true })).toContain(
+      'into "/downloads/tv" (automatic management, category "tv"; savepath "/elsewhere" is ignored)',
+    );
+    expect(await summarize('torrents.add', { urls, savepath: 'iso' })).toContain('into "/downloads/iso"');
+  });
+
+  it('shows every plugin a search runs, disabled ones included', async () => {
+    expect(await summarize('search.start', { pattern: 'x', plugins: 'ALL', category: 'all' })).toContain(
+      'with plugins "example"; including disabled: "legacy"',
+    );
+    expect(await summarize('search.start', { pattern: 'x', plugins: 'enabled', category: 'all' })).toContain(
+      'with plugins "example" (runs',
+    );
   });
 });

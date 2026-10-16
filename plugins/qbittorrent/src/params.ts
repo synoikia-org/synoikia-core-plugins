@@ -35,6 +35,9 @@ export const HASH_PARAM: Record<string, 'hashes' | 'id'> = { 'torrents.setSavePa
 /** Operations whose `hashes` take `all` (qBittorrent's applyToTorrents); queue moves parse each entry as a hash. */
 const NO_ALL = new Set(['torrents.topPrio', 'torrents.bottomPrio', 'torrents.info']);
 
+/** Fields that hold one entry per line. */
+const MULTILINE = new Set(['torrents.add urls', 'torrents.addTrackers urls', 'torrents.removeCategories categories']);
+
 const schemaOf = (op: HttpOperation) => (isPlainObject(op.paramsSchema) ? op.paramsSchema : {});
 const propsOf = (op: HttpOperation): Record<string, unknown> => {
   const props = schemaOf(op).properties;
@@ -73,8 +76,12 @@ function checkValue(op: HttpOperation, name: string, value: unknown, schema: Rec
         throw invalid(`${where} must not be empty`);
       if (typeof schema.maxLength === 'number' && value.length > schema.maxLength)
         throw invalid(`${where} must be at most ${schema.maxLength} characters`);
-      // A NUL or line break in a single-line field would end it early, or split it, in qBittorrent's parsing.
-      if (/\0/.test(value)) throw invalid(`${where} must not contain NUL characters`);
+      // qBittorrent splits these fields on line breaks, or keeps a CR that changes the name: only the multi-line
+      // fields take a LF, and none a CR or NUL.
+      if (/[\0\r]/.test(value) || (value.includes('\n') && !MULTILINE.has(`${op.key} ${name}`)))
+        throw invalid(
+          `${where} must not contain ${MULTILINE.has(`${op.key} ${name}`) ? 'CR or NUL' : 'line breaks or NUL'} characters`,
+        );
   }
 }
 
@@ -130,10 +137,11 @@ export function selection(key: string, params: CallParams): HashSelection | unde
   return undefined;
 }
 
-/** A path inside a torrent: relative, without `..`, `.` or empty segments. */
+/** A path inside a torrent: relative, without `..`, `.`, empty segments or a drive. */
 export function checkInnerPath(op: HttpOperation, name: string, value: unknown): void {
   const text = typeof value === 'string' ? value : '';
   const segments = text.split(/[\\/]/);
-  if (!text || /^([a-zA-Z]:)?[\\/]/.test(text) || segments.some((s) => s === '' || s === '.' || s === '..'))
+  // `:` is refused in any segment: on Windows `C:name` is relative to drive C, not to the torrent.
+  if (!text || /^[\\/]/.test(text) || segments.some((s) => s === '' || s === '.' || s === '..' || s.includes(':')))
     throw invalid(`${op.key} ${name} must be a path inside the torrent, as torrents.files names it`);
 }

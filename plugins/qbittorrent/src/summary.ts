@@ -13,10 +13,9 @@ export interface SummaryInput {
   targets: readonly ResolvedTarget[];
   host: string;
   maxNames: number;
-  /** Where a category's torrents are saved, for setCategory and add. */
-  categoryPath?: string;
-  /** qBittorrent's default save path, for add without a save path or category. */
-  defaultPath?: string;
+  /** Where data lands or moves, as qBittorrent resolves it: add's save path text, the path setCategory moves
+   * auto-managed torrents to, editCategory's new path. Undefined when the settings could not be read. */
+  destination?: string;
   /** Notes per changed preference key (`runs a program`). */
   preferenceNotes?: (key: string) => string[];
 }
@@ -96,14 +95,6 @@ function addDetail(p: Record<string, unknown>): string {
   return parts.length ? `; ${parts.join(', ')}` : '';
 }
 
-function addDestination(p: Record<string, unknown>, s: SummaryInput): string {
-  const categoryPath = s.categoryPath ? `${quote(s.categoryPath)} (the category's save path)` : undefined;
-  if (p.autoTMM === true && categoryPath) return categoryPath;
-  if (typeof p.savepath === 'string' && p.savepath) return quote(p.savepath);
-  if (categoryPath) return categoryPath;
-  return s.defaultPath ? `${quote(s.defaultPath)} (the default save path)` : 'the default save path';
-}
-
 function preferencesText(json: unknown, notes: SummaryInput['preferenceNotes']): string {
   if (!isPlainObject(json)) return 'no changes';
   return Object.entries(json)
@@ -147,12 +138,14 @@ export function summaryText(s: SummaryInput): string {
     case 'torrents.topPrio':
     case 'torrents.bottomPrio':
       return torrentsOn();
-    case 'torrents.setCategory':
+    case 'torrents.setCategory': {
+      const move = `torrents in automatic management move to ${s.destination ?? 'a path qBittorrent did not report'}`;
       return torrentsOn(
         typeof p.category === 'string' && p.category
-          ? `category ${quote(p.category)}${s.categoryPath ? `; torrents in automatic management move to ${quote(s.categoryPath)}` : ''}`
-          : 'clear the category',
+          ? `category ${quote(p.category)}; ${move}`
+          : `clear the category; ${move}`,
       );
+    }
     case 'torrents.addTags':
     case 'torrents.removeTags':
       return torrentsOn(`${base === 'torrents.addTags' ? 'add' : 'remove'} tags ${quote(p.tags)}`);
@@ -176,8 +169,10 @@ export function summaryText(s: SummaryInput): string {
       return `${head} to ${quote(p.location)} for ${torrentsText(targets, max)}: moves their data; turns off automatic management`;
     case 'torrents.setSavePath':
       return `${head} to ${quote(p.path)} for ${torrentsText(targets, max)}: moves the data of those in manual management`;
-    case 'torrents.add':
-      return `${head} into ${addDestination(p, s)} on ${instance}: ${of(targets, 'source').length} source(s): ${origins(targets, 'source')}${addDetail(p)}`;
+    case 'torrents.add': {
+      const inner = origins(targets, 'magnet-url');
+      return `${head} into ${s.destination ?? 'an unknown save path'} on ${instance}: ${of(targets, 'source').length} source(s): ${origins(targets, 'source')}${inner ? `; magnet trackers and sources: ${inner}` : ''}${addDetail(p)}`;
+    }
     case 'torrents.addTrackers':
       return torrentsOn(`add trackers ${origins(targets, 'new-tracker')}`);
     case 'torrents.editTracker': {
@@ -197,7 +192,7 @@ export function summaryText(s: SummaryInput): string {
       const download = p.downloadPathEnabled === true ? `, download path ${quote(p.downloadPath ?? '')}` : '';
       return on(
         namesText('category', 'categories', targets, 'category', max),
-        `save path ${quote(p.savePath)}${download}; its torrents in automatic management move`,
+        `save path ${quote(p.savePath)}${download}; its torrents in automatic management move to ${s.destination ?? 'a path qBittorrent did not report'}`,
       );
     }
     case 'torrents.removeCategories':
@@ -239,11 +234,18 @@ export function summaryText(s: SummaryInput): string {
     }
     case 'rss.removeRule':
       return on(namesText('rule', 'rules', targets, 'rss-rule', max), 'delete');
-    case 'search.start':
+    case 'search.start': {
+      const enabled = of(targets, 'search-plugin').map((t) => t.name);
+      const disabled = of(targets, 'disabled-search-plugin').map((t) => t.name);
+      const gone = of(targets, 'missing-search-plugin').map((t) => t.id);
+      const parts = [enabled.length ? `plugins ${quotedList(enabled, max)}` : 'no enabled plugins'];
+      if (disabled.length) parts.push(`including disabled: ${quotedList(disabled, max)}`);
+      if (gone.length) parts.push(`unknown plugins ${quotedList(gone, max)}`);
       return on(
         instance,
-        `search ${quote(p.pattern)} with plugins ${quote(p.plugins)} in category ${quote(p.category)} (runs search plugin code)`,
+        `search ${quote(p.pattern)} in category ${quote(p.category)} with ${parts.join('; ')} (runs search plugin code)`,
       );
+    }
     case 'search.installPlugin':
       return on(
         instance,

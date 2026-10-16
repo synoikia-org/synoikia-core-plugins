@@ -59,6 +59,8 @@ export interface Call {
 export interface FakeOptions {
   /** 5.2+ answers a sign-in with 204 and `QBT_SID_<port>`; 5.0/5.1 with 200 `Ok.` and `SID`. */
   release?: '5.0' | '5.2';
+  /** Host header validation that refuses every request (401 `Unauthorized`), as with a missing Server domain. */
+  refuseHost?: boolean;
 }
 
 export interface FakeQbittorrent extends FakeHttp {
@@ -110,10 +112,16 @@ function initial() {
     categories: new Map([
       ['linux', { name: 'linux', savePath: '/downloads/linux' }],
       ['movies', { name: 'movies', savePath: '/downloads/movies' }],
+      // Implicit paths: `<default>/tv` and `<tv's path>/shows`.
+      ['tv', { name: 'tv', savePath: '' }],
+      ['tv/shows', { name: 'tv/shows', savePath: '' }],
     ]),
     tags: new Set(['iso', 'keep']),
     preferences: {
       save_path: '/downloads',
+      auto_tmm_enabled: false,
+      use_category_paths_in_manual_mode: false,
+      use_subcategories: true,
       web_ui_port: 8080,
       web_ui_username: 'admin',
       web_ui_api_key: SECRETS.apiKey,
@@ -144,7 +152,10 @@ function initial() {
         torrentParams: { save_path: '/downloads/linux', category: 'linux' },
       },
     } as Record<string, Record<string, unknown>>,
-    plugins: [{ name: 'example', enabled: true, url: 'https://search.example' }],
+    plugins: [
+      { name: 'example', enabled: true, url: 'https://search.example' },
+      { name: 'legacy', enabled: false, url: 'https://legacy.example' },
+    ],
   };
 }
 
@@ -321,7 +332,10 @@ export async function startFakeQbittorrent(opts: FakeOptions = {}): Promise<Fake
       pick(f.hashes).forEach((t) => ((t.save_path = f.location ?? ''), (t.auto_tmm = false))),
       ok()
     ),
-    'torrents/setSavePath': (f) => (pick(f.id).forEach((t) => !t.auto_tmm && (t.save_path = f.path ?? '')), ok()),
+    'torrents/setSavePath': (f) =>
+      f.path === '/readonly'
+        ? { status: 403, body: 'Cannot write to directory' }
+        : (pick(f.id).forEach((t) => !t.auto_tmm && (t.save_path = f.path ?? '')), ok()),
     'torrents/addTrackers': (f) => (pick(f.hash).forEach((t) => t.trackers.push(...split(f.urls, '\n'))), ok()),
     'torrents/editTracker': (f) => {
       const t = state.torrents.get(f.hash ?? '');
@@ -547,7 +561,7 @@ export async function startFakeQbittorrent(opts: FakeOptions = {}): Promise<Fake
   const fake = await startFakeHttp({
     guard: (req) => {
       if (!req.path.startsWith('/api/v2/')) return { status: 404, body: 'Not Found' };
-      if (req.headers.origin !== undefined) return { status: 401, body: 'Unauthorized' };
+      if (req.headers.origin !== undefined || opts.refuseHost) return { status: 401, body: 'Unauthorized' };
       if (req.path === '/api/v2/auth/login') return undefined;
       const id = sid(req);
       return id && sessions.has(id) ? undefined : { status: 403, body: 'Forbidden' };

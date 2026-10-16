@@ -85,11 +85,27 @@ export const LOCK_CASES: LockCase[] = [
     'torrents.add',
     { urls: MAGNET, category: 'linux', tags: 'iso' },
     HOST,
-    'into "/downloads/linux" (the category\'s save path)',
+    'into "/downloads" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet "Fedora 42"; magnet trackers and sources: https://private.example',
     (f) => {
       expect(f.torrents.get('dd'.repeat(20))).toMatchObject({ name: 'Fedora 42', category: 'linux' });
       expect(lastCall(f, 'torrents/add')?.fields.urls).toBe(MAGNET);
     },
+  ),
+  lock(
+    'torrents.add (automatic management)',
+    'torrents.add',
+    {
+      key: 'torrents.add',
+      params: {
+        urls: `magnet:?xt=urn:btih:${'ee'.repeat(20)}&dn=Show`,
+        category: 'tv/shows',
+        savepath: '/elsewhere',
+        autoTMM: true,
+      },
+    },
+    HOST,
+    'into "/downloads/tv/shows" (automatic management, category "tv/shows"; savepath "/elsewhere" is ignored)',
+    (f) => expect(lastCall(f, 'torrents/add')?.fields).toMatchObject({ autoTMM: 'true', category: 'tv/shows' }),
   ),
   same(
     'torrents.setLocation',
@@ -258,9 +274,17 @@ export const LOCK_CASES: LockCase[] = [
     'search.start',
     { pattern: 'ubuntu', plugins: 'enabled', category: 'all' },
     HOST,
-    'search "ubuntu" with plugins "enabled"',
+    'search "ubuntu" in category "all" with plugins "example" (runs',
     (f) =>
       expect(lastCall(f, 'search/start')?.fields).toEqual({ pattern: 'ubuntu', plugins: 'enabled', category: 'all' }),
+  ),
+  lock(
+    'search.start (all plugins)',
+    'search.start',
+    { key: 'search.start', params: { pattern: 'debian', plugins: 'all', category: 'all' } },
+    HOST,
+    'with plugins "example"; including disabled: "legacy"',
+    (f) => expect(lastCall(f, 'search/start')?.fields.plugins).toBe('all'),
   ),
   same(
     'search.installPlugin',
@@ -270,7 +294,7 @@ export const LOCK_CASES: LockCase[] = [
     (f) => expect(f.state.installed).toEqual(['https://plugins.example/nova/example.py']),
   ),
   same('search.uninstallPlugin', { names: 'example' }, 'example', 'on plugin "example": uninstall', (f) =>
-    expect(f.plugins).toEqual([]),
+    expect(f.plugins.map((p) => p.name)).toEqual(['legacy']),
   ),
   same('search.enablePlugin', { names: 'example', enable: false }, 'example', 'on plugin "example": disable', (f) =>
     expect(f.plugins[0]?.enabled).toBe(false),

@@ -2,6 +2,7 @@ import { isPlainObject } from '@synoikia/plugin-sdk';
 import type { ResolvedTarget } from '@synoikia/plugin-sdk';
 import type { UrlMasker } from './mask.js';
 import { selection } from './params.js';
+import { magnetUrls } from './urls.js';
 import type { CallParams } from './params.js';
 import {
   categories,
@@ -46,6 +47,36 @@ function urlTarget(masker: UrlMasker, kind: string, given: string, i: number): R
   };
 }
 
+/** A source to add, and for a magnet link each tracker and source URL in it that qBittorrent will contact. */
+function sourceTargets(masker: UrlMasker, given: string, i: number): ResolvedTarget[] {
+  const real = masker.unmask(given);
+  const inner = real && /^magnet:/i.test(real) ? magnetUrls(real) : [];
+  return [
+    urlTarget(masker, 'source', given, i),
+    ...inner.map((u, j) => ({ kind: 'magnet-url', id: `magnet-url:${i}:${j}:${masker.url(u)}`, name: origin(u) })),
+  ];
+}
+
+/** The plugins a search runs, as qBittorrent picks them: `all` (any case) is every installed plugin, disabled ones
+ * too; `enabled` (or `multi`) the enabled ones; names run whatever their enabled state. */
+async function searchTargets(ctx: TargetContext, plugins: string): Promise<ResolvedTarget[]> {
+  const stored = await searchPlugins(ctx.lookups);
+  if (!stored) return [missing('search-plugin', plugins)];
+  const names = plugins.split('|');
+  const one = names.length === 1 ? names[0]!.toLowerCase() : undefined;
+  const picked =
+    one === 'all'
+      ? [...stored.keys()]
+      : one === 'enabled' || one === 'multi'
+        ? [...stored].filter(([, enabled]) => enabled).map(([n]) => n)
+        : names;
+  return picked.map((n) =>
+    !stored.has(n)
+      ? missing('search-plugin', n)
+      : { kind: stored.get(n) ? 'search-plugin' : 'disabled-search-plugin', id: n, name: n },
+  );
+}
+
 async function torrentPart(ctx: TargetContext, key: string, params: CallParams): Promise<ResolvedTarget[]> {
   const sel = selection(key.split('#')[0]!, params);
   return sel ? torrentTargets(ctx.lookups, sel) : [];
@@ -69,7 +100,7 @@ export async function writeTargets(ctx: TargetContext, key: string, params: Call
   const instance = [instanceTarget(ctx.host)];
   switch (base) {
     case 'torrents.add':
-      return [...instance, ...lines(params.urls, '\n').map((u, i) => urlTarget(ctx.masker, 'source', u, i))];
+      return [...instance, ...lines(params.urls, '\n').flatMap((u, i) => sourceTargets(ctx.masker, u, i))];
     case 'torrents.addTrackers':
       return [
         ...(await torrentPart(ctx, key, params)),
@@ -129,6 +160,8 @@ export async function writeTargets(ctx: TargetContext, key: string, params: Call
       const rules = await rssRules(l);
       return [rules && Object.hasOwn(rules, name) ? { kind: 'rss-rule', id: name, name } : missing('rss-rule', name)];
     }
+    case 'search.start':
+      return [...instance, ...(await searchTargets(ctx, String(params.plugins)))];
     case 'search.uninstallPlugin':
     case 'search.enablePlugin': {
       const stored = await searchPlugins(l);
@@ -148,7 +181,6 @@ export async function writeTargets(ctx: TargetContext, key: string, params: Call
     case 'transfer.toggleSpeedLimitsMode':
     case 'app.setPreferences':
     case 'app.shutdown':
-    case 'search.start':
     case 'search.updatePlugins':
       return instance;
     default:

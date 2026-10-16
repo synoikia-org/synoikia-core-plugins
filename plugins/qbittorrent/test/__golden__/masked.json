@@ -5,6 +5,7 @@
       "add_trackers_enabled": true,
       "add_trackers_url": "[REDACTED]",
       "add_trackers_url_list": "[REDACTED]",
+      "auto_tmm_enabled": false,
       "autorun_enabled": true,
       "autorun_on_torrent_added_program": "",
       "autorun_program": "[REDACTED]",
@@ -17,6 +18,8 @@
       "scan_dirs": {
         "/watch": 1
       },
+      "use_category_paths_in_manual_mode": false,
+      "use_subcategories": true,
       "web_ui_api_key": "[REDACTED]",
       "web_ui_port": 8080,
       "web_ui_username": "admin"

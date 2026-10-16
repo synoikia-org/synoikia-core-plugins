@@ -40,9 +40,9 @@ Not declared: `auth/*` (the plugin's own sign-in only), `app/cookies` and `setCo
 
 ## Auth
 
-`POST /api/v2/auth/login` with the connection's `username` and `password` as a form. It answers 204 (5.2) or 200 `Ok.` (5.0, 5.1) and sets the session cookie; wrong credentials get 401 (5.2) or 200 `Fails.`; a banned address gets 403. The cookie is `QBT_SID_<WebUI port>` from 5.2 and `SID` (or the configured `WebAPISessionCookieName`) before. The plugin takes `SID` or `QBT_SID_<n>` from `Set-Cookie`, else the only cookie set, and sends it on every call. A call without a valid session gets 403; the plugin signs in again once (`HttpJsonClient` `before`/`onAuthFailure`, single-flight). The password and cookie never reach an error. 5.2's API key (`Authorization: Bearer`) is not used.
+`POST /api/v2/auth/login` with the connection's `username` and `password` as a form. It answers 204 (5.2) or 200 `Ok.` (5.0, 5.1) and sets the session cookie; wrong credentials get 401 (5.2) or 200 `Fails.`; a banned address gets 403. The cookie is `QBT_SID_<WebUI port>` from 5.2 and `SID` (or the configured `WebAPISessionCookieName`) before. The plugin takes `SID` or `QBT_SID_<n>` from `Set-Cookie`, else the only cookie set, and sends it on every call. A call without a valid session gets 403 with the bare status text `Forbidden` (`doProcessRequest`); only then does the plugin sign in again (single-flight) and repeat the call, which never reached the action. Any other 401 or 403 is final and a write is never repeated: an action's own 403 carries its message (`setSavePath`'s "Cannot write to directory"). The password and cookie never reach an error. 5.2's API key (`Authorization: Bearer`) is not used.
 
-CSRF: `isCrossSiteRequest` treats a request with neither `Origin` nor `Referer` as same-site, so the plugin sends neither. Host header validation compares the `Host` header (the base URL's host) with the WebUI's *Server domains*; the connection help says to add it.
+CSRF: `isCrossSiteRequest` treats a request with neither `Origin` nor `Referer` as same-site, so the plugin sends neither. Host header validation compares the `Host` header (the base URL's host) with the WebUI's *Server domains*; the connection help says to add it. Both refuse with 401 `Unauthorized` before any session check. 5.2 also answers wrong credentials with 401, so after a refused sign-in the plugin sends one request without a session: 403 means the credentials were wrong, 401 that Host validation or CSRF refused it, and the error says which.
 
 The version check reads `app/webapiVersion` and `app/version` and refuses WebUI API before 2.11 (qBittorrent 5.0).
 
@@ -54,7 +54,9 @@ qBittorrent keeps params in a case-sensitive `QHash` (`requestparser.cpp`): a re
 - refuses names that differ only by case, and arrays or objects except for the declared object params, so no value is sent twice;
 - checks each value's declared type (`deleteFiles` must be a JSON boolean, not `"true"`).
 
-Torrent hashes are 40 hex characters, normalized to lower case. `hashes` (and `setSavePath`'s `id`) take several joined with `|`, or `all`. qBittorrent compares `all` exactly (`applyToTorrents`), so `ALL` is refused, not sent as a hash that matches nothing. `topPrio` and `bottomPrio` do not take `all` (`toTorrentIDs`). Operations on one torrent take `hash`; `addTrackers` and `removeTrackers` would also apply a `|` list or `all` (and `removeTrackers` `*`) to every torrent, so they take exactly one hash. Paths in `renameFile` and `renameFolder` must be relative, without `.` or `..` segments.
+Torrent hashes are 40 hex characters, normalized to lower case. `hashes` (and `setSavePath`'s `id`) take several joined with `|`, or `all`. qBittorrent compares `all` exactly (`applyToTorrents`), so `ALL` is refused, not sent as a hash that matches nothing. `topPrio` and `bottomPrio` do not take `all` (`toTorrentIDs`). Operations on one torrent take `hash`; `addTrackers` and `removeTrackers` would also apply a `|` list or `all` (and `removeTrackers` `*`) to every torrent, so they take exactly one hash. Paths in `renameFile` and `renameFolder` must be relative, without `.`, `..` or empty segments, and without `:` in any segment (on Windows `C:name` is relative to drive C).
+
+qBittorrent splits `torrents/add` URLs and `addTrackers` URLs on LF, and `removeCategories` names on LF; those three fields take LF. No field takes CR or NUL, and no other field takes LF.
 
 ## Locks
 
@@ -81,7 +83,17 @@ Literals come from the targets, which the plugin reads back from qBittorrent (`t
 
 `src/policy.ts` lists the locks that must exist. The plugin refuses to load when one is missing or not locked, or when a rule names an operation `plugin.yaml` does not declare.
 
-`torrents.setCategory`, `createCategory` without paths and the other writes are plain writes: an admin decides at the group level. `setCategory`'s summary names the category's save path, since torrents in automatic management move there.
+`torrents.setCategory`, `createCategory` without paths and the other writes are plain writes: an admin decides at the group level. Torrents in automatic management move when their category changes, so every `setCategory` summary names the path they move to, clearing included.
+
+Paths follow `SessionImpl::categorySavePath` (5.2.4): no category is the default save path (`save_path`); a category's own path is used as is, or under the default save path when relative; an empty path is implicit, `<parent category's path>/<last segment>` (`tv/shows` under `tv`'s path, `tv` under the default save path). `torrents.add` follows `buildLoadTorrentParams`: automatic management (`autoTMM`, or when absent `auto_tmm_enabled` with no `savepath` and no `downloadPath`) saves to the category's path and ignores `savepath`, and the summary says so; otherwise an absolute `savepath`, or a relative one under the category's path (`autoTMM`/`auto_tmm_enabled` or `use_category_paths_in_manual_mode`) or the default save path.
+
+`search.start` resolves `plugins` as qBittorrent does: `all` in any case is every installed plugin, disabled ones included; `enabled` or `multi` the enabled ones; names run whatever their state. The summary lists them, with `including disabled: …` when that applies, and an unknown name leaves no literal.
+
+## URLs qBittorrent fetches
+
+Qt's QUrl and Node's WHATWG URL read some URLs differently: `https://github.com\@evil.example/x.py` is host `github.com` to Node (it reads `\` as `/`) and `evil.example` to QUrl (userinfo `github.com\`), so an approval would show one origin and qBittorrent fetch another. Every URL qBittorrent will fetch or announce to (`torrents.add`, `addTrackers`, `editTracker` `newUrl`, `rss.addFeed`, `setFeedURL`, `setRule` feeds, `search.installPlugin`, and the `tr`, `ws`, `xs` and `as` URLs inside a magnet link) is refused when it contains a backslash, whitespace or a control character, has userinfo (`@` before the path), or when Node's host differs from the authority as written (case and a default port aside). The check runs on the real URL, after a masked one is resolved.
+
+A magnet link's tracker and source URLs are targets of their own, so the approval shows each origin.
 
 ## URLs in results
 

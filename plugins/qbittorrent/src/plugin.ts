@@ -17,14 +17,17 @@ import {
 import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 import { UrlMasker } from './mask.js';
+import { urlProblem } from './urls.js';
 import { checkInnerPath, checkParams, invalid } from './params.js';
 import type { CallParams, HttpOperation } from './params.js';
 import { checkPolicy } from './policy.js';
-import { QbtSession, SERVICE } from './session.js';
-import { categories, defaultSavePath, rssItems, storedUrl, trackerUrls } from './stored.js';
+import { QbtApi, QbtSession, SERVICE } from './session.js';
+import { addDestination, categoryPath, pathSettings } from './paths.js';
+import { rssItems, storedUrl, trackerUrls } from './stored.js';
 import type { Lookups } from './stored.js';
 import { summaryText } from './summary.js';
 import { hasMissing, literals, writeTargets } from './targets.js';
+import { quote } from './text.js';
 
 /** The qBittorrent plugin: operations declared in plugin.yaml over the WebUI API v2, signed in with the WebUI
  * session cookie; the sandbox calls `qbittorrent.call(operation, params)` with flat params. */
@@ -114,6 +117,8 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
       if (real === undefined)
         throw invalid(`${op.key} ${name}: a masked URL this plugin no longer knows; read it again and retry`);
       if (!SCHEMES[kind].re.test(real)) throw invalid(`${op.key} ${name}: ${SCHEMES[kind].text}`);
+      const problem = urlProblem(real);
+      if (problem) throw invalid(`${op.key} ${name}: a URL that ${problem}`);
       return real;
     });
   };
@@ -159,6 +164,10 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
         const feeds = isPlainObject(p.ruleDef) ? p.ruleDef.affectedFeeds : undefined;
         if (feeds !== undefined && !(Array.isArray(feeds) && feeds.every((f) => typeof f === 'string')))
           throw invalid(`${op.key} ruleDef.affectedFeeds must be a list of feed URLs`);
+        for (const f of (feeds ?? []) as string[]) {
+          const problem = UrlMasker.isMasked(f) ? undefined : urlProblem(f);
+          if (problem) throw invalid(`${op.key} ruleDef.affectedFeeds: a URL that ${problem}`);
+        }
         break;
       }
     }
@@ -167,14 +176,14 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
   return definePlugin({
     connect(init) {
       const session = new QbtSession(init);
-      const client: HttpJsonClient = new HttpJsonClient({
+      const http = new HttpJsonClient({
         baseUrl: joinApiPath(requireString(init.config, 'baseUrl'), settings.plugin.apiPath),
         service: SERVICE,
         verifyTls: init.config.verifyTls !== false,
         timeoutMs: settings.defaults.timeouts.request,
-        ...session.options(() => client),
+        headers: () => session.headers(),
       });
-      return client;
+      return new QbtApi(http, session, settings.defaults.timeouts.request);
     },
 
     // The WebUI API version decides support (5.0 renamed pause/resume); both calls also prove the sign-in.
@@ -288,13 +297,21 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
           const op = operation(key);
           const p = isPlainObject(params) ? params : {};
           if (op.classification === 'read') return { text: `${SERVICE} ${key} on qBittorrent at ${host()}` };
-          const category = typeof p.category === 'string' && p.category ? p.category : undefined;
-          const categoryPath =
-            (op.key === 'torrents.setCategory' || op.key === 'torrents.add') && category
-              ? (await categories(lookups()))?.get(category)?.savePath || undefined
-              : undefined;
-          const defaultPath =
-            op.key === 'torrents.add' && !categoryPath && !p.savepath ? await defaultSavePath(lookups()) : undefined;
+          const paths = ['torrents.add', 'torrents.setCategory', 'torrents.editCategory'].includes(op.key)
+            ? await pathSettings(lookups())
+            : undefined;
+          const category = typeof p.category === 'string' ? p.category : '';
+          let destination: string | undefined;
+          if (op.key === 'torrents.add') destination = addDestination(paths, p);
+          else if (paths && op.key === 'torrents.setCategory')
+            destination =
+              category && !paths.categories.has(category)
+                ? `the path of category ${quote(category)}, which does not exist`
+                : quote(categoryPath(paths, category));
+          else if (paths && op.key === 'torrents.editCategory' && typeof p.savePath === 'string')
+            destination = quote(
+              categoryPath({ ...paths, categories: new Map(paths.categories).set(category, p.savePath) }, category),
+            );
           const notes = rules.summaryNotes(key).map((n) => ` ${n}`);
           const text =
             summaryText({
@@ -303,8 +320,7 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
               targets,
               host: host(),
               maxNames: settings.plugin.maxNames,
-              categoryPath,
-              defaultPath,
+              destination,
               preferenceNotes,
             }) + notes.join('');
           const literal = await rules.confirmLiteral({ key, params: p, targets });

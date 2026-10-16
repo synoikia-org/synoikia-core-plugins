@@ -1,0 +1,42 @@
+{
+  "add (autoTMM, no category)": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "torrents.add",
+    "text": "qBittorrent torrents.add into \"/downloads\" (automatic management) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora\""
+  },
+  "add (autoTMM, savepath ignored)": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "torrents.add",
+    "text": "qBittorrent torrents.add into \"/downloads/tv\" (automatic management, category \"tv\"; savepath \"/elsewhere\" is ignored) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora\"; category \"tv\""
+  },
+  "add (manual, relative savepath)": {
+    "confirmLiteral": "127.0.0.1",
+    "resolved": "torrents.add",
+    "text": "qBittorrent torrents.add into \"/downloads/iso\" on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora\""
+  },
+  "editCategory (to implicit)": {
+    "confirmLiteral": "movies",
+    "resolved": "torrents.editCategory",
+    "text": "qBittorrent torrents.editCategory on category \"movies\": save path \"\"; its torrents in automatic management move to \"/downloads/movies\""
+  },
+  "setCategory (clear)": {
+    "resolved": "torrents.setCategory",
+    "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": clear the category; torrents in automatic management move to \"/downloads\""
+  },
+  "setCategory (explicit path)": {
+    "resolved": "torrents.setCategory",
+    "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"movies\"; torrents in automatic management move to \"/downloads/movies\""
+  },
+  "setCategory (implicit path)": {
+    "resolved": "torrents.setCategory",
+    "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"tv\"; torrents in automatic management move to \"/downloads/tv\""
+  },
+  "setCategory (subcategory)": {
+    "resolved": "torrents.setCategory",
+    "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"tv/shows\"; torrents in automatic management move to \"/downloads/tv/shows\""
+  },
+  "setCategory (unknown)": {
+    "resolved": "torrents.setCategory",
+    "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"nope\"; torrents in automatic management move to the path of category \"nope\", which does not exist"
+  }
+}

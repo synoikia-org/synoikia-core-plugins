@@ -79,6 +79,33 @@ describe('qBittorrent golden record', () => {
     await expect(portless(stable(out))).toMatchFileSnapshot('__golden__/summaries.json');
   });
 
+  it('summaries of writes that move data without a lock', async () => {
+    const urls = `magnet:?xt=urn:btih:${'dd'.repeat(20)}&dn=Fedora`;
+    const cases: [string, string, Record<string, unknown>][] = [
+      ['setCategory (explicit path)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'movies' }],
+      ['setCategory (implicit path)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'tv' }],
+      ['setCategory (subcategory)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'tv/shows' }],
+      ['setCategory (clear)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: '' }],
+      ['setCategory (unknown)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'nope' }],
+      ['add (manual, relative savepath)', 'torrents.add', { urls, savepath: 'iso' }],
+      [
+        'add (autoTMM, savepath ignored)',
+        'torrents.add',
+        { urls, category: 'tv', savepath: '/elsewhere', autoTMM: true },
+      ],
+      ['add (autoTMM, no category)', 'torrents.add', { urls, autoTMM: true }],
+      ['editCategory (to implicit)', 'torrents.editCategory', { category: 'movies', savePath: '' }],
+    ];
+    const out: Record<string, unknown> = {};
+    for (const [name, key, raw] of cases) {
+      fake.reset();
+      const { key: resolved, params } = await plugin.resolveOperation({ fn: 'call', args: [key, raw] });
+      const targets = (await plugin.resolveTargets?.({ key: resolved, params })) ?? [];
+      out[name] = { resolved, ...(await plugin.summarize({ key: resolved, params, targets })) };
+    }
+    await expect(portless(stable(out))).toMatchFileSnapshot('__golden__/writes.json');
+  });
+
   it('results with URLs and secrets, as core passes them on', async () => {
     fake.reset();
     const calls: [string, unknown][] = [

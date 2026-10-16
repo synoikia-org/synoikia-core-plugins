@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
-import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
+import type { ResolvedTarget } from '@synoikia/plugin-sdk';
 import type { UrlMasker } from './mask.js';
 import type { HashSelection } from './params.js';
+import type { QbtApi } from './session.js';
 import { quote } from './text.js';
 
 /** Reads of what a write acts on, as qBittorrent stores it: torrents, categories, tags, RSS items and rules,
@@ -15,7 +16,7 @@ export interface Torrent {
 }
 
 export interface Lookups {
-  client: HttpJsonClient;
+  client: QbtApi;
   timeoutMs: number;
 }
 
@@ -59,11 +60,6 @@ export async function tags(l: Lookups): Promise<Set<string> | undefined> {
   return Array.isArray(body) ? new Set(body.filter((t): t is string => typeof t === 'string')) : undefined;
 }
 
-export async function defaultSavePath(l: Lookups): Promise<string | undefined> {
-  const body = await read(l, '/app/defaultSavePath');
-  return typeof body === 'string' && body ? body : undefined;
-}
-
 export interface RssItem {
   path: string;
   /** A feed's URL; undefined for a folder. */
@@ -103,10 +99,15 @@ export async function rssRules(l: Lookups): Promise<Record<string, unknown> | un
   return isPlainObject(body) ? body : undefined;
 }
 
-export async function searchPlugins(l: Lookups): Promise<Set<string> | undefined> {
+/** Installed search plugins by name, and whether each is enabled. */
+export async function searchPlugins(l: Lookups): Promise<Map<string, boolean> | undefined> {
   const body = await read(l, '/search/plugins');
   if (!Array.isArray(body)) return undefined;
-  return new Set(body.flatMap((p) => (isPlainObject(p) && stringOr(p.name) ? [String(p.name)] : [])));
+  return new Map(
+    body.flatMap((p): [string, boolean][] =>
+      isPlainObject(p) && stringOr(p.name) ? [[String(p.name), p.enabled === true]] : [],
+    ),
+  );
 }
 
 /** A torrent's tracker URLs, without the DHT, PeX and LSD rows. */

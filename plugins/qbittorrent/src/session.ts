@@ -1,5 +1,13 @@
-import { ErrorCodes, PluginError, requireString, singleFlight, statusKind, upstreamError } from '@synoikia/plugin-sdk';
-import type { HttpJsonClient, HttpJsonClientOptions, HttpResponse, InitParams } from '@synoikia/plugin-sdk';
+import {
+  ErrorCodes,
+  errorMessage,
+  PluginError,
+  requireString,
+  singleFlight,
+  statusKind,
+  upstreamError,
+} from '@synoikia/plugin-sdk';
+import type { HttpJsonClient, HttpRequestOptions, HttpResponse, InitParams } from '@synoikia/plugin-sdk';
 
 export const SERVICE = 'qBittorrent';
 
@@ -28,9 +36,16 @@ function signedIn(res: HttpResponse): boolean {
   return res.status === 200 && (res.body === null || (typeof res.body === 'string' && res.body.trim() === 'Ok.'));
 }
 
-/** The WebUI session: `POST /auth/login` with the connection's username and password as a form, the cookie it sets
- * sent on every call, and one sign-in again on a 401/403 (an expired session answers 403). Credentials and the
- * cookie never reach errors. */
+/** qBittorrent answers a request without a valid session with 403 and the bare status text (webapplication.cpp
+ * `doProcessRequest`); an action's own 403 ("Cannot write to directory") carries its message. */
+export const sessionEnded = (res: HttpResponse) =>
+  res.status === 403 && typeof res.body === 'string' && res.body.trim() === 'Forbidden';
+
+/** Host header validation or CSRF protection refused the request before any session check (401, bare text). */
+const HOST_REFUSED = `${SERVICE} refused the request before sign-in (HTTP 401): add the base URL's host name to the WebUI's Server domains, or check its CSRF protection and reverse proxy settings`;
+
+/** The WebUI session: `POST /auth/login` with the connection's username and password as a form, and the cookie it
+ * sets sent on every call. Credentials and the cookie never reach errors. */
 export class QbtSession {
   private cookie?: string;
   private readonly username: string;
@@ -42,19 +57,17 @@ export class QbtSession {
     this.password = requireString(init.secrets, 'password');
   }
 
-  /** Auth options for an `HttpJsonClient`; `http()` returns that same client (sign-in uses its `raw`). */
-  options(http: () => HttpJsonClient): Pick<HttpJsonClientOptions, 'headers' | 'before' | 'onAuthFailure'> {
-    return {
-      headers: (): Record<string, string> => (this.cookie ? { cookie: this.cookie } : {}),
-      before: async (deadline) => {
-        if (!this.cookie) await this.signIn(http(), deadline);
-      },
-      onAuthFailure: async (deadline) => {
-        this.cookie = undefined;
-        await this.signIn(http(), deadline);
-        return true;
-      },
-    };
+  headers(): Record<string, string> {
+    return this.cookie ? { cookie: this.cookie } : {};
+  }
+
+  async ensure(http: HttpJsonClient, deadline: number): Promise<void> {
+    if (!this.cookie) await this.signIn(http, deadline);
+  }
+
+  async renew(http: HttpJsonClient, deadline: number): Promise<void> {
+    this.cookie = undefined;
+    await this.signIn(http, deadline);
   }
 
   private async doSignIn(http: HttpJsonClient, deadline: number): Promise<void> {
@@ -69,12 +82,50 @@ export class QbtSession {
         ErrorCodes.UpstreamDenied,
         `${SERVICE} refused the sign-in: too many failed attempts banned this address for a while`,
       );
-    if (res.status === 401 || (res.status === 200 && !signedIn(res)))
+    if (res.status === 401) {
+      // 5.2 answers wrong credentials with 401 too; a request without a session tells them apart (403 vs 401).
+      const probe = await http.raw('GET', '/app/webapiVersion', { deadline });
+      throw new PluginError(
+        ErrorCodes.UpstreamDenied,
+        probe.status === 401 ? HOST_REFUSED : `${SERVICE} rejected the username or password`,
+      );
+    }
+    if (res.status === 200 && !signedIn(res))
       throw new PluginError(ErrorCodes.UpstreamDenied, `${SERVICE} rejected the username or password`);
     if (!signedIn(res))
       throw upstreamError(SERVICE, statusKind(res.status), 'sign-in', `HTTP ${res.status}`, { status: res.status });
     const cookie = sessionCookie(res.headers['set-cookie']);
     if (!cookie) throw new PluginError(ErrorCodes.UpstreamError, `${SERVICE} sign-in set no session cookie`);
     this.cookie = cookie;
+  }
+}
+
+/** The API as the plugin uses it: signs in first, and once more only when qBittorrent says the session ended (the
+ * request then never reached the action, so repeating it is safe). Any other error is final, a POST is never
+ * repeated after it. */
+export class QbtApi {
+  constructor(
+    readonly http: HttpJsonClient,
+    private readonly session: QbtSession,
+    private readonly timeoutMs: number,
+  ) {}
+
+  async request(method: string, path: string, opts: HttpRequestOptions = {}): Promise<unknown> {
+    const deadline = opts.deadline ?? Date.now() + (opts.timeoutMs ?? this.timeoutMs);
+    await this.session.ensure(this.http, deadline);
+    let res = await this.http.raw(method, path, { ...opts, deadline });
+    if (sessionEnded(res)) {
+      await this.session.renew(this.http, deadline);
+      res = await this.http.raw(method, path, { ...opts, deadline });
+    }
+    if (res.status >= 200 && res.status < 300) return res.body;
+    const label = `${method} ${path}`;
+    if (res.status === 401 && errorMessage(res) === 'Unauthorized')
+      throw new PluginError(ErrorCodes.UpstreamDenied, HOST_REFUSED);
+    const kind = statusKind(res.status);
+    const message = errorMessage(res);
+    throw upstreamError(SERVICE, kind, label, kind === 'failed' ? `HTTP ${res.status} (${message})` : message, {
+      status: res.status,
+    });
   }
 }
