@@ -351,11 +351,23 @@ describe('provider fields', () => {
 
   it('cuts a magnet guid to its info hash, and a host without a scheme loses its userinfo', () => {
     expect(
-      cutLinksDeep({ guid: 'magnet:?xt=urn:btih:ABC123&dn=x&tr=https%3A%2F%2Ft.example%2FPASSKEY' }, ['guid']),
+      cutLinksDeep(
+        {
+          guid: 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=x&tr=https%3A%2F%2Ft.example%2FPASSKEY',
+        },
+        ['guid'],
+      ),
     ).toEqual({
-      guid: 'magnet:?xt=urn:btih:ABC123',
+      guid: 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567',
     });
     expect(destinations({ fields: [{ name: 'host', value: 'user:pw@socks.lan' }] })).toEqual(['http://socks.lan']);
+  });
+
+  it('drops host userinfo only before the first delimiter, so a fragment or path cannot fake the host', () => {
+    const host = (value: string) => destinations({ fields: [{ name: 'host', value }] });
+    expect(host('user:pw@nas.lan')).toEqual(['http://nas.lan']);
+    for (const value of ['evil.example#@good.example', 'evil.example?@good.example', 'evil.example/@good.example'])
+      expect(host(value)[0], value).toMatch(/^http:\/\/evil\.example/);
   });
 
   it('hides link keys in any case, at any depth', () => {

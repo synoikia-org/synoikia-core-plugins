@@ -343,16 +343,22 @@ describe('provider fields', () => {
     expect(
       cutLinksDeep(
         [
-          { guid: ' magnet:?dn=x&xt=urn:btih:ABC123&tr=https%3A%2F%2Ft.example%2Fa%2FPASSKEY&xs=y&as=z' },
+          {
+            guid: ' magnet:?dn=x&xt=urn:btih:0123456789abcdef0123456789abcdef01234567&tr=https%3A%2F%2Ft.example%2Fa%2FPASSKEY&xs=y&as=z',
+          },
           { InfoURL: 'MAGNET:?tr=https://t.example/a?passkey=PASSKEY' },
           { commentUrl: 'magnet:?xt=urn:btih:ABC&xt=https://t.example/PASSKEY' },
+          { guid: 'magnet%3A%3Fxt%3Durn%3Abtih%3AABC%26tr%3Dhttps%3A%2F%2Ft.example%2FPASSKEY' },
+          { infoUrl: 'xt=urn:btih:ABC&tr=https://t.example/PASSKEY' },
         ],
         keys,
       ),
     ).toEqual([
-      { guid: 'magnet:?xt=urn:btih:ABC123' },
+      { guid: 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567' },
       { InfoURL: 'magnet:?[REDACTED]' },
-      { commentUrl: 'magnet:?xt=urn:btih:ABC' },
+      { commentUrl: 'magnet:?[REDACTED]' },
+      { guid: '[REDACTED]' },
+      { infoUrl: '[REDACTED]' },
     ]);
   });
 
@@ -365,6 +371,13 @@ describe('provider fields', () => {
         ],
       }),
     ).toEqual(['http://nas.lan:8080']);
+  });
+
+  it('drops host userinfo only before the first delimiter, so a fragment or path cannot fake the host', () => {
+    const host = (value: string) => destinations({ fields: [{ name: 'host', value }] });
+    expect(host('user:pw@nas.lan')).toEqual(['http://nas.lan']);
+    for (const value of ['evil.example#@good.example', 'evil.example?@good.example', 'evil.example/@good.example'])
+      expect(host(value)[0], value).toMatch(/^http:\/\/evil\.example/);
   });
 
   it('hides link keys in any case, at any depth', () => {

@@ -10,7 +10,8 @@ Workflows:
 - Albums: `GET /api/v1/album` (`artistId`) → command `AlbumSearch`.
 - Search missing: `GET /api/v1/wanted/missing` → `POST /api/v1/command` `MissingAlbumSearch`.
 - Downloads: `GET /api/v1/queue` (`includeArtist`), then `GET /api/v1/history`.
+- Upcoming: `GET /api/v1/calendar` (`start`, `end`).
 
-Download links are masked and link guids cut. A cut guid can't be grabbed via `POST /api/v1/release`: push the release's `downloadUrl` (`POST /api/v1/release/push`) if shown, else say it can't be grabbed.
+Download links are masked and link guids cut; a release with a masked guid can't be grabbed by `POST /api/v1/release`.
 
 Locked (typed confirmation): deletes, moving files, bulk artist edits, file-changing commands, host, media and metadata settings, root folders, restart, backups, and editing download clients, indexers, import lists and notifications. No filesystem browsing, manual-import scans or log downloads.
