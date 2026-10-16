@@ -715,8 +715,6 @@ rules:
   # Deleting the downloaded data as well is its own locked twin.
   - match: torrents.delete
     split: with-files
-  - match: torrents.delete#with-files
-    summaryNote: '(deletes the downloaded files)'
   # A share limit that removes torrents when it is reached is a delayed delete.
   - match: torrents.setShareLimits
     split: remove

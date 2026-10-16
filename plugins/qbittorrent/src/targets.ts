@@ -100,10 +100,12 @@ export async function writeTargets(ctx: TargetContext, key: string, params: Call
       const path = String(params.path);
       const item = (await rssItems(l))?.get(path);
       const ok = item && (base === 'rss.removeItem' || item.url !== undefined);
-      const target: ResolvedTarget = ok
-        ? { kind: 'rss-item', id: path, name: item.url === undefined ? `${path} (${item.feeds} feeds)` : path }
-        : missing('rss-item', path);
-      return base === 'rss.setFeedURL' ? [target, urlTarget(ctx.masker, 'feed-url', String(params.url), 0)] : [target];
+      if (!ok) return [missing('rss-item', path)];
+      const target: ResolvedTarget = { kind: 'rss-item', id: path, name: path };
+      if (base === 'rss.setFeedURL') return [target, urlTarget(ctx.masker, 'feed-url', String(params.url), 0)];
+      return item.url === undefined
+        ? [target, { kind: 'rss-folder-feeds', id: `feeds:${path}`, name: String(item.feeds) }]
+        : [target];
     }
     case 'rss.setRule': {
       const name = String(params.ruleName);

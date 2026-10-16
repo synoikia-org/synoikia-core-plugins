@@ -170,7 +170,7 @@ export function summaryText(s: SummaryInput): string {
       return torrentsOn(`${quote(p.oldPath)} to ${quote(p.newPath)}`);
     case 'torrents.delete':
       return torrentsOn(
-        p.deleteFiles === true ? 'remove them and their downloaded files' : 'remove them, keep the files',
+        p.deleteFiles === true ? 'remove, deleting the downloaded files' : 'remove, keep the downloaded files',
       );
     case 'torrents.setLocation':
       return `${head} to ${quote(p.location)} for ${torrentsText(targets, max)}: moves their data; turns off automatic management`;
@@ -226,11 +226,10 @@ export function summaryText(s: SummaryInput): string {
     case 'rss.setFeedURL':
       return on(namesText('feed', 'feeds', targets, 'rss-item', max), `URL to ${origins(targets, 'feed-url')}`);
     case 'rss.removeItem': {
-      const item = of(targets, 'rss-item')[0];
-      const feeds = item && /\((\d+) feeds?\)$/.exec(item.name)?.[1];
+      const feeds = of(targets, 'rss-folder-feeds')[0]?.name;
       return on(
         namesText('item', 'items', targets, 'rss-item', max),
-        feeds ? `remove it and its ${feeds} feed(s)` : 'remove',
+        feeds === undefined ? 'remove the feed' : `remove the folder and its ${feeds} feed(s)`,
       );
     }
     case 'rss.setRule': {
