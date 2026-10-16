@@ -18,7 +18,7 @@ import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 import { UrlMasker } from './mask.js';
 import { urlProblem } from './urls.js';
-import { checkInnerPath, checkParams, invalid } from './params.js';
+import { checkCategoryName, checkInnerPath, checkParams, invalid } from './params.js';
 import type { CallParams, HttpOperation } from './params.js';
 import { checkPolicy } from './policy.js';
 import { QbtApi, QbtSession, SERVICE } from './session.js';
@@ -129,6 +129,15 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
     switch (op.key) {
       case 'torrents.add':
         urlsOf(op, 'urls', lines(p.urls, '\n'), 'source');
+        checkCategoryName(op, 'category', p.category);
+        break;
+      case 'torrents.setCategory':
+      case 'torrents.createCategory':
+      case 'torrents.editCategory':
+        checkCategoryName(op, 'category', p.category);
+        break;
+      case 'torrents.removeCategories':
+        for (const c of lines(p.categories, '\n')) checkCategoryName(op, 'categories', c);
         break;
       case 'torrents.addTrackers':
         urlsOf(op, 'urls', lines(p.urls, '\n'), 'tracker');
@@ -161,7 +170,11 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
             throw invalid(`${op.key} json: ${JSON.stringify(k.slice(0, 80))} is not a preference name`);
         break;
       case 'rss.setRule': {
-        const feeds = isPlainObject(p.ruleDef) ? p.ruleDef.affectedFeeds : undefined;
+        const def = isPlainObject(p.ruleDef) ? p.ruleDef : {};
+        checkCategoryName(op, 'ruleDef.assignedCategory', def.assignedCategory);
+        if (isPlainObject(def.torrentParams))
+          checkCategoryName(op, 'ruleDef.torrentParams.category', def.torrentParams.category);
+        const feeds = def.affectedFeeds;
         if (feeds !== undefined && !(Array.isArray(feeds) && feeds.every((f) => typeof f === 'string')))
           throw invalid(`${op.key} ruleDef.affectedFeeds must be a list of feed URLs`);
         for (const f of (feeds ?? []) as string[]) {

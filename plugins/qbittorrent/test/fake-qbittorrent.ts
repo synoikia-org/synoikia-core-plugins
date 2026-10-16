@@ -116,6 +116,9 @@ function initial() {
       ['tv', { name: 'tv', savePath: '' }],
       ['tv/shows', { name: 'tv/shows', savePath: '' }],
       ['tv/odd:name?', { name: 'tv/odd:name?', savePath: '' }],
+      // A subcategory whose parent has its own path: nested it is under /media/films, flat under /downloads.
+      ['films', { name: 'films', savePath: '/media/films' }],
+      ['films/x', { name: 'films/x', savePath: '' }],
     ]),
     tags: new Set(['iso', 'keep']),
     preferences: {

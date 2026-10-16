@@ -10,8 +10,9 @@ const DEFAULT_PORTS: Record<string, string> = { http: '80', https: '443', ws: '8
 
 /** A magnet link's params as libtorrent's `parse_magnet_uri` keys them: names compared case-insensitively, a
  * `.<digits>` (or bare `.`) suffix after the first `.` stripped (`TR.1`, `tr.` are `tr`; `x.pe` stays), values
- * percent-decoded with `+` as a space. A value that does not decode is kept raw, so the checks refuse it. */
-export function magnetParams(magnet: string): { key: string; value: string }[] {
+ * percent-decoded with `+` as a space. A value that does not decode (`%FF`, which libtorrent decodes bytewise) is
+ * kept raw and marked, and the checks refuse it. */
+export function magnetParams(magnet: string): { key: string; value: string; decoded: boolean }[] {
   return magnet
     .slice(magnet.indexOf('?') + 1)
     .split('&')
@@ -22,13 +23,11 @@ export function magnetParams(magnet: string): { key: string; value: string }[] {
       const raw = eq < 0 ? '' : pair.slice(eq + 1);
       const dot = name.indexOf('.');
       const key = dot >= 0 && /^\d*$/.test(name.slice(dot + 1)) ? name.slice(0, dot) : name;
-      let value = raw;
       try {
-        value = decodeURIComponent(raw.replace(/\+/g, ' '));
+        return { key, value: decodeURIComponent(raw.replace(/\+/g, ' ')), decoded: true };
       } catch {
-        // kept raw; `%` sequences that do not decode fail the URL checks
+        return { key, value: raw, decoded: false };
       }
-      return { key, value };
     });
 }
 
@@ -58,7 +57,9 @@ export function magnetEndpoints(magnet: string): string[] {
 }
 
 function magnetProblem(raw: string): string | undefined {
-  for (const { key, value } of magnetParams(raw)) {
+  for (const { key, value, decoded } of magnetParams(raw)) {
+    const checked = Object.hasOwn(MAGNET_URL_KEYS, key) || Object.hasOwn(MAGNET_ENDPOINT_KEYS, key);
+    if (checked && !decoded) return `has a ${key} value that is not valid percent-encoded UTF-8`;
     const scheme = MAGNET_URL_KEYS[key];
     if (scheme) {
       if (!scheme.test(value))

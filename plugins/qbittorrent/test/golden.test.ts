@@ -102,6 +102,11 @@ describe('qBittorrent golden record', () => {
         },
       ],
       ['setCategory (reserved characters)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'tv/odd:name?' }],
+      [
+        'setCategory (under a parent with its own path)',
+        'torrents.setCategory',
+        { hashes: HASH.ubuntu, category: 'films/x' },
+      ],
       ['editCategory (to implicit)', 'torrents.editCategory', { category: 'movies', savePath: '' }],
     ];
     const out: Record<string, unknown> = {};

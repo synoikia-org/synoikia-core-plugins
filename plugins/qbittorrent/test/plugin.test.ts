@@ -393,6 +393,7 @@ describe('URLs Node and qBittorrent would read differently', () => {
     ['WS= that is not http(s)', `WS=${enc('ftp://seed.example/f')}`],
     ['x.pe= that is not host:port', `x.pe=${enc('10.0.0.2 6881')}`],
     ['dht= that is not host:port', `dht=${enc('router.example')}`],
+    ['a tracker that is not valid percent-encoded UTF-8', 'tr=udp://evil%2Eexample:80/%FF'],
   ])('refuses a magnet with %s', async (_label, param) => {
     await expect(resolve('torrents.add', { urls: `magnet:?xt=urn:btih:${hash}&${param}` })).rejects.toMatchObject({
       code: ErrorCodes.InvalidParams,
@@ -410,6 +411,12 @@ describe('URLs Node and qBittorrent would read differently', () => {
       'peer 10.0.0.2:6881',
       'DHT node router.example:6881',
     ]);
+  });
+
+  it('names a magnet by its last dn, as libtorrent does', async () => {
+    const r = await resolve('torrents.add', { urls: `magnet:?xt=urn:btih:${hash}&dn=First&DN=Last` });
+    const targets = (await plugin.resolveTargets?.({ key: r.key, params: r.params })) ?? [];
+    expect(targets.find((t) => t.kind === 'source')?.name).toBe('magnet "Last"');
   });
 
   it("lists a magnet link's trackers and sources as targets", async () => {
@@ -443,6 +450,58 @@ describe('errors that are not an ended session', () => {
     expect(await p.testConnection()).toMatchObject({ ok: false, message: expect.stringContaining('Server domains') });
     await p.shutdown?.();
     await other.close();
+  });
+});
+
+describe('category names', () => {
+  it.each([
+    ['createCategory', 'torrents.createCategory', { category: '../x' }],
+    ['createCategory (deep)', 'torrents.createCategory', { category: '../../root/.ssh' }],
+    ['setCategory', 'torrents.setCategory', { hashes: HASH.ubuntu, category: '../../root/.ssh' }],
+    ['setCategory (inner ..)', 'torrents.setCategory', { hashes: HASH.ubuntu, category: 'tv/../../x' }],
+    ['add', 'torrents.add', { urls: `magnet:?xt=urn:btih:${'dd'.repeat(20)}`, category: 'a/./b' }],
+    ['editCategory (empty segment)', 'torrents.editCategory', { category: 'a//b', savePath: '' }],
+    ['removeCategories', 'torrents.removeCategories', { categories: 'linux\n..' }],
+    ['a leading slash', 'torrents.createCategory', { category: '/etc' }],
+    ['a backslash', 'torrents.createCategory', { category: 'a\\..\\b' }],
+    ['rss.setRule torrentParams', 'rss.setRule', { ruleName: 'R', ruleDef: { torrentParams: { category: '../x' } } }],
+    ['rss.setRule assignedCategory', 'rss.setRule', { ruleName: 'R', ruleDef: { assignedCategory: '..' } }],
+  ])('refuses .., . and empty segments: %s', async (_label, key, params) => {
+    await expect(resolve(key, params)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+  });
+
+  it('still takes nested names and no category', async () => {
+    await expect(resolve('torrents.createCategory', { category: 'tv/shows/kids' })).resolves.toMatchObject({
+      key: 'torrents.createCategory',
+    });
+    await expect(resolve('torrents.setCategory', { hashes: HASH.ubuntu, category: '' })).resolves.toBeDefined();
+  });
+});
+
+describe('subcategory modes', () => {
+  const pathOf = async (release: '5.0' | '5.2', subcategories: boolean) => {
+    const other = await startFakeQbittorrent({ release });
+    other.preferences.use_subcategories = subcategories;
+    const p = createQbittorrentPlugin();
+    await p.init({ ...connection(other.url), sdkVersion: '1' });
+    const r = await p.resolveOperation({
+      fn: 'call',
+      args: ['torrents.setCategory', { hashes: HASH.ubuntu, category: 'films/x' }],
+    });
+    const targets = (await p.resolveTargets?.({ key: r.key, params: r.params })) ?? [];
+    const { text } = await p.summarize({ key: r.key, params: r.params, targets });
+    await p.shutdown?.();
+    await other.close();
+    return /move to "([^"]*)"/.exec(text)?.[1];
+  };
+
+  it.each([
+    ['5.0', false, '/downloads/films/x'],
+    ['5.0', true, '/media/films/x'],
+    ['5.2', false, '/media/films/x'],
+    ['5.2', true, '/media/films/x'],
+  ] as const)('qBittorrent %s with use_subcategories %s saves films/x under %s', async (release, on, path) => {
+    expect(await pathOf(release, on)).toBe(path);
   });
 });
 

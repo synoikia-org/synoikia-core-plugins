@@ -129,7 +129,10 @@ export function storedUrl(masker: UrlMasker, stored: readonly string[], given: s
 /** A URL's scheme, host and port, for summaries; never its path, query or credentials. */
 export function origin(url: string): string {
   if (/^magnet:/i.test(url)) {
-    const dn = magnetParams(url).find((p) => p.key === 'dn')?.value;
+    // libtorrent keeps the last `dn`.
+    const dn = magnetParams(url)
+      .filter((p) => p.key === 'dn')
+      .at(-1)?.value;
     return dn ? `magnet ${quote(dn, 120)}` : 'a magnet link';
   }
   try {

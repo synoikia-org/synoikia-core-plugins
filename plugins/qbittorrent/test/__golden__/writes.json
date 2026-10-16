@@ -44,6 +44,10 @@
     "resolved": "torrents.setCategory",
     "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"tv/shows\"; torrents in automatic management move to \"/downloads/tv/shows\""
   },
+  "setCategory (under a parent with its own path)": {
+    "resolved": "torrents.setCategory",
+    "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"films/x\"; torrents in automatic management move to \"/media/films/x\""
+  },
   "setCategory (unknown)": {
     "resolved": "torrents.setCategory",
     "text": "qBittorrent torrents.setCategory on torrent \"Ubuntu 24.04 Desktop\": category \"nope\"; torrents in automatic management move to the path of category \"nope\", which does not exist"

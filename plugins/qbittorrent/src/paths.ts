@@ -15,14 +15,18 @@ export interface PathSettings {
   autoTmmDefault: boolean;
   /** Manual-mode torrents still start from the category's path (`use_category_paths_in_manual_mode`). */
   categoryPathsInManual: boolean;
+  /** An implicit path nests under the parent category's path: `use_subcategories` on 5.0 and 5.1, always from 5.2
+   * (WebUI API 2.15), whose `categorySavePath` dropped the other branch. */
+  nested: boolean;
 }
 
 /** The settings the paths depend on, read from qBittorrent; undefined when a read fails. */
 export async function pathSettings(l: Lookups): Promise<PathSettings | undefined> {
-  const [prefs, cats] = await Promise.all([
-    l.client.request('GET', '/app/preferences', { timeoutMs: l.timeoutMs }).catch(() => undefined),
-    categories(l),
-  ]);
+  const get = (path: string) => l.client.request('GET', path, { timeoutMs: l.timeoutMs }).catch(() => undefined);
+  const [prefs, cats, api] = await Promise.all([get('/app/preferences'), categories(l), get('/app/webapiVersion')]);
+  const m = typeof api === 'string' ? /^(\d+)\.(\d+)/.exec(api.trim()) : null;
+  if (!m) return undefined;
+  const from52 = Number(m[1]) > 2 || (Number(m[1]) === 2 && Number(m[2]) >= 15);
   const defaultPath = isPlainObject(prefs) ? stringOr(prefs.save_path) : undefined;
   if (!isPlainObject(prefs) || !defaultPath || !cats) return undefined;
   return {
@@ -30,22 +34,42 @@ export async function pathSettings(l: Lookups): Promise<PathSettings | undefined
     categories: new Map([...cats].map(([name, c]) => [name, c.savePath])),
     autoTmmDefault: prefs.auto_tmm_enabled === true,
     categoryPathsInManual: prefs.use_category_paths_in_manual_mode === true,
+    nested: from52 || prefs.use_subcategories === true,
   };
 }
 
 const isAbsolute = (p: string) => p.startsWith('/') || p.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(p);
 const join = (base: string, rel: string) => `${base.replace(/[\\/]+$/, '')}/${rel}`;
 
-/** A category's save path: its own (relative to the default save path), else implicit, `<parent's path>/<last
- * segment>` (`a/b` under `a`'s path; a top-level one under the default save path). No category: the default. */
+/** `QDir::cleanPath` as `Path` applies it: separators collapsed, `.` dropped, `..` resolved. */
+function clean(path: string): string {
+  const root = /^(\/|[A-Za-z]:\/)/.exec(path.replace(/\\/g, '/'))?.[0] ?? '';
+  const out: string[] = [];
+  for (const seg of path.replace(/\\/g, '/').slice(root.length).split('/')) {
+    if (seg === '' || seg === '.') continue;
+    if (seg === '..' && out.length && out.at(-1) !== '..') out.pop();
+    else if (seg !== '..' || !root) out.push(seg);
+  }
+  return root + out.join('/');
+}
+
+/** `Utils::Fs::toValidPath`: runs of `:?"*<>|` become one space. */
+const validPath = (name: string) => name.replace(/[:?"*<>|]+/g, ' ');
+
+/** A category's save path, cleaned as qBittorrent's `Path` cleans it: its own (relative to the default save path),
+ * else implicit: nested, `<parent's path>/<last segment>`; else the whole name under the default save path. No
+ * category: the default. */
 export function categoryPath(s: PathSettings, name: string): string {
+  return clean(rawCategoryPath(s, name));
+}
+
+function rawCategoryPath(s: PathSettings, name: string): string {
   if (!name) return s.defaultPath;
   const own = s.categories.get(name) ?? '';
   if (own) return isAbsolute(own) ? own : join(s.defaultPath, own);
+  if (!s.nested) return join(s.defaultPath, validPath(name));
   const sep = name.lastIndexOf('/');
-  // `Utils::Fs::toValidPath`: runs of `:?"*<>|` become one space.
-  const segment = name.slice(sep + 1).replace(/[:?"*<>|]+/g, ' ');
-  return join(categoryPath(s, sep < 0 ? '' : name.slice(0, sep)), segment);
+  return join(rawCategoryPath(s, sep < 0 ? '' : name.slice(0, sep)), validPath(name.slice(sep + 1)));
 }
 
 /** Where `torrents/add` saves, destination text for the approval. With automatic management (asked for, or the
@@ -64,5 +88,5 @@ export function addDestination(s: PathSettings | undefined, p: Record<string, un
   const base = useCategory ? categoryPath(s, category) : s.defaultPath;
   if (!savepath)
     return `${quote(base)} (${useCategory && category ? "the category's save path" : 'the default save path'})`;
-  return quote(isAbsolute(savepath) ? savepath : join(base, savepath));
+  return quote(clean(isAbsolute(savepath) ? savepath : join(base, savepath)));
 }
