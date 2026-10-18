@@ -160,6 +160,27 @@
     ],
     "text": "Prowlarr POST /api/v1/indexer/test on indexer PrivateHD (Cardigann) → https://collector.example:443 {\"id\":2,\"name\":\"PrivateHD\",\"implementation\":\"Cardigann\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
   },
+  "POST /api/v1/indexerproxy": {
+    "resolved": "POST /api/v1/indexerproxy",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "indexerproxy",
+        "name": "indexerproxy VPN (Socks5) → http://vpn.lan"
+      },
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "routes indexer PrivateHD (https://privatehd.example)"
+      },
+      {
+        "id": "3",
+        "kind": "indexer",
+        "name": "routes indexer Tracker RSS (https://tracker.example)"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/indexerproxy on indexerproxy VPN (Socks5) → http://vpn.lan; routes indexer PrivateHD (https://privatehd.example); routes indexer Tracker RSS (https://tracker.example) {\"name\":\"VPN\",\"implementation\":\"Socks5\",\"tags\":[16],\"fields\":\"[REDACTED]\"} (traffic of every indexer with one of these tags goes through this proxy)"
+  },
   "POST /api/v1/indexerproxy/action/{name}#stored": {
     "confirmLiteral": "Socks",
     "resolved": "POST /api/v1/indexerproxy/action/{name}#stored",
@@ -384,6 +405,27 @@
     ],
     "text": "Prowlarr PUT /api/v1/indexer/2 on indexer PrivateHD (Cardigann) → https://collector.example:443 {\"id\":2,\"name\":\"PrivateHD\",\"implementation\":\"Cardigann\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
   },
+  "PUT /api/v1/indexerproxy/{id}": {
+    "resolved": "PUT /api/v1/indexerproxy/{id}",
+    "targets": [
+      {
+        "id": "5",
+        "kind": "indexerproxy",
+        "name": "indexerproxy FlareSolverr (FlareSolverr) → http://flaresolverr:8191"
+      },
+      {
+        "id": "1",
+        "kind": "indexer",
+        "name": "routes indexer NZBgeek (https://api.nzbgeek.info)"
+      },
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "routes indexer PrivateHD (https://privatehd.example)"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexerproxy/5 on indexerproxy FlareSolverr (FlareSolverr) → http://flaresolverr:8191; routes indexer NZBgeek (https://api.nzbgeek.info); routes indexer PrivateHD (https://privatehd.example) {\"id\":5,\"name\":\"Renamed\",\"implementation\":\"FlareSolverr\",\"tags\":[12],\"fields\":\"[REDACTED]\"} (traffic of every indexer with one of these tags goes through this proxy)"
+  },
   "PUT /api/v1/indexerproxy/{id}#stored": {
     "confirmLiteral": "Socks",
     "resolved": "PUT /api/v1/indexerproxy/{id}#stored",
@@ -392,9 +434,14 @@
         "id": "10",
         "kind": "indexerproxy",
         "name": "indexerproxy Socks (Socks5) → https://collector.example:443"
+      },
+      {
+        "id": "unknown",
+        "kind": "indexer",
+        "name": "indexers routed through it: unknown (the body has no list of tag ids)"
       }
     ],
-    "text": "Prowlarr PUT /api/v1/indexerproxy/10 on indexerproxy Socks (Socks5) → https://collector.example:443 {\"id\":10,\"name\":\"Socks\",\"implementation\":\"Socks5\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+    "text": "Prowlarr PUT /api/v1/indexerproxy/10 on indexerproxy Socks (Socks5) → https://collector.example:443; indexers routed through it: unknown (the body has no list of tag ids) {\"id\":10,\"name\":\"Socks\",\"implementation\":\"Socks5\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
   },
   "PUT /api/v1/notification/{id}#script": {
     "confirmLiteral": "Discord",

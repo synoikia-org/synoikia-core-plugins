@@ -196,6 +196,7 @@ describe('Prowlarr plugin', () => {
     ]);
     await expect(targets('PUT /api/v1/indexerproxy/{id}', { path: { id: '5' }, body: {} })).resolves.toEqual([
       { kind: 'indexerproxy', id: '5', name: 'indexerproxy FlareSolverr (FlareSolverr) → http://flaresolverr:8191' },
+      { kind: 'indexer', id: 'unknown', name: 'indexers routed through it: unknown (the body has no list of tag ids)' },
     ]);
     await expect(targets('DELETE /api/v1/indexerproxy/{id}', { path: { id: '10' } })).resolves.toEqual([
       { kind: 'indexerproxy', id: '10', name: 'indexerproxy Socks (Socks5) → http://socks.lan:1080' },
@@ -220,6 +221,75 @@ describe('Prowlarr plugin', () => {
       { kind: 'indexer', id: 'new', name: 'indexer PrivateHD\\u202e (Cardigann) → https://collector.example' },
     ]);
     await expect(targets('GET /api/v1/indexer/{id}', { path: { id: '1' } })).resolves.toEqual([]);
+  });
+
+  describe('a saved indexer proxy names the indexers it carries', () => {
+    const proxy = (tags: unknown) => ({
+      name: 'VPN',
+      implementation: 'Socks5',
+      tags,
+      fields: [{ name: 'host', value: 'vpn.lan' }],
+    });
+    const routes = async (key: string, params: object) =>
+      (await plugin.resolveTargets!({ key, params })).filter((t) => t.kind === 'indexer').map((t) => t.name);
+
+    it('lists every stored indexer that shares a tag, with its base URL origin only', async () => {
+      await expect(routes('POST /api/v1/indexerproxy', { body: proxy([16]) })).resolves.toEqual([
+        'routes indexer PrivateHD (https://privatehd.example)',
+        'routes indexer Tracker RSS (https://tracker.example)',
+      ]);
+      const put = await routes('PUT /api/v1/indexerproxy/{id}#stored', { path: { id: '5' }, body: proxy([12]) });
+      expect(put).toEqual([
+        'routes indexer NZBgeek (https://api.nzbgeek.info)',
+        'routes indexer PrivateHD (https://privatehd.example)',
+      ]);
+      expect(JSON.stringify(put)).not.toContain(SECRETS.trackerPasskey);
+      expect(fake.requests.some((r) => r.method === 'GET' && r.path === '/api/v1/indexer')).toBe(true);
+    });
+
+    it('says so when no indexer shares a tag', async () => {
+      await expect(routes('POST /api/v1/indexerproxy', { body: proxy([99]) })).resolves.toEqual([
+        'routes no indexer: no stored indexer shares its tags',
+      ]);
+      await expect(routes('POST /api/v1/indexerproxy', { body: proxy([]) })).resolves.toEqual([
+        'routes no indexer: no stored indexer shares its tags',
+      ]);
+    });
+
+    it('says the indexers are unknown when the lookup fails or the tags are not tag ids', async () => {
+      fake.denied.add('/api/v1/indexer');
+      try {
+        await expect(routes('POST /api/v1/indexerproxy', { body: proxy([12]) })).resolves.toEqual([
+          'indexers routed through it: unknown (lookup failed)',
+        ]);
+      } finally {
+        fake.denied.delete('/api/v1/indexer');
+      }
+      for (const tags of [undefined, '12', [12, 'x'], [1.5], [null]])
+        await expect(routes('POST /api/v1/indexerproxy', { body: proxy(tags) })).resolves.toEqual([
+          'indexers routed through it: unknown (the body has no list of tag ids)',
+        ]);
+    });
+
+    it('lists at most 20 indexers, then how many more', async () => {
+      const indexers = fake.store.get('indexer')!;
+      for (let id = 200; id < 225; id++)
+        indexers.set(id, {
+          id,
+          name: `Idx ${id}`,
+          tags: [12],
+          fields: [{ name: 'baseUrl', value: `https://i${id}.example/x?k=1` }],
+        });
+      const names = await routes('POST /api/v1/indexerproxy', { body: proxy([12]) });
+      expect(names).toHaveLength(21);
+      expect(names[2]).toBe('routes indexer Idx 200 (https://i200.example)');
+      expect(names.at(-1)).toBe('and 7 more');
+    });
+
+    it('leaves other proxy calls and other providers alone', async () => {
+      await expect(routes('DELETE /api/v1/indexerproxy/{id}', { path: { id: '5' } })).resolves.toEqual([]);
+      await expect(routes('POST /api/v1/indexerproxy/test', { body: proxy([12]) })).resolves.toEqual([]);
+    });
   });
 
   it('puts the destination ahead of a long body in the approval text', async () => {

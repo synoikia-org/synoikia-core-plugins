@@ -3,7 +3,7 @@ import { startFakeHttp } from '@synoikia/core/testing';
 import type { FakeHttp, FakeRequest, FakeResponse } from '@synoikia/core/testing';
 
 /** A fake Prowlarr v2: X-Api-Key auth on /api/v1, the spec served the way GitHub serves it (under /spec/<ref>/…),
- * generic CRUD for the stored resources the tests touch, and results holding secrets an upstream returns unmasked
+ * generic CRUD for the stored resources the tests touch (indexers tagged for the proxies), and results holding secrets an upstream returns unmasked
  * (Cardigann settings, search links, history URLs) or would if it stopped masking them. */
 
 export const FAKE_API_KEY = 'fake-prowlarr-api-key-abcdef';
@@ -49,6 +49,7 @@ export function seed(): Record<string, Row[]> {
         protocol: 'usenet',
         privacy: 'private',
         enable: true,
+        tags: [12],
         fields: [
           field('baseUrl', 'https://api.nzbgeek.info'),
           field('apiPath', '/api'),
@@ -63,6 +64,7 @@ export function seed(): Record<string, Row[]> {
         protocol: 'torrent',
         privacy: 'private',
         enable: true,
+        tags: [16, 12],
         fields: [
           field('definitionFile', 'privatehd'),
           field('baseUrl', `https://privatehd.example/?passkey=${SECRETS.trackerPasskey}`, 'normal', 'select'),
@@ -84,6 +86,7 @@ export function seed(): Record<string, Row[]> {
         protocol: 'torrent',
         privacy: 'private',
         enable: false,
+        tags: [16],
         fields: [field('baseUrl', `https://tracker.example/rss/${SECRETS.trackerPasskey}`)],
       },
     ],
@@ -161,7 +164,10 @@ export function seed(): Record<string, Row[]> {
       },
     ],
     appprofile: [{ id: 11, name: 'Standard', enableRss: true, enableInteractiveSearch: true }],
-    tag: [{ id: 12, label: 'flaresolverr' }],
+    tag: [
+      { id: 12, label: 'flaresolverr' },
+      { id: 16, label: 'vpn' },
+    ],
     customfilter: [{ id: 13, type: 'indexers', label: 'Torrents', filters: [] }],
   };
 }

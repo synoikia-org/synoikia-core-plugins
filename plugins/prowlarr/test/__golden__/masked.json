@@ -170,7 +170,10 @@
         "implementation": "Newznab",
         "name": "NZBgeek",
         "privacy": "private",
-        "protocol": "usenet"
+        "protocol": "usenet",
+        "tags": [
+          12
+        ]
       },
       {
         "definitionName": "privatehd",
@@ -242,7 +245,11 @@
         "implementation": "Cardigann",
         "name": "PrivateHD",
         "privacy": "private",
-        "protocol": "torrent"
+        "protocol": "torrent",
+        "tags": [
+          16,
+          12
+        ]
       },
       {
         "enable": false,
@@ -258,7 +265,10 @@
         "implementation": "TorrentRssIndexer",
         "name": "Tracker RSS",
         "privacy": "private",
-        "protocol": "torrent"
+        "protocol": "torrent",
+        "tags": [
+          16
+        ]
       }
     ],
     "sensitiveParams": [
