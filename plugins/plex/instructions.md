@@ -10,6 +10,6 @@ Workflows:
 - Mark watched or unwatched: `PUT /:/scrobble` or `PUT /:/unscrobble` with `key` = ratingKey and `identifier` = `com.plexapp.plugins.library`.
 - Scan a library: `POST /library/sections/{sectionId}/refresh`.
 
-Leave `async*` flags out of `GET /library/metadata/{ids}`: they start background work and need a typed confirmation.
+Leave `async*` flags out of `GET /library/metadata/{ids}`: they start background work and are locked.
 
-Locked (a person types a confirmation): deletes, emptying trash, analyze, optimize, clean bundles, server settings, updates, butler tasks, ending sessions, adding or changing libraries, and anything that makes Plex fetch a URL. Not available: plex.tv account, sharing and friends, streaming and transcoding, downloads, images, log upload, tokens, filesystem browsing.
+Locked: deleting a library or several items, emptying trash, optimize, clean bundles, server settings, updates, all butler tasks, adding or changing libraries, DVR and tuner admin, and anything that makes Plex fetch a URL. Not available: plex.tv account, sharing and friends, streaming and transcoding, downloads, images, log upload, tokens, filesystem browsing.

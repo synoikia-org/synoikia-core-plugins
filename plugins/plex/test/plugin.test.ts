@@ -82,7 +82,7 @@ describe('Plex plugin', () => {
     fake.specFetches.length = 0;
     const result = await plugin.syncCatalog();
     expect(result).toMatchObject({ upstreamVersion: VERSION, sourceRef: SPEC_REF });
-    expect(result.operations).toHaveLength(306);
+    expect(result.operations).toHaveLength(308);
     expect(fake.specFetches).toEqual([{ ref: SPEC_REF, token: undefined }]);
   });
 
@@ -164,12 +164,12 @@ describe('request keys', () => {
 });
 
 describe('summaries and targets', () => {
-  it('names the session, its user and player, and confirms on what it plays', async () => {
+  it('names the session, its user and player; ending it is a regular write', async () => {
     const r = await resolve({ method: 'POST', path: '/status/sessions/terminate', query: { sessionId: 'sess-1' } });
     const targets = (await plugin.resolveTargets?.(r)) ?? [];
     expect(targets[0]?.name).toBe('alice playing Arrival (2016) [movie] on Living Room TV');
     const summary = await plugin.summarize({ ...r, targets });
-    expect(summary.confirmLiteral).toBe('Arrival');
+    expect(summary.confirmLiteral).toBeUndefined();
     expect(summary.text).toMatch(/^Plex POST \/status\/sessions\/terminate on alice playing/);
   });
 

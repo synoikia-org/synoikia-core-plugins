@@ -134,6 +134,7 @@ export async function startFakePlex(): Promise<FakePlex> {
         return ok;
       },
       'DELETE /library/metadata/{ids}/media/{mediaItem}': () => ok,
+      'DELETE /library/metadata/{ids}/marker/{marker}': () => ok,
       'GET /library/metadata/{ids}/subtitles': () => ok,
       'POST /library/metadata/{ids}/{element}': () => ok,
       'PUT /library/metadata/{ids}/{element}': () => ok,
@@ -205,6 +206,10 @@ export async function startFakePlex(): Promise<FakePlex> {
       'PUT /livetv/dvrs/{dvrId}/devices/{deviceId}': () => ok,
       'PUT /media/grabbers/devices/{deviceId}': () => ok,
       'PUT /media/grabbers/devices/{deviceId}/{action}': () => ok,
+      'DELETE /livetv/dvrs/{dvrId}': () => ok,
+      'DELETE /livetv/dvrs/{dvrId}/{action}': () => ok,
+      'DELETE /livetv/dvrs/{dvrId}/devices/{deviceId}': () => ok,
+      'DELETE /media/grabbers/devices/{deviceId}': () => ok,
       'GET /playQueues/{playQueueId}': ({ params }) =>
         container({ playQueueID: Number(params.playQueueId), Metadata: [s().items.get('102')] }),
     },

@@ -7,6 +7,8 @@ import { parseSpecSource, pmsOnly } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-plex.js';
 import { LOCK_CASES } from './locks.js';
 
+const LOCKED_TOTAL = 42;
+
 /** The catalog from the pinned community spec: a rename upstream must fail here, not silently unlock. */
 
 const catalog = buildCatalog(SPEC_TEXT);
@@ -42,8 +44,8 @@ describe('Plex catalog (pinned spec)', () => {
     for (const key of ['GET /users/account.json', 'POST /shared_servers', 'GET /friends', 'POST /pins'])
       expect(cloud).toContain(key);
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
-    expect(twins).toBe(3);
-    expect(catalog.operations).toHaveLength(306);
+    expect(twins).toBe(5);
+    expect(catalog.operations).toHaveLength(308);
     expect(all.length - cloud.length - (keys.size - twins)).toBe(50);
   });
 
@@ -56,27 +58,40 @@ describe('Plex catalog (pinned spec)', () => {
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(42);
+    expect(locked).toHaveLength(37);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
     }
   });
 
-  it('locks every delete, every split twin and nothing the rules do not name', () => {
+  it('locks every split twin and nothing the rules do not name; single-item deletes are regular writes', () => {
     const locked = catalog.operations.filter((o) => o.locked).map((o) => o.key);
-    for (const o of catalog.operations.filter((x) => x.key.startsWith('DELETE ') || x.key.includes('#')))
-      expect(o.locked, o.key).toBe(true);
+    for (const o of catalog.operations.filter((x) => x.key.includes('#'))) expect(o.locked, o.key).toBe(true);
     const named = new Set(lockedKeys(settings.rules));
-    const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
-    expect(extra).toEqual([]);
-    expect(locked).toHaveLength(71);
+    expect(locked.filter((k) => !k.includes('#') && !named.has(k))).toEqual([]);
+    for (const key of [
+      'DELETE /library/metadata/{ids}',
+      'DELETE /playlists/{playlistId}',
+      'DELETE /library/sections/{sectionId}/collection/{collectionId}',
+      'DELETE /butler',
+      'DELETE /library/caches',
+      'DELETE /library/sections/{sectionId}/indexes',
+      'POST /status/sessions/terminate',
+      'POST /butler/{butlerTask}',
+      'PUT /library/sections/{sectionId}/analyze',
+      'GET /library/sections/{sectionId}/unmatch',
+      'GET /playQueues/{playQueueId}',
+    ])
+      expect(op(key), key).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
+    for (const key of ['DELETE /library/sections/{sectionId}', 'DELETE /livetv/dvrs/{dvrId}'])
+      expect(op(key), key).toMatchObject({ locked: true });
+    expect(locked).toHaveLength(LOCKED_TOTAL);
   });
 
   it('has a lock case for every named lock and every twin', () => {
     const cases = new Set(LOCK_CASES.map((c) => c.key));
-    for (const o of catalog.operations.filter((x) => x.locked && !x.key.startsWith('DELETE ')))
-      expect(cases, o.key).toContain(o.key);
+    for (const o of catalog.operations.filter((x) => x.locked)) expect(cases, o.key).toContain(o.key);
     for (const key of cases) expect(op(key)?.locked, key).toBe(true);
     expect(new Set(LOCK_CASES.map((c) => c.name)).size).toBe(LOCK_CASES.length);
   });
@@ -124,8 +139,10 @@ describe('Plex catalog (pinned spec)', () => {
       'GET /:/progress',
       'GET /library/sections/{sectionId}/refresh',
       'GET /library/sections/{sectionId}/match',
+      'GET /library/sections/{sectionId}/unmatch',
       'GET /media/grabbers/devices/discover',
       'GET /system/updates',
+      'GET /playQueues/{playQueueId}',
     ]);
     for (const o of catalog.operations) {
       const read = o.key.startsWith('GET ') && !o.locked && !writes.has(o.key);
@@ -140,12 +157,12 @@ describe('Plex catalog (pinned spec)', () => {
     expect(op('GET /library/metadata/{ids}/subtitles')).toMatchObject({ locked: true, classification: 'write' });
   });
 
-  it('locks a delete a newer spec adds', () => {
+  it('leaves a delete a newer spec adds a regular write', () => {
     const spec = specOf();
     const newer = { ...spec, paths: { ...spec.paths, '/library/things/{id}': { delete: { tags: ['Library'] } } } };
     expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /library/things/{id}')).toMatchObject({
-      locked: true,
-      typedConfirmation: true,
+      locked: false,
+      classification: 'write',
     });
   });
 
@@ -227,10 +244,21 @@ describe('split predicates', () => {
       request: {},
     }) as Parameters<(typeof splitWhen)['refresh']>[0];
 
-  it('takes #own for own that is not plainly off', () => {
-    const own = (query?: object) => splitWhen.own!(call(query));
-    expect([own(undefined), own({ own: 0 }), own({ own: 'false' })]).toEqual([false, false, false]);
-    expect([own({ own: 1 }), own({ own: 'true' })]).toEqual([true, true]);
+  it('takes #many for anything but exactly one id', () => {
+    const many = (ids?: string) =>
+      splitWhen.many!({
+        ...call(),
+        key: 'DELETE /library/metadata/{ids}',
+        params: { path: ids === undefined ? {} : { ids } },
+      });
+    expect([many('101'), many(' 101 ')]).toEqual([false, false]);
+    expect([many('101,102'), many('101,,102'), many(''), many(','), many(undefined)]).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
   });
 
   it('takes #refresh for any refresh, analysis, augment or file-check flag that is not plainly off', () => {

@@ -48,7 +48,7 @@ export function createPlexPlugin(): PluginHandlers {
     handlers(kit) {
       const http = () => kit.client().http;
       const get = (path: string) => http().request('GET', path, { timeoutMs: settings.defaults.timeouts.lookup });
-      const rules = compileRules(settings, { lookup: restLookup(http), custom: customSources(get) });
+      const rules = compileRules(settings, { lookup: restLookup(http), custom: customSources() });
       const current = kit.lazy(async () => {
         const version = await kit.version();
         const { text, ref } = await fetchPlexSpec(SERVICE, settings.plugin.spec, kit.client().specBaseUrl);
