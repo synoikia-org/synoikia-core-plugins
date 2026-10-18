@@ -1,9 +1,11 @@
-import { isPlainObject } from '@synoikia/plugin-sdk';
+import { ErrorCodes, isPlainObject, PluginError, stringOr } from '@synoikia/plugin-sdk';
+import type { RestParams } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
 
-/** The upstream decisions behind the `#stored` and `#script` twins: whether a provider test or action sends the
- * stored credentials somewhere other than the stored destination, and whether a notification runs a program. Any
- * lookup that fails, or a shape that is not known, takes the locked twin. */
+/** The upstream decisions behind the `#stored`, `#script` and `#folder` twins: whether a provider write, test or
+ * action sends the stored credentials somewhere other than the stored destination, whether a notification runs a
+ * program, and whether a download client writes files to a host folder. Any lookup that fails, or a shape that is
+ * not known, takes the locked twin. */
 
 export type Get = (path: string) => Promise<unknown>;
 
@@ -12,6 +14,8 @@ const DESTINATION_NAME = /host|url/i;
 const SCRIPT_IMPLEMENTATIONS = new Set(['customscript']);
 const SCRIPT_NAME = /path|script|command|executable|program/i;
 const SCRIPT_TYPES = new Set(['path', 'filepath']);
+const FOLDER_IMPLEMENTATIONS = new Set(['torrentblackhole', 'usenetblackhole', 'pneumatic']);
+const FOLDER_NAME = /folder|path/i;
 
 /** A positive `id` in the body: Servarr fills the stored secrets into a test or action for it. */
 export function storedId(body: unknown): string | undefined {
@@ -47,9 +51,15 @@ const norm = (v: unknown) =>
 const isDestination = (name: string, type: string) =>
   DESTINATION_NAMES.has(name) || DESTINATION_NAME.test(name) || type === 'url';
 
-/** True when `body` names a destination, or a provider type, other than the stored row's. */
-export function destinationChanged(stored: Record<string, unknown>, body: Record<string, unknown>): boolean {
+/** True when `body` names a destination, or a provider type, other than the stored row's. `keys` are top-level
+ * body keys that also decide where the provider connects (Prowlarr's `tags` pick the indexer proxy). */
+export function destinationChanged(
+  stored: Record<string, unknown>,
+  body: Record<string, unknown>,
+  keys: readonly string[] = [],
+): boolean {
   if (norm(stored.implementation) !== norm(body.implementation)) return true;
+  if (keys.some((k) => norm(stored[k]) !== norm(body[k]))) return true;
   const before = fieldsOf(stored);
   const after = fieldsOf(body);
   for (const name of new Set([...before.keys(), ...after.keys()])) {
@@ -61,10 +71,23 @@ export function destinationChanged(stored: Record<string, unknown>, body: Record
   return a.length !== b.length || a.some((d) => !b.includes(d));
 }
 
-/** `#stored`: a test or action for a stored provider whose body changes where it connects. */
-export async function sendsStoredElsewhere(get: Get | undefined, key: string, body: unknown): Promise<boolean> {
-  const id = storedId(body);
-  if (id === undefined) return false;
+/** `#stored`: a write, test or action for a stored provider whose body changes where it connects. A PUT names the
+ * stored row by its path id (Servarr tests the provider on save), a test or action by the body's `id`. */
+export async function sendsStoredElsewhere(
+  get: Get | undefined,
+  key: string,
+  params: RestParams,
+  keys: readonly string[] = [],
+): Promise<boolean> {
+  const { body } = params;
+  const pathId = stringOr(params.path?.id);
+  const id = key.startsWith('PUT ') ? pathId : storedId(body);
+  if (key.startsWith('PUT ')) {
+    const bodyId = isPlainObject(body) ? body.id : undefined;
+    if (bodyId !== undefined && bodyId !== null && String(bodyId) !== pathId)
+      throw new PluginError(ErrorCodes.InvalidParams, `body.id (${String(bodyId)}) must be the path id (${pathId})`);
+  }
+  if (id === undefined) return !key.startsWith('POST ');
   const base = resourcePath(key);
   if (!get || !base || !isPlainObject(body)) return true;
   let stored: unknown;
@@ -73,7 +96,7 @@ export async function sendsStoredElsewhere(get: Get | undefined, key: string, bo
   } catch {
     return true;
   }
-  return !isPlainObject(stored) || destinationChanged(stored, body);
+  return !isPlainObject(stored) || destinationChanged(stored, body, keys);
 }
 
 /** A notification that runs a program: a script implementation, or a path- or script-like field. */
@@ -105,4 +128,22 @@ export async function runsScript(get: Get | undefined, key: string, body: unknow
   } catch {
     return true;
   }
+}
+
+/** A download client that writes files to a host folder: a blackhole client, or a folder- or path-like field. */
+export function writesToFolder(row: unknown): boolean {
+  if (!isPlainObject(row) || typeof row.implementation !== 'string' || !row.implementation) return true;
+  if (FOLDER_IMPLEMENTATIONS.has(row.implementation.toLowerCase())) return true;
+  for (const [name, { type }] of fieldsOf(row)) if (FOLDER_NAME.test(name) || SCRIPT_TYPES.has(type)) return true;
+  return false;
+}
+
+/** The folders a download client names, for the approver. */
+export function foldersOf(row: unknown): string[] {
+  if (!isPlainObject(row)) return [];
+  const out: string[] = [];
+  for (const [name, { value, type }] of fieldsOf(row))
+    if ((FOLDER_NAME.test(name) || SCRIPT_TYPES.has(type)) && typeof value === 'string' && value)
+      out.push(safe(value) ?? value);
+  return out;
 }

@@ -927,6 +927,19 @@
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "downloadclient",
+    "key": "POST /api/v1/downloadclient/action/{name}#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
     "key": "POST /api/v1/downloadclient/action/{name}#stored",
     "kind": "rest",
     "locked": true,
@@ -953,6 +966,19 @@
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "downloadclient",
+    "key": "POST /api/v1/downloadclient/test#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
     "key": "POST /api/v1/downloadclient/test#stored",
     "kind": "rest",
     "locked": true,
@@ -974,6 +1000,19 @@
       "/body/fields"
     ],
     "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "POST /api/v1/downloadclient#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1354,6 +1393,19 @@
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "application",
+    "key": "PUT /api/v1/applications/{id}#stored",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "application",
     "key": "PUT /api/v1/applications/bulk",
     "kind": "rest",
     "locked": true,
@@ -1455,6 +1507,32 @@
   },
   {
     "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "PUT /api/v1/downloadclient/{id}#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "PUT /api/v1/downloadclient/{id}#stored",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
     "classificationReason": "verb:PUT",
     "group": "downloadclient",
     "key": "PUT /api/v1/downloadclient/bulk",
@@ -1478,6 +1556,19 @@
       "/body/fields"
     ],
     "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "indexer",
+    "key": "PUT /api/v1/indexer/{id}#stored",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1507,6 +1598,19 @@
   },
   {
     "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "indexerproxy",
+    "key": "PUT /api/v1/indexerproxy/{id}#stored",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
     "classificationReason": "verb:PUT",
     "group": "notification",
     "key": "PUT /api/v1/notification/{id}",
@@ -1523,6 +1627,19 @@
     "classificationReason": "locked:destructive",
     "group": "notification",
     "key": "PUT /api/v1/notification/{id}#script",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "PUT /api/v1/notification/{id}#stored",
     "kind": "rest",
     "locked": true,
     "needsReview": false,

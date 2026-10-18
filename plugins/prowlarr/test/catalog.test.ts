@@ -6,7 +6,7 @@ import { tagFor } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-prowlarr.js';
 import { LOCK_CASES } from './locks.js';
 
-const LOCKED_TOTAL = 27;
+const LOCKED_TOTAL = 36;
 
 /** The catalog from the pinned Prowlarr v2.6.5.5623 spec: a rename upstream must fail here, not silently unlock. */
 
@@ -20,7 +20,7 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Prowlarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v1 included', () => {
-    expect(catalog.operations).toHaveLength(125);
+    expect(catalog.operations).toHaveLength(134);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v1\//);
   });
 
@@ -92,8 +92,8 @@ describe('Prowlarr catalog (pinned spec)', () => {
   });
 
   it('matches at least one operation with every rule pattern', () => {
-    // Forward-looking: Prowlarr has no editor endpoint yet.
-    const ahead = new Set(['DELETE */editor']);
+    // Forward-looking: Prowlarr has no editor endpoint or UI password reset yet.
+    const ahead = new Set(['DELETE */editor', 'POST /reset-password*']);
     for (const pattern of settings.rules.flatMap((r) => listOf(r.match)).filter((p) => !ahead.has(p)))
       expect(
         [...keys].some((k) => globRe(pattern).test(k)),
@@ -172,6 +172,26 @@ describe('Prowlarr catalog (pinned spec)', () => {
       locked: false,
       classification: 'write',
     });
+  });
+
+  it('locks the UI password reset a newer spec adds, without requiring it', () => {
+    const spec = specOf();
+    const form = { content: { 'multipart/form-data': { schema: { type: 'object' } } } };
+    const paths = {
+      ...spec.paths,
+      '/reset-password': { post: { tags: ['Authentication'], requestBody: form } },
+      '/reset-password/request': { post: { tags: ['Authentication'] } },
+    };
+    const ops = buildCatalog({ ...spec, paths }).operations;
+    for (const key of ['POST /reset-password', 'POST /reset-password/request'])
+      expect(
+        ops.find((o) => o.key === key),
+        key,
+      ).toMatchObject({ locked: true, typedConfirmation: true });
+    expect(ops.find((o) => o.key === 'POST /reset-password')?.sensitiveParams).toEqual(
+      expect.arrayContaining(['/body/password', '/body/token']),
+    );
+    expect(keys.has('POST /reset-password')).toBe(false);
   });
 
   it('refuses a truncated spec', () => {
@@ -258,6 +278,47 @@ describe('split predicates and literals', () => {
     ])
       expect(await take(body), JSON.stringify(body)).toBe(true);
     expect(await offline.stored!(call(KEY, { body: qbit }))).toBe(true);
+  });
+
+  it('takes #stored on a save whose destination changes, by the path id, and refuses another body id', async () => {
+    const get = async (path: string) => {
+      if (path === '/api/v1/downloadclient/6') return qbit;
+      throw new Error('404');
+    };
+    const PUT = 'PUT /api/v1/downloadclient/{id}';
+    const save = (body: unknown, id = '6') => splitWhen(get).stored!(call(PUT, { path: { id }, body }));
+    expect(await save(qbit)).toBe(false);
+    expect(await save({ ...qbit, id: undefined })).toBe(false);
+    // A new host with the stored password kept as ********: Servarr tests the client on save with that password.
+    expect(await save(withField('host', 'collector.example'))).toBe(true);
+    expect(await save({ ...qbit, id: undefined }, '99')).toBe(true);
+    await expect(save({ ...qbit, id: 7 })).rejects.toMatchObject({ code: 'INVALID_PARAMS' });
+    expect(await offline.stored!(call(PUT, { path: { id: '6' }, body: qbit }))).toBe(true);
+  });
+
+  it('takes #folder for a download client that writes files to a host folder', () => {
+    const folder = (body: unknown) => offline.folder!(call('POST /api/v1/downloadclient', { body }));
+    expect(folder(qbit)).toBe(false);
+    for (const body of [
+      { ...qbit, implementation: 'TorrentBlackhole' },
+      { ...qbit, implementation: 'usenetblackhole' },
+      { ...qbit, implementation: 'Pneumatic' },
+      { ...qbit, fields: [...qbit.fields, { name: 'watchFolder', value: '/w' }] },
+      { ...qbit, fields: [...qbit.fields, { name: 'nzbPath', value: '/n' }] },
+      { ...qbit, fields: [...qbit.fields, { name: 'x', type: 'path', value: '/x' }] },
+      { id: 6, name: 'no implementation' },
+      undefined,
+    ])
+      expect(folder(body), JSON.stringify(body)).toBe(true);
+  });
+
+  it('counts a change of tags as a destination change: tags pick the indexer proxy', async () => {
+    const tagged = { ...qbit, tags: [1] };
+    const stored = splitWhen(async () => tagged).stored!;
+    const take = (body: unknown) => stored(call('POST /api/v1/downloadclient/test', { body }));
+    expect(await take(tagged)).toBe(false);
+    expect(await take({ ...tagged, tags: [2] })).toBe(true);
+    expect(await take({ ...tagged, tags: [] })).toBe(true);
   });
 
   it('takes #script for a notification that runs a program, and testall while one is stored', async () => {

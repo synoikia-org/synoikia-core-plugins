@@ -1,7 +1,7 @@
 import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
-import { programsOf } from './stored.js';
+import { foldersOf, programsOf } from './stored.js';
 
 /** What a non-GET call acts on, for the approver: the stored artist(s) by name and folder, an album by title and
  * artist, track files by path, or a provider connection by name with the hosts it sends to. Lookups that fail
@@ -54,34 +54,32 @@ async function several(ids: unknown, noun: string, one: (id: string) => Promise<
 }
 
 async function provider(get: Get, resource: string, body: unknown, id: string | undefined): Promise<ResolvedTarget[]> {
-  let source = body;
-  if (!isPlainObject(body) || !Array.isArray(body.fields)) {
-    if (!id) return [];
+  let stored: Record<string, unknown> | undefined;
+  if (id) {
     try {
-      source = await get(`/api/v1/${resource}/${encodeURIComponent(id)}`);
+      const row = await get(`/api/v1/${resource}/${encodeURIComponent(id)}`);
+      stored = isPlainObject(row) ? row : undefined;
     } catch {
-      return [{ kind: resource, id, name: `${resource} ${safe(id) ?? '?'}` }];
+      stored = undefined;
     }
   }
-  if (!isPlainObject(source)) return [];
-  const name = safe(source.name) ?? safe(id) ?? 'new';
+  const sent = isPlainObject(body) && Array.isArray(body.fields) ? body : undefined;
+  const source = sent ?? stored;
+  if (!source) return id ? [{ kind: resource, id, name: `${resource} ${safe(id) ?? '?'}` }] : [];
+  // A stored provider is named by its stored name: the body's `name` is the model's.
+  const name = safe(stored?.name) ?? safe(source.name) ?? safe(id) ?? 'new';
   const impl = safe(source.implementation);
   let to = destinations(source);
   // A body that names no destination keeps the stored one.
-  if (!to.length && source === body && id) {
-    try {
-      to = destinations(await get(`/api/v1/${resource}/${encodeURIComponent(id)}`));
-    } catch {
-      to = [];
-    }
-  }
-  // A notification that runs a program shows it: its path field is hidden with the other provider fields.
+  if (!to.length && sent && stored) to = destinations(stored);
+  // A notification that runs a program, or a client that writes to a folder, shows it: provider fields are hidden.
   const runs = resource === 'notification' ? programsOf(source) : [];
+  const folders = resource === 'downloadclient' ? foldersOf(source) : [];
   return [
     {
       kind: resource,
       id: id ?? 'new',
-      name: `${resource} ${name}${impl ? ` (${impl})` : ''}${to.length ? ` → ${to.join(', ')}` : ''}${runs.length ? `, runs ${runs.join(', ')}` : ''}`,
+      name: `${resource} ${name}${impl ? ` (${impl})` : ''}${to.length ? ` → ${to.join(', ')}` : ''}${runs.length ? `, runs ${runs.join(', ')}` : ''}${folders.length ? `, writes to ${folders.join(', ')}` : ''}`,
     },
   ];
 }

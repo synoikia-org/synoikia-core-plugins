@@ -36,7 +36,7 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Prowlarr end to end (fake Prowlarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(125);
+    expect(h.operations()).toHaveLength(134);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
     expect(h.operation('POST /api/v1/applications/test#stored')).toMatchObject({
@@ -158,7 +158,8 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
       const text = shown.join('\n');
       for (const secret of [...BODY_SECRETS, ...SECRET_VALUES]) expect(text).not.toContain(secret);
       // The approver sees where a provider call sends data.
-      if (key.includes('#script') && !key.includes('testall')) expect(shown[0]).toContain('runs /tmp/evil.sh');
+      if (key.includes('#folder')) expect(shown[0]).toContain('writes to /tmp/drop, /tmp/w');
+      else if (key.includes('#script') && !key.includes('testall')) expect(shown[0]).toContain('runs /tmp/evil.sh');
       else if (
         /(downloadclient|indexer|indexerproxy|notification|applications)(\/(test|action)|\/\{id\}|$)/.test(key) &&
         !key.includes('testall')

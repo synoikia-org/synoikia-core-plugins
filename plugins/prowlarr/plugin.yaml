@@ -45,6 +45,9 @@ rules:
   # Every bulk or editor delete, including one a newer spec adds.
   - match: ['DELETE */bulk', 'DELETE */editor']
     locked: true
+  # Resets the UI sign-in; Prowlarr's spec doesn't have it yet, so it is a pattern, not a required key.
+  - match: 'POST /reset-password*'
+    locked: true
 
   # Locked twins picked per call (src/catalog.ts): a command not in `plugin.quickCommands`, a notification that runs
   # a program, and a test or action that sends the stored credentials to a destination other than the stored one.
@@ -58,6 +61,12 @@ rules:
       - 'POST /api/v1/notification/action/{name}'
     split: script
   - match:
+      - 'POST /api/v1/downloadclient'
+      - 'PUT /api/v1/downloadclient/{id}'
+      - 'POST /api/v1/downloadclient/test'
+      - 'POST /api/v1/downloadclient/action/{name}'
+    split: folder
+  - match:
       - 'POST /api/v1/downloadclient/test'
       - 'POST /api/v1/downloadclient/action/{name}'
       - 'POST /api/v1/indexer/test'
@@ -68,6 +77,11 @@ rules:
       - 'POST /api/v1/applications/action/{name}'
       - 'POST /api/v1/notification/test'
       - 'POST /api/v1/notification/action/{name}'
+      - 'PUT /api/v1/downloadclient/{id}'
+      - 'PUT /api/v1/indexer/{id}'
+      - 'PUT /api/v1/indexerproxy/{id}'
+      - 'PUT /api/v1/applications/{id}'
+      - 'PUT /api/v1/notification/{id}'
     split: stored
 
   # What each locked, split or twin operation does, and why it matters.
@@ -81,9 +95,14 @@ rules:
       {base} for a notification that runs a program (Custom Script, or a path or script field), or a test of every
       notification while one does: Prowlarr runs the program on its host. Locked.
     summaryNote: '(runs a program on the Prowlarr host)'
+  - match: '*#folder'
+    description: >-
+      {base} for a download client that writes files to a host folder (Torrent or Usenet Blackhole, Pneumatic, or a
+      folder or path field): Prowlarr reads and writes that folder. Locked.
+    summaryNote: '(writes files to a folder on the Prowlarr host)'
   - match: '*#stored'
     description: >-
-      {base} for a stored connection whose host, port, URL, SSL or type changes: Prowlarr fills in the saved password
+      {base} for a stored connection whose host, port, URL, SSL or type changes (a save tests it too): Prowlarr fills in the saved password
       or API key and sends it to the new destination. Locked.
     summaryNote: '(sends the stored credentials to a destination other than the stored one)'
   - match: ['POST /api/v1/applications/test#stored', 'POST /api/v1/applications/action/{name}#stored']
@@ -114,28 +133,42 @@ rules:
   - match: 'POST /api/v1/applications/testall'
     description: 'Tests every stored application: Prowlarr posts a test indexer with its API key to each. Locked.'
     summaryNote: "(sends Prowlarr's API key to every stored application)"
+  - match: 'POST /reset-password*'
+    description: 'Resets the web UI sign-in password, or asks for a reset. Locked: it changes who can sign in.'
+    summaryNote: '(resets the UI login)'
+    sensitiveParams: [/body/password, /body/passwordConfirmation, /body/token]
   - match: 'POST /api/v1/command'
     description: 'Runs a command (health check, backup, definition update). One not in the quick list takes the #heavy twin.'
-  - match: ['POST /api/v1/notification', 'PUT /api/v1/notification/{id}', 'POST /api/v1/notification/testall']
-    description: '{base}: a notification that runs a program takes the #script twin.'
-  - match: ['POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
-    description: >-
-      {base}: a notification that runs a program takes the #script twin, and a stored one sent to a new destination
-      the #stored twin.
-  - match:
-      - 'POST /api/v1/downloadclient/test'
-      - 'POST /api/v1/downloadclient/action/{name}'
-      - 'POST /api/v1/indexer/test'
-      - 'POST /api/v1/indexer/action/{name}'
-      - 'POST /api/v1/indexerproxy/test'
-      - 'POST /api/v1/indexerproxy/action/{name}'
-      - 'POST /api/v1/applications/test'
-      - 'POST /api/v1/applications/action/{name}'
-    description: '{base}: a stored connection (`id` in the body) sent to a new destination takes the #stored twin.'
   - match: ['POST /api/v1/applications', 'PUT /api/v1/applications/{id}']
     summaryNote: "(the application gets Prowlarr's indexers and API key)"
   - match: ['POST /api/v1/indexerproxy', 'PUT /api/v1/indexerproxy/{id}']
     summaryNote: '(indexer traffic with its tags goes through this proxy)'
+  - match:
+      - 'POST /api/v1/downloadclient'
+      - 'PUT /api/v1/downloadclient/{id}'
+      - 'POST /api/v1/downloadclient/test'
+      - 'POST /api/v1/downloadclient/action/{name}'
+    description: >-
+      {base}: a client that writes files to a host folder takes the #folder twin, and a stored one sent to a new
+      destination the #stored twin.
+  - match: ['POST /api/v1/notification', 'POST /api/v1/notification/testall']
+    description: '{base}: a notification that runs a program takes the #script twin.'
+  - match:
+      ['PUT /api/v1/notification/{id}', 'POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
+    description: >-
+      {base}: a notification that runs a program takes the #script twin, and a stored one sent to a new destination
+      the #stored twin.
+  - match:
+      - 'POST /api/v1/indexer/test'
+      - 'POST /api/v1/indexer/action/{name}'
+      - 'PUT /api/v1/indexer/{id}'
+      - 'POST /api/v1/indexerproxy/test'
+      - 'POST /api/v1/indexerproxy/action/{name}'
+      - 'PUT /api/v1/indexerproxy/{id}'
+      - 'POST /api/v1/applications/test'
+      - 'POST /api/v1/applications/action/{name}'
+      - 'PUT /api/v1/applications/{id}'
+    description: '{base}: a stored connection sent to a new destination (path or body `id`) takes the #stored twin.'
 
   # The literal an approver types: the stored item's name, never a body field the model writes except on create.
   - match: ['* /api/v1/indexer/bulk', '* /api/v1/applications/bulk', '* /api/v1/downloadclient/bulk']
@@ -150,6 +183,7 @@ rules:
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/applications/testall'
       - 'POST /api/v1/notification/testall#script'
+      - 'POST /reset-password*'
     confirm: instance
   - match: '*#heavy'
     confirm: [{ custom: command }, instance]
@@ -165,9 +199,26 @@ rules:
   - match: 'POST /api/v1/applications/*#stored'
     confirm:
       lookup: { op: 'GET /api/v1/applications/{id}', args: [{ id: { $param: /body/id } }], field: name }
-  - match: 'PUT /api/v1/notification/{id}#script'
+  - match: 'PUT /api/v1/downloadclient/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/indexer/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/indexer/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/indexerproxy/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/indexerproxy/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/applications/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/applications/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/notification/{id}#*'
     confirm:
       lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: ['POST /api/v1/downloadclient#folder', 'POST /api/v1/downloadclient/*#folder']
+    confirm:
+      - lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /body/id } }], field: name }
+      - param: /body/name
+      - instance
   - match:
       ['POST /api/v1/notification#script', 'POST /api/v1/notification/*#script', 'POST /api/v1/notification/*#stored']
     confirm:
@@ -217,6 +268,8 @@ plugin:
   # Request keys the rules, targets and pointers read, in Prowlarr's spelling. Prowlarr binds query and body keys
   # case-insensitively, so `Id` or `Name` is renamed to this spelling, and two keys that differ only in case are
   # refused (src/request.ts).
+  # Top-level body keys that also decide where a provider connects, for the #stored check (src/stored.ts).
+  destinationKeys: [tags]
   canonicalKeys:
     - id
     - name
@@ -234,3 +287,5 @@ plugin:
     - passwordConfirmation
     - proxyPassword
     - sslCertPassword
+    - tags
+    - token

@@ -34,7 +34,7 @@ The same as Radarr: web UI and sign-in, the iCal feed, log file downloads, media
 
 Quick commands: `SeriesSearch`, `SeasonSearch`, `EpisodeSearch`, `MissingEpisodeSearch`, `CutoffUnmetEpisodeSearch`, `RssSync`, `RefreshSeries`, `RescanSeries`, `RefreshMonitoredDownloads`, `ImportListSync`, `CheckHealth`, `Housekeeping`, `Backup`. They write metadata or a backup and can delete empty folders. None of them takes a caller's folder, installs, updates or restarts. `ApplicationUpdateCheck` is heavy: started through the API it counts as manual, ignores the auto-update setting and queues `ApplicationUpdate`, which installs the update and restarts. Sonarr finds the command by class name without `Command`, case-insensitively (`CommandController.StartCommand`).
 
-All other locks (bulk deletes, host config, shutdown, restart, backup restore, `POST /reset-password*`, `#script` notifications, `#stored` tests and actions) are as in Radarr. Single-item creates, edits and deletes, `deleteFiles` included, are regular writes. `POST /reset-password*` is in Sonarr's `develop` spec only.
+All other locks (bulk deletes, host config, shutdown, restart, backup restore, `POST /reset-password*`, `#script` notifications, `#folder` download clients, `#stored` saves, tests and actions) are as in Radarr. Single-item creates, edits and deletes, `deleteFiles` included, are regular writes; a root folder lists the host folders under it (owner decision). `POST /reset-password*` is in Sonarr's `develop` spec only.
 
 ## Request keys
 

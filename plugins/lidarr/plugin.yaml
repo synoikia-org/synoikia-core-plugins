@@ -51,8 +51,8 @@ rules:
     locked: true
 
   # Locked twins picked per call (src/catalog.ts): deleting files in bulk, moving files on disk, a command not in
-  # `plugin.quickCommands`, a notification that runs a program, and a test or action that sends the stored
-  # credentials to a destination other than the stored one.
+  # `plugin.quickCommands`, a notification that runs a program, a download client that writes to a host folder,
+  # and a provider save, test or action that sends the stored credentials to a destination other than the stored one.
   - match: 'DELETE /api/v1/artist/editor'
     split: delete-files
   - match: 'PUT /api/v1/artist/{id}'
@@ -67,6 +67,12 @@ rules:
       - 'POST /api/v1/notification/action/{name}'
     split: script
   - match:
+      - 'POST /api/v1/downloadclient'
+      - 'PUT /api/v1/downloadclient/{id}'
+      - 'POST /api/v1/downloadclient/test'
+      - 'POST /api/v1/downloadclient/action/{name}'
+    split: folder
+  - match:
       - 'POST /api/v1/downloadclient/test'
       - 'POST /api/v1/downloadclient/action/{name}'
       - 'POST /api/v1/indexer/test'
@@ -75,6 +81,10 @@ rules:
       - 'POST /api/v1/importlist/action/{name}'
       - 'POST /api/v1/notification/test'
       - 'POST /api/v1/notification/action/{name}'
+      - 'PUT /api/v1/downloadclient/{id}'
+      - 'PUT /api/v1/indexer/{id}'
+      - 'PUT /api/v1/importlist/{id}'
+      - 'PUT /api/v1/notification/{id}'
     split: stored
 
   # What each locked, split or twin operation does, and why it matters.
@@ -94,9 +104,14 @@ rules:
       {base} for a notification that runs a program (Custom Script, or a path or script field), or a test of every
       notification while one does: Lidarr runs the program on its host. Locked.
     summaryNote: '(runs a program on the Lidarr host)'
+  - match: '*#folder'
+    description: >-
+      {base} for a download client that writes files to a host folder (Torrent or Usenet Blackhole, Pneumatic, or a
+      folder or path field): Lidarr reads and writes that folder. Locked.
+    summaryNote: '(writes files to a folder on the Lidarr host)'
   - match: '*#stored'
     description: >-
-      {base} for a stored connection whose host, port, URL, SSL or type changes: Lidarr fills in the saved password
+      {base} for a stored connection whose host, port, URL, SSL or type changes (a save tests it too): Lidarr fills in the saved password
       or API key and sends it to the new destination. Locked.
     summaryNote: '(sends the stored credentials to a destination other than the stored one)'
   - match: 'PUT /api/v1/artist/editor'
@@ -140,20 +155,29 @@ rules:
     description: 'Changes an artist: monitoring, quality profile, tags, path. With moveFiles it takes the #move-files twin.'
   - match: 'POST /api/v1/command'
     description: 'Runs a command (search, refresh, rescan, backup). One not in the quick list takes the #heavy twin.'
-  - match: ['POST /api/v1/notification', 'PUT /api/v1/notification/{id}', 'POST /api/v1/notification/testall']
+  - match:
+      - 'POST /api/v1/downloadclient'
+      - 'PUT /api/v1/downloadclient/{id}'
+      - 'POST /api/v1/downloadclient/test'
+      - 'POST /api/v1/downloadclient/action/{name}'
+    description: >-
+      {base}: a client that writes files to a host folder takes the #folder twin, and a stored one sent to a new
+      destination the #stored twin.
+  - match: ['POST /api/v1/notification', 'POST /api/v1/notification/testall']
     description: '{base}: a notification that runs a program takes the #script twin.'
-  - match: ['POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
+  - match:
+      ['PUT /api/v1/notification/{id}', 'POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
     description: >-
       {base}: a notification that runs a program takes the #script twin, and a stored one sent to a new destination
       the #stored twin.
   - match:
-      - 'POST /api/v1/downloadclient/test'
-      - 'POST /api/v1/downloadclient/action/{name}'
       - 'POST /api/v1/indexer/test'
       - 'POST /api/v1/indexer/action/{name}'
+      - 'PUT /api/v1/indexer/{id}'
       - 'POST /api/v1/importlist/test'
       - 'POST /api/v1/importlist/action/{name}'
-    description: '{base}: a stored connection (`id` in the body) sent to a new destination takes the #stored twin.'
+      - 'PUT /api/v1/importlist/{id}'
+    description: '{base}: a stored connection sent to a new destination (path or body `id`) takes the #stored twin.'
 
   # The literal an approver types: the stored item's name, never a body field the model writes except on create.
   - match: '* /api/v1/artist/{id}*'
@@ -184,9 +208,23 @@ rules:
   - match: 'POST /api/v1/importlist/*#stored'
     confirm:
       lookup: { op: 'GET /api/v1/importlist/{id}', args: [{ id: { $param: /body/id } }], field: name }
-  - match: 'PUT /api/v1/notification/{id}#script'
+  - match: 'PUT /api/v1/downloadclient/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/indexer/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/indexer/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/importlist/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v1/importlist/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v1/notification/{id}#*'
     confirm:
       lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: ['POST /api/v1/downloadclient#folder', 'POST /api/v1/downloadclient/*#folder']
+    confirm:
+      - lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /body/id } }], field: name }
+      - param: /body/name
+      - instance
   - match:
       ['POST /api/v1/notification#script', 'POST /api/v1/notification/*#script', 'POST /api/v1/notification/*#stored']
     confirm:
@@ -249,6 +287,8 @@ plugin:
   # Request keys the rules, targets and pointers read, in Lidarr's spelling. Lidarr binds query and body keys
   # case-insensitively, so `MoveFiles` or `Id` is renamed to this spelling, and two keys that differ only in case
   # are refused (src/request.ts).
+  # Top-level body keys that also decide where a provider connects, for the #stored check (src/stored.ts).
+  destinationKeys: []
   canonicalKeys:
     - id
     - name

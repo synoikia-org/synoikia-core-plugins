@@ -159,8 +159,41 @@ export const LOCK_CASES: LockCase[] = [
         request: { method: 'POST', path: `/api/v3/${resource}/action/getCategories`, body },
         confirm: name,
       },
+      // A save with a new host and the stored password kept as ********: the upstream tests it with that password.
+      {
+        key: `PUT /api/v3/${resource}/{id}#stored`,
+        request: { method: 'PUT', path: `/api/v3/${resource}/${id}`, body },
+        confirm: name,
+      },
     ];
   }),
+  ...(
+    [
+      ['POST /api/v3/downloadclient#folder', 'POST', '/api/v3/downloadclient', undefined, 'Drop'],
+      ['PUT /api/v3/downloadclient/{id}#folder', 'PUT', '/api/v3/downloadclient/6', 6, 'qBit'],
+      ['POST /api/v3/downloadclient/test#folder', 'POST', '/api/v3/downloadclient/test', undefined, 'Drop'],
+      [
+        'POST /api/v3/downloadclient/action/{name}#folder',
+        'POST',
+        '/api/v3/downloadclient/action/getCategories',
+        6,
+        'qBit',
+      ],
+    ] as const
+  ).map(([key, method, path, id, confirm]) => ({
+    key,
+    request: {
+      method,
+      path,
+      body: provider(
+        'Drop',
+        'TorrentBlackhole',
+        [field('torrentFolder', '/tmp/drop'), field('watchFolder', '/tmp/w')],
+        id,
+      ),
+    },
+    confirm,
+  })),
   {
     key: 'DELETE /api/v3/queue/bulk',
     request: { method: 'DELETE', path: '/api/v3/queue/bulk', body: { ids: [41] } },

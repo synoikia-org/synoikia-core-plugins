@@ -14,7 +14,7 @@ Radarr's list with the `/api/v1` prefix, plus `POST /api/v1/manualimport`: it re
 
 ## Locks
 
-Radarr's locks for bulk deletes, host settings, shutdown and restart, backup restore, `POST /reset-password*`, `#script` notifications and `#stored` tests and actions, with these Lidarr ones. Single-item creates, edits and deletes (artist, album, track file, root folder, providers), `deleteFiles` included, are regular writes. `POST /reset-password*` is in no Lidarr spec yet.
+Radarr's locks for bulk deletes, host settings, shutdown and restart, backup restore, `POST /reset-password*`, `#script` notifications, `#folder` download clients and `#stored` saves, tests and actions, with these Lidarr ones. Single-item creates, edits and deletes (artist, album, track file, root folder, providers), `deleteFiles` included, are regular writes. A root folder lists the host folders under it (owner decision). `POST /reset-password*` is in no Lidarr spec yet.
 
 | Operation | Why | Literal |
 | --- | --- | --- |

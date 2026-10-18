@@ -30,7 +30,7 @@ Excluded:
 | `GET /feed/*` | iCal text; `GET /api/v3/calendar` has the same data |
 | `GET /api/v3/log/file*` | Log file downloads (text files) |
 | `GET /api/v3/mediacover/*` | Images |
-| `GET /api/v3/filesystem*`, `GET /api/v3/manualimport` | List any directory, or the media files in any folder, the Radarr process can read. Root folders take a path, so the model doesn't need them |
+| `GET /api/v3/filesystem*`, `GET /api/v3/manualimport` | List any directory, or the media files in any folder, the Radarr process can read. Root folders take a path, so the model doesn't need them. A root folder create or change is a regular write (owner decision): its unmapped subfolders list the host folders under it, so one at `/` shows the host's top-level directories |
 | `POST /api/v3/manualimport` | Reprocesses files at any path the body names and returns their details |
 | `POST /api/v3/system/backup/restore/upload` | Multipart upload |
 
@@ -57,14 +57,16 @@ A lock adds a typed confirmation to core's approval. Single-item creates, edits 
 | `POST /api/v3/system/backup/restore/{id}` | Replaces the database and settings | backup file name |
 | `POST /reset-password*` | Resets the web UI sign-in. Only newer specs have it, so the rule is a pattern and the key is not required | instance name |
 | `POST`, `PUT /api/v3/notification…#script` | The notification runs a program: implementation `CustomScript`, or a field whose name has `path`, `script`, `command`, `executable` or `program`, or a field of type `path` or `filePath`. A body without an `implementation` takes the twin. `/testall#script` is taken while any stored notification runs a program, or when the list can't be read | stored name, else body `name`, else instance name |
-| `POST /api/v3/{downloadclient,indexer,importlist,notification}/{test,action/{name}}#stored` | With an `id` in the body, Radarr fills in the stored password or API key (`ProviderControllerBase.Test`). The twin is taken when the body changes the destination (see below), or when the stored record can't be read | stored name |
+| `POST /api/v3/{downloadclient,indexer,importlist,notification}/{test,action/{name}}#stored`, `PUT …/{id}#stored` | Radarr fills in the stored password or API key for a test or action with an `id` in the body (`ProviderControllerBase.Test`), and tests a provider on save. The twin is taken when the body changes the destination (see below), or when the stored record can't be read. A PUT reads the stored record by the path id and refuses a body `id` that differs from it | stored name |
+| `POST /api/v3/downloadclient#folder`, `PUT …/{id}#folder`, `POST …/test#folder`, `…/action/{name}#folder` | The client writes files to a host folder: `TorrentBlackhole`, `UsenetBlackhole`, `Pneumatic`, or a field whose name has `folder` or `path`, or of type `path` or `filePath`. A body without an `implementation` takes the twin. The target shows `writes to <folders>` | stored name, else body `name`, else instance name |
 | `POST /api/v3/command#heavy` | Any command not in `plugin.quickCommands`: `RenameFiles`, `RenameMovie`, `MoveMovie`, `ManualImport`, `DownloadedMoviesScan`, `DeleteLogFiles`, `ClearBlocklist`, `CleanUpRecycleBin`, `ResetApiKey`, `ApplicationCheckUpdate`, `ApplicationUpdate`, `Shutdown`, `Restart`, … and future ones. Radarr matches names case-insensitively, and so does the check | the command name (a plain word), else instance name |
 
-**Destination check** (`src/stored.ts`). The stored record comes from `GET <resource>/{id}`. The destination changes when one of these differs, compared case-insensitively, with a missing value, `null` and `""` the same:
+**Destination check** (`src/stored.ts`). The stored record comes from `GET <resource>/{id}`, by the path id on a PUT and the body `id` on a test or action. The destination changes when one of these differs, compared case-insensitively, with a missing value, `null` and `""` the same:
 
 - `implementation`;
 - the fields `host`, `port`, `urlBase`, `url`, `baseUrl`, `useSsl`, any field whose name has `host` or `url`, and any field of type `url`, matched by name in any case. A field that the stored record has and the body leaves out counts as changed;
-- the hosts and URL origins that the targets list for each side.
+- the hosts and URL origins that the targets list for each side;
+- the top-level body keys in `plugin.destinationKeys` (Prowlarr: `tags`, which pick the indexer proxy).
 
 **Descriptions** (`src/describe.ts`). The spec has no summaries. Each operation without one gets a description from its method, path and tag: `List movies`, `Get a movie by id`, `Delete a movie`, `Test a download client`, `Update movies in bulk`. Every locked, split or twin operation has a description in `plugin.yaml` that says why.
 
@@ -73,7 +75,7 @@ Quick commands, the ordinary `POST /api/v3/command`: searches (`MoviesSearch`, `
 **Targets** (`capabilities.targets`). Non-GET calls name what they act on, placed right after the method and path in the approval text, ahead of the truncated body:
 
 - movie calls: `Title (year) at <folder>`, plus `→ <new folder>` for a PUT; the movie editor lists up to 10 movies and the new root folder;
-- provider calls: `<kind> <name> (<implementation>) → <destinations>`, and `, runs <path>` for a notification that names a program: `host:port`, URL origins only (no path, query or credentials), e-mail server and recipients, read by exact field name, first match, as Servarr does; from the body, else the stored provider;
+- provider calls: `<kind> <name> (<implementation>) → <destinations>`, plus `, runs <path>` for a notification that names a program and `, writes to <folders>` for a download client that names a folder. A stored provider shows its stored name, not the body's: `host:port`, URL origins only (no path, query or credentials), e-mail server and recipients, read by exact field name, first match, as Servarr does; from the body, else the stored provider;
 - release push: the title and the origin of the download URL;
 - media management: `import script on|off: <path>` when the body sets `useScriptImport` or `scriptImportPath`; a field the body leaves out or sends as null (or an empty path) comes from the stored settings;
 - root folders: `root folder <path>` on create; `root folder <stored path> → <new path>` on a PUT.

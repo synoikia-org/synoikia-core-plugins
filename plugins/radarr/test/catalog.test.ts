@@ -6,7 +6,7 @@ import { tagFor } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-radarr.js';
 import { LOCK_CASES } from './locks.js';
 
-const LOCKED_TOTAL = 31;
+const LOCKED_TOTAL = 39;
 
 /** The catalog from the pinned Radarr v6.4.4.10685 spec: a rename upstream must fail here, not silently unlock. */
 
@@ -20,7 +20,7 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Radarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v3 included', () => {
-    expect(catalog.operations).toHaveLength(233);
+    expect(catalog.operations).toHaveLength(241);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v3\//);
   });
 
@@ -266,6 +266,38 @@ describe('split predicates', () => {
     ])
       expect(await take(body), JSON.stringify(body)).toBe(true);
     expect(await offline.stored!(call(KEY, { body: qbit }))).toBe(true);
+  });
+
+  it('takes #stored on a save whose destination changes, by the path id, and refuses another body id', async () => {
+    const get = async (path: string) => {
+      if (path === '/api/v3/downloadclient/6') return qbit;
+      throw new Error('404');
+    };
+    const PUT = 'PUT /api/v3/downloadclient/{id}';
+    const save = (body: unknown, id = '6') => splitWhen(get).stored!(call(PUT, { path: { id }, body }));
+    expect(await save(qbit)).toBe(false);
+    expect(await save({ ...qbit, id: undefined })).toBe(false);
+    // A new host with the stored password kept as ********: Servarr tests the client on save with that password.
+    expect(await save(withField('host', 'collector.example'))).toBe(true);
+    expect(await save({ ...qbit, id: undefined }, '99')).toBe(true);
+    await expect(save({ ...qbit, id: 7 })).rejects.toMatchObject({ code: 'INVALID_PARAMS' });
+    expect(await offline.stored!(call(PUT, { path: { id: '6' }, body: qbit }))).toBe(true);
+  });
+
+  it('takes #folder for a download client that writes files to a host folder', () => {
+    const folder = (body: unknown) => offline.folder!(call('POST /api/v3/downloadclient', { body }));
+    expect(folder(qbit)).toBe(false);
+    for (const body of [
+      { ...qbit, implementation: 'TorrentBlackhole' },
+      { ...qbit, implementation: 'usenetblackhole' },
+      { ...qbit, implementation: 'Pneumatic' },
+      { ...qbit, fields: [...qbit.fields, { name: 'watchFolder', value: '/w' }] },
+      { ...qbit, fields: [...qbit.fields, { name: 'nzbPath', value: '/n' }] },
+      { ...qbit, fields: [...qbit.fields, { name: 'x', type: 'path', value: '/x' }] },
+      { id: 6, name: 'no implementation' },
+      undefined,
+    ])
+      expect(folder(body), JSON.stringify(body)).toBe(true);
   });
 
   it('takes #script for a notification that runs a program, and testall while one is stored', async () => {

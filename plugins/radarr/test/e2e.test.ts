@@ -36,7 +36,7 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Radarr end to end (fake Radarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(233);
+    expect(h.operations()).toHaveLength(241);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
     expect(h.operation('DELETE /api/v3/movie/{id}')).toMatchObject({ locked: false, typedConfirmation: false });
@@ -152,7 +152,8 @@ describe('Radarr end to end (fake Radarr)', () => {
       for (const secret of ['sab-key-777777', 'idx-key-888888', 'secret-hook-999999', 'pk-123456', ...SECRET_VALUES])
         expect(text).not.toContain(secret);
       // The approver sees where a provider call sends data.
-      if (key.includes('#script') && !key.includes('testall')) expect(shown[0]).toContain('runs /tmp/evil.sh');
+      if (key.includes('#folder')) expect(shown[0]).toContain('writes to /tmp/drop, /tmp/w');
+      else if (key.includes('#script') && !key.includes('testall')) expect(shown[0]).toContain('runs /tmp/evil.sh');
       else if (
         /(downloadclient|indexer|importlist|notification)(\/(test|action)|\/\{id\}|$)/.test(key) &&
         !key.includes('testall')

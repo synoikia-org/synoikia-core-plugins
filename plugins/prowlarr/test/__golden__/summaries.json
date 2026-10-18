@@ -76,6 +76,30 @@
     "targets": [],
     "text": "Prowlarr POST /api/v1/command {\"name\":\"ApplicationIndexerSync\",\"forceSync\":true} (syncs applications, clears data, or changes the application)"
   },
+  "POST /api/v1/downloadclient#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v1/downloadclient#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
+  "POST /api/v1/downloadclient/action/{name}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v1/downloadclient/action/{name}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient/action/getCategories on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
   "POST /api/v1/downloadclient/action/{name}#stored": {
     "confirmLiteral": "qBit",
     "resolved": "POST /api/v1/downloadclient/action/{name}#stored",
@@ -87,6 +111,18 @@
       }
     ],
     "text": "Prowlarr POST /api/v1/downloadclient/action/getCategories on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/downloadclient/test#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v1/downloadclient/test#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient/test on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
   },
   "POST /api/v1/downloadclient/test#stored": {
     "confirmLiteral": "qBit",
@@ -271,6 +307,18 @@
     ],
     "text": "Prowlarr PUT /api/v1/applications/bulk on applications Sonarr (Sonarr) {\"ids\":[4],\"syncLevel\":\"fullSync\"}"
   },
+  "PUT /api/v1/applications/{id}#stored": {
+    "confirmLiteral": "Sonarr",
+    "resolved": "PUT /api/v1/applications/{id}#stored",
+    "targets": [
+      {
+        "id": "4",
+        "kind": "applications",
+        "name": "applications Sonarr (Sonarr) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/applications/4 on applications Sonarr (Sonarr) → https://collector.example:443 {\"id\":4,\"name\":\"Sonarr\",\"implementation\":\"Sonarr\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
   "PUT /api/v1/config/development/{id}": {
     "confirmLiteral": "Home Prowlarr",
     "resolved": "PUT /api/v1/config/development/{id}",
@@ -282,6 +330,30 @@
     "resolved": "PUT /api/v1/config/host/{id}",
     "targets": [],
     "text": "Prowlarr PUT /api/v1/config/host/1 {\"id\":1,\"bindAddress\":\"*\",\"urlBase\":\"/prowlarr\"} (sign-in, bind address, port, URL base, proxy and update script)"
+  },
+  "PUT /api/v1/downloadclient/{id}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v1/downloadclient/{id}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/downloadclient/6 on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
+  "PUT /api/v1/downloadclient/{id}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v1/downloadclient/{id}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/downloadclient/6 on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
   },
   "PUT /api/v1/indexer/bulk": {
     "confirmLiteral": "2 indexers",
@@ -300,6 +372,30 @@
     ],
     "text": "Prowlarr PUT /api/v1/indexer/bulk on indexer NZBgeek (Newznab); indexer PrivateHD (Cardigann) {\"ids\":[1,2],\"tags\":[12],\"applyTags\":\"add\"}"
   },
+  "PUT /api/v1/indexer/{id}#stored": {
+    "confirmLiteral": "PrivateHD",
+    "resolved": "PUT /api/v1/indexer/{id}#stored",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "indexer PrivateHD (Cardigann) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexer/2 on indexer PrivateHD (Cardigann) → https://collector.example:443 {\"id\":2,\"name\":\"PrivateHD\",\"implementation\":\"Cardigann\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v1/indexerproxy/{id}#stored": {
+    "confirmLiteral": "Socks",
+    "resolved": "PUT /api/v1/indexerproxy/{id}#stored",
+    "targets": [
+      {
+        "id": "10",
+        "kind": "indexerproxy",
+        "name": "indexerproxy Socks (Socks5) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexerproxy/10 on indexerproxy Socks (Socks5) → https://collector.example:443 {\"id\":10,\"name\":\"Socks\",\"implementation\":\"Socks5\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
   "PUT /api/v1/notification/{id}#script": {
     "confirmLiteral": "Discord",
     "resolved": "PUT /api/v1/notification/{id}#script",
@@ -307,9 +403,21 @@
       {
         "id": "9",
         "kind": "notification",
-        "name": "notification Renamed (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
       }
     ],
-    "text": "Prowlarr PUT /api/v1/notification/9 on notification Renamed (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Renamed\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Prowlarr host)"
+    "text": "Prowlarr PUT /api/v1/notification/9 on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Renamed\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Prowlarr host)"
+  },
+  "PUT /api/v1/notification/{id}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v1/notification/{id}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/notification/9 on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
   }
 }

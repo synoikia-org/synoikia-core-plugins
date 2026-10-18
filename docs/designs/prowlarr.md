@@ -19,11 +19,12 @@ Radarr's web UI, sign-in, log file, filesystem and backup upload exclusions with
 
 ## Locks
 
-Radarr's locks for bulk deletes (`DELETE */bulk`, `DELETE */editor`), host settings, shutdown and restart, backup restore, `#script` notifications and `#stored` tests and actions, with these Prowlarr ones. Single-item creates, edits and deletes of indexers, applications, indexer proxies, download clients, notifications, app profiles and tags are regular writes. Prowlarr's spec has no `POST /reset-password*`.
+Radarr's locks for bulk deletes (`DELETE */bulk`, `DELETE */editor`), host settings, shutdown and restart, backup restore, `POST /reset-password*`, `#script` notifications, `#folder` download clients and `#stored` saves, tests and actions, with these Prowlarr ones. Single-item creates, edits and deletes of indexers, applications, indexer proxies, download clients, notifications, app profiles and tags are regular writes. Prowlarr's spec has no `POST /reset-password*` yet; the pattern locks it when one does.
 
 | Operation | Why | Literal |
 | --- | --- | --- |
-| `POST /api/v1/applications/{test,action/{name}}#stored` | With an `id`, Prowlarr fills in the stored app API key and posts a test indexer with its own API key. The twin is taken when the body changes the app's destination (`baseUrl`, `prowlarrUrl` or the type) or the stored app can't be read | stored name |
+| `POST /api/v1/applications/{test,action/{name}}#stored` | With an `id`, Prowlarr fills in the stored app API key and posts a test indexer with its own API key. The twin is taken when the body changes the app's destination (`baseUrl`, `prowlarrUrl`, the type or `tags`) or the stored app can't be read. `PUT /api/v1/applications/{id}#stored` takes it on save the same way | stored name |
+| `#stored` on every provider | `tags` count as a destination (`plugin.destinationKeys`): they pick the indexer proxy a provider's traffic goes through | stored name |
 | `POST /api/v1/applications/testall` | Posts a test indexer with Prowlarr's API key to every stored application | instance name |
 | `PUT /api/v1/applications/bulk` | Sync level (`fullSync` removes indexers from the apps) and tags of many apps | `<n> applications` |
 | `PUT /api/v1/indexer/bulk`, `DELETE /api/v1/indexer/bulk` | App profile, tags (which apps and proxies apply), enable and seed settings of many indexers | `<n> indexers` |

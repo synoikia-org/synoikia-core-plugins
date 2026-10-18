@@ -14,4 +14,4 @@ Workflows:
 
 Download links and history URLs are masked, link guids cut; a release with a cut guid can't be grabbed by `POST /api/v1/search`, so say so.
 
-Locked: bulk edits and deletes, testing every app, tests sending stored credentials elsewhere, notifications that run a program, sync and update commands, host and logging settings, restart, backup restore. Other single-item writes are ordinary. No filesystem, log files or Newznab/download proxy.
+Locked: bulk edits and deletes, testing every app, credentials sent to a new host or proxy tags, scripts, blackhole folders, sync and update commands, host and logging settings, password reset, restart, backup restore. No filesystem, log files or Newznab/download proxy.

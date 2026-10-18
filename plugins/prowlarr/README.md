@@ -19,21 +19,21 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 
 ## Files
 
-| File              | What                                                                                                     |
-| ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `manifest.json`   | Binding, connection form, targets, `sensitiveKeys` and network hosts                                     |
-| `plugin.yaml`     | Excluded routes, locks, split twins, confirmation literals, sensitive params and results, quick commands |
-| `instructions.md` | Agent instructions (API shape, commands, common workflows); core adds it to the MCP server instructions  |
-| `src/spec.ts`     | Servarr spec loader: 4-part version → release tag, fallback branch, mirror                               |
-| `src/catalog.ts`  | Settings, split predicates, custom confirmation sources, catalog build                                   |
-| `src/fields.ts`   | Provider `fields[]` and release guids: secret masking in results, destinations, refusing masked values   |
-| `src/targets.ts`  | Provider connections a call acts on (with the hosts they send to) and the providers a bulk call changes  |
-| `src/request.ts`  | Case-insensitive keys: refuses case duplicates, renames the keys the rules read                          |
-| `src/stored.ts`   | Split checks that read upstream: a changed destination (`#stored`), a notification that runs a program   |
-| `src/describe.ts` | Generated descriptions for operations the spec leaves undocumented                                       |
-| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                             |
-| `test/`           | A fake Prowlarr serving the pinned v2.6.5.5623 spec, unit, golden and e2e tests                          |
+| File              | What                                                                                                            |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| `manifest.json`   | Binding, connection form, targets, `sensitiveKeys` and network hosts                                            |
+| `plugin.yaml`     | Excluded routes, locks, split twins, confirmation literals, sensitive params and results, quick commands        |
+| `instructions.md` | Agent instructions (API shape, commands, common workflows); core adds it to the MCP server instructions         |
+| `src/spec.ts`     | Servarr spec loader: 4-part version → release tag, fallback branch, mirror                                      |
+| `src/catalog.ts`  | Settings, split predicates, custom confirmation sources, catalog build                                          |
+| `src/fields.ts`   | Provider `fields[]` and release guids: secret masking in results, destinations, refusing masked values          |
+| `src/targets.ts`  | Provider connections a call acts on (with the hosts they send to) and the providers a bulk call changes         |
+| `src/request.ts`  | Case-insensitive keys: refuses case duplicates, renames the keys the rules read                                 |
+| `src/stored.ts`   | Split checks that read upstream: a changed destination (`#stored`), a program (`#script`), a folder (`#folder`) |
+| `src/describe.ts` | Generated descriptions for operations the spec leaves undocumented                                              |
+| `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                                    |
+| `test/`           | A fake Prowlarr serving the pinned v2.6.5.5623 spec, unit, golden and e2e tests                                 |
 
 ## Locked operations
 
-Bulk edits and deletes (indexers, applications, download clients); application tests to every app (`applications/testall`); provider, application and notification tests and actions that send the stored credentials to another destination (`#stored`); notifications that run a program (`#script`); development (logging) settings; commands that sync applications, clear data or change the application; host settings; shutdown and restart; backup restore. Single-item creates, edits and deletes are regular writes. Reasons and literals are in the design note and `plugin.yaml`.
+Bulk edits and deletes (indexers, applications, download clients); application tests to every app (`applications/testall`); provider, application and notification saves, tests and actions that send the stored credentials to another destination or change their proxy tags (`#stored`); the UI password reset; notifications that run a program (`#script`); download clients that write files to a host folder, such as the blackhole clients (`#folder`); development (logging) settings; commands that sync applications, clear data or change the application; host settings; shutdown and restart; backup restore. Single-item creates, edits and deletes are regular writes. Reasons and literals are in the design note and `plugin.yaml`.

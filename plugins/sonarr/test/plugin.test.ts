@@ -62,7 +62,7 @@ describe('Sonarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 230,
+      count: 238,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -155,10 +155,13 @@ describe('Sonarr plugin', () => {
       resolve({ method: 'PUT', path: '/api/v3/notification/9', body: { id: 9, name: 'Discord', fields } }),
     ).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
     // Sonarr's own mask keeps the stored secret, so it passes.
-    const kept = [{ name: 'password', value: '********', privacy: 'password' }];
-    await expect(
-      resolve({ method: 'PUT', path: '/api/v3/downloadclient/6', body: { id: 6, name: 'qBit', fields: kept } }),
-    ).resolves.toMatchObject({ key: 'PUT /api/v3/downloadclient/{id}' });
+    const kept = structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    kept.fields = (kept.fields as { name: string; value: unknown }[]).map((f) =>
+      f.name === 'password' ? { ...f, value: '********' } : f,
+    );
+    await expect(resolve({ method: 'PUT', path: '/api/v3/downloadclient/6', body: kept })).resolves.toMatchObject({
+      key: 'PUT /api/v3/downloadclient/{id}',
+    });
   });
 
   it('names the series, episode files, connections and release source a call acts on', async () => {
@@ -205,8 +208,12 @@ describe('Sonarr plugin', () => {
       implementation: 'Discord',
       fields: [{ name: 'webHookUrl', value: `https://discord.com/api/webhooks/42/${SECRETS.webhookToken}` }],
     };
+    // A stored notification is named by its stored name; a new one by the body's, escaped.
     await expect(targets('POST /api/v3/notification/test', { body })).resolves.toEqual([
-      { kind: 'notification', id: '9', name: 'notification Discord\\u202e (Discord) → https://discord.com' },
+      { kind: 'notification', id: '9', name: 'notification Discord (Discord) → https://discord.com' },
+    ]);
+    await expect(targets('POST /api/v3/notification', { body: { ...body, id: undefined } })).resolves.toEqual([
+      { kind: 'notification', id: 'new', name: 'notification Discord\\u202e (Discord) → https://discord.com' },
     ]);
     await expect(
       targets('POST /api/v3/release/push', { body: { title: 'X', downloadUrl: 'https://t.example/dl?passkey=pk' } }),
@@ -457,11 +464,11 @@ describe('case-insensitive binding', () => {
     ).toBe('DELETE /api/v3/series/editor#delete-files');
     const stored = await resolve({
       method: 'POST',
-      path: '/api/v3/downloadclient/test',
+      path: '/api/v3/indexer/test',
       body: { Id: 5, Name: 'x', Fields: [] },
     });
     expect(stored).toMatchObject({
-      key: 'POST /api/v3/downloadclient/test#stored',
+      key: 'POST /api/v3/indexer/test#stored',
       params: { body: { id: 5, name: 'x', fields: [] } },
     });
   });

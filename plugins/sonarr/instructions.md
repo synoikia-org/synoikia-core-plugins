@@ -13,4 +13,4 @@ Workflows:
 
 Download links are masked and link guids cut; a release with a masked guid can't be grabbed by `POST /api/v3/release`.
 
-Locked: bulk edits and deletes, moving files, file-changing commands, notifications that run a program, tests sending stored credentials elsewhere, host and media settings, password reset, restart, backup restore. Other single-item writes are ordinary. No filesystem browsing, manual imports or log downloads.
+Locked: bulk edits and deletes, moving files, file-changing commands, scripts, blackhole folders, credentials sent to a new host, host and media settings, password reset, restart, backup restore. No filesystem browsing, manual imports or logs, though a new root folder lists the host folders under it.

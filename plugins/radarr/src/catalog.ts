@@ -4,7 +4,7 @@ import raw from '../plugin.yaml';
 import { withDescriptions } from './describe.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
 import { parseSpecSource } from './spec.js';
-import { runsScript, sendsStoredElsewhere } from './stored.js';
+import { runsScript, sendsStoredElsewhere, writesToFolder } from './stored.js';
 import type { Get } from './stored.js';
 
 /** Radarr's catalog: the SDK's OpenAPI catalog over the spec for the instance's release, with plugin.yaml's rules
@@ -26,6 +26,9 @@ export const settings = parsePluginSettings(raw, {
       throw new Error('plugin.yaml plugin.quickCommands must be a list of command names');
     if (!Array.isArray(p.canonicalKeys) || !p.canonicalKeys.every((c) => typeof c === 'string' && /^\w+$/.test(c)))
       throw new Error('plugin.yaml plugin.canonicalKeys must be a list of keys');
+    const destinationKeys = p.destinationKeys ?? [];
+    if (!Array.isArray(destinationKeys) || !destinationKeys.every((c) => typeof c === 'string' && /^\w+$/.test(c)))
+      throw new Error('plugin.yaml plugin.destinationKeys must be a list of keys');
     return {
       spec: parseSpecSource(p.spec),
       versionPath: text('versionPath'),
@@ -33,6 +36,7 @@ export const settings = parsePluginSettings(raw, {
       minOperations: p.minOperations,
       quickCommands: new Set((p.quickCommands as string[]).map((c) => c.toLowerCase())),
       canonicalKeys: p.canonicalKeys as string[],
+      destinationKeys: destinationKeys as string[],
     };
   },
 });
@@ -52,7 +56,8 @@ export function splitWhen(get?: Get): Record<string, (call: RestCall) => boolean
       const name = isPlainObject(call.params.body) ? call.params.body.name : undefined;
       return typeof name !== 'string' || !settings.plugin.quickCommands.has(name.toLowerCase());
     },
-    stored: (call) => sendsStoredElsewhere(get, call.key, call.params.body),
+    stored: (call) => sendsStoredElsewhere(get, call.key, call.params, settings.plugin.destinationKeys),
+    folder: (call) => writesToFolder(call.params.body),
     script: (call) => runsScript(get, call.key, call.params.body),
   };
 }
