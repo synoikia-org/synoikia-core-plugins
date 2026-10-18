@@ -66,7 +66,7 @@ describe('Prowlarr golden record', () => {
     await expect(stable(policy)).toMatchFileSnapshot('__golden__/catalog.json');
   });
 
-  it('summaries and confirm literals of locked operations, and of grabs', async () => {
+  it('summaries and confirm literals of locked operations, grabs and proxy saves', async () => {
     const out: Record<string, unknown> = {};
     const grabs = [
       {
@@ -89,7 +89,23 @@ describe('Prowlarr golden record', () => {
         },
       },
     ];
-    for (const c of [...LOCK_CASES, ...grabs]) {
+    // Proxy saves stay regular writes; the approver sees every indexer whose traffic the proxy carries.
+    const flaresolverr = structuredClone(fake.store.get('indexerproxy')!.get(5)!);
+    const proxies = [
+      {
+        key: 'POST /api/v1/indexerproxy',
+        request: {
+          method: 'POST',
+          path: '/api/v1/indexerproxy',
+          body: { name: 'VPN', implementation: 'Socks5', Tags: [16], fields: [{ name: 'host', value: 'vpn.lan' }] },
+        },
+      },
+      {
+        key: 'PUT /api/v1/indexerproxy/{id}',
+        request: { method: 'PUT', path: '/api/v1/indexerproxy/5', body: { ...flaresolverr, name: 'Renamed' } },
+      },
+    ];
+    for (const c of [...LOCK_CASES, ...grabs, ...proxies]) {
       const { key, params } = await plugin.resolveOperation({ fn: 'request', args: [c.request] });
       const declared = operations.find((o) => o.key === key)?.sensitiveParams ?? [];
       const shown = redactPaths(params, declared);

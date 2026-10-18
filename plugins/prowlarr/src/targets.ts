@@ -1,6 +1,6 @@
 import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
-import { destinations, safe } from './fields.js';
+import { destinations, originOf, safe } from './fields.js';
 import { foldersOf, programsOf } from './stored.js';
 
 /** What a non-GET call acts on, for the approver: a provider connection (indexer, application, proxy, download
@@ -12,6 +12,8 @@ const PROVIDER =
   /^(POST|PUT|DELETE) \/api\/v1\/(downloadclient|indexer|indexerproxy|notification|applications)(\/|$|#)/;
 const BULK = /^(PUT|DELETE) \/api\/v1\/(downloadclient|indexer|applications)\/bulk/;
 const GRAB = /^POST \/api\/v1\/search(\/bulk)?$/;
+const PROXY_SAVE = /^(POST \/api\/v1\/indexerproxy|PUT \/api\/v1\/indexerproxy\/\{id\})(#|$)/;
+const MAX_ROUTED = 20;
 
 type Get = (path: string) => Promise<unknown>;
 
@@ -102,6 +104,42 @@ async function grabs(get: Get, body: unknown, many: boolean): Promise<ResolvedTa
   return [...shown, ...(more > 0 ? [{ kind: 'release', id: 'more', name: `${more} more releases` }] : [])];
 }
 
+// Servarr reads a provider field by its exact name, first match first.
+function baseUrlOf(row: Record<string, unknown>): unknown {
+  const fields: unknown[] = Array.isArray(row.fields) ? row.fields : [];
+  const found = fields.find((f): f is Record<string, unknown> => isPlainObject(f) && f.name === 'baseUrl');
+  return found?.value;
+}
+
+const routed = (id: string, name: string): ResolvedTarget => ({ kind: 'indexer', id, name });
+
+/** The stored indexers whose traffic a saved proxy carries: Prowlarr sends an indexer through every proxy that shares
+ * one of its tags. The owner keeps proxy saves a regular write, so the approver sees each indexer instead. */
+async function routedIndexers(get: Get, body: unknown): Promise<ResolvedTarget[]> {
+  const tags = isPlainObject(body) ? body.tags : undefined;
+  if (!Array.isArray(tags) || !tags.every((t) => Number.isInteger(t)))
+    return [routed('unknown', 'indexers routed through it: unknown (the body has no list of tag ids)')];
+  let rows: unknown;
+  try {
+    rows = await get('/api/v1/indexer');
+  } catch {
+    rows = undefined;
+  }
+  if (!Array.isArray(rows)) return [routed('unknown', 'indexers routed through it: unknown (lookup failed)')];
+  const hits = rows.filter(
+    (r): r is Record<string, unknown> =>
+      isPlainObject(r) && Array.isArray(r.tags) && r.tags.some((t: unknown) => tags.includes(t)),
+  );
+  if (!hits.length) return [routed('none', 'routes no indexer: no stored indexer shares its tags')];
+  const shown = hits.slice(0, MAX_ROUTED).map((r) => {
+    const id = stringOr(r.id) ?? '?';
+    const origin = safe(originOf(baseUrlOf(r)));
+    return routed(id, `routes indexer ${safe(r.name) ?? safe(id) ?? '?'} (${origin ?? 'no base URL'})`);
+  });
+  const more = hits.length - shown.length;
+  return [...shown, ...(more > 0 ? [routed('more', `and ${more} more`)] : [])];
+}
+
 export async function resolveTargets(
   client: HttpJsonClient,
   key: string,
@@ -120,7 +158,8 @@ export async function resolveTargets(
   const match = PROVIDER.exec(key);
   if (match) {
     const id = stringOr(pathParams.id) ?? (isPlainObject(body) ? stringOr(body.id) : undefined);
-    return provider(get, match[2]!, body, id && id !== '0' ? id : undefined);
+    const self = await provider(get, match[2]!, body, id && id !== '0' ? id : undefined);
+    return PROXY_SAVE.test(key) ? [...self, ...(await routedIndexers(get, body))] : self;
   }
   return [];
 }

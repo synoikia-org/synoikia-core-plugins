@@ -142,7 +142,7 @@ rules:
   - match: ['POST /api/v1/applications', 'PUT /api/v1/applications/{id}']
     summaryNote: "(the application gets Prowlarr's indexers and API key)"
   - match: ['POST /api/v1/indexerproxy', 'PUT /api/v1/indexerproxy/{id}']
-    summaryNote: '(indexer traffic with its tags goes through this proxy)'
+    summaryNote: '(traffic of every indexer with one of these tags goes through this proxy)'
   - match:
       - 'POST /api/v1/downloadclient'
       - 'PUT /api/v1/downloadclient/{id}'

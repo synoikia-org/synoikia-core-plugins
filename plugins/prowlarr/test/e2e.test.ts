@@ -114,6 +114,36 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
       expect(h.audit({ operationKey: key }).length).toBeGreaterThan(0);
     });
 
+    it('names every indexer a new indexer proxy carries in its approval', async () => {
+      const key = 'POST /api/v1/indexerproxy';
+      expect(h.operation(key)).toMatchObject({ locked: false, classification: 'write' });
+      h.setOperationLevel(key, 'ask');
+      const shown: string[] = [];
+      let literal: unknown = 'unset';
+      const r = await h.execute(
+        call({
+          method: 'POST',
+          path: '/api/v1/indexerproxy',
+          body: { name: 'VPN', implementation: 'Socks5', tags: [16], fields: [{ name: 'host', value: 'vpn.lan' }] },
+        }),
+        {
+          onApproval: (a) => {
+            literal = a.pending.confirmLiteral;
+            shown.push(a.message, JSON.stringify(a.pending));
+            a.approve();
+          },
+        },
+      );
+      h.setOperationLevel(key, null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal ?? null).toBeNull();
+      expect(shown[0]).toContain('routes indexer PrivateHD (https://privatehd.example)');
+      expect(shown[0]).toContain('routes indexer Tracker RSS (https://tracker.example)');
+      expect(shown[0]).not.toContain('NZBgeek');
+      expect(shown[0]).toContain('goes through this proxy');
+      for (const secret of SECRET_VALUES) expect(shown.join('\n')).not.toContain(secret);
+    });
+
     it('takes the locked twin once the stored download client goes to another host', async () => {
       const body = stored();
       const fields = body.fields as { name: string; value: unknown }[];

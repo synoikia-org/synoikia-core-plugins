@@ -39,6 +39,17 @@ These stay writes: `POST /api/v1/indexer/testall` (stored indexers only), `PUT /
 
 **Targets.** Provider calls show `<kind> <name> (<implementation>) → <destinations>` as in Radarr; for an application that is its `prowlarrUrl` and `baseUrl`, in field order. A `host` that is a URL (FlareSolverr) shows its origin. Bulk calls list up to 10 providers by stored name. A grab shows each release (up to 10) as `release <guid> ("<title>") → download client <name> (from <indexer>)`. Prowlarr takes the release from its cache by `indexerId` and `guid` and ignores `title`, so the guid leads and the title is the caller's claim. The client is the one in the body for a single grab (its id when the lookup fails), else the indexer's stored one, else Prowlarr's default. `indexerId`, `downloadClientId` and `title` are in `plugin.canonicalKeys`, so `DownloadClientId` is read as Prowlarr binds it.
 
+**Indexer proxy saves.** The owner decided that `POST /api/v1/indexerproxy` and `PUT /api/v1/indexerproxy/{id}` stay regular writes. Prowlarr sends an indexer's traffic through every proxy that shares one of its tags, so the approval names those indexers instead of a lock. `src/targets.ts` reads `GET /api/v1/indexer` and adds a target for each stored indexer whose `tags` share an id with the body's `tags`:
+
+| Case | Target |
+| --- | --- |
+| Shared tags | `routes indexer <name> (<base URL origin>)`, up to 20, then `and <n> more` |
+| No shared tags, or `tags: []` | `routes no indexer: no stored indexer shares its tags` |
+| `tags` missing, or not a list of integers | `indexers routed through it: unknown (the body has no list of tag ids)` |
+| The lookup fails | `indexers routed through it: unknown (lookup failed)` |
+
+`tags` is in `plugin.canonicalKeys`, so `Tags` is read as Prowlarr binds it. The base URL is the indexer's `baseUrl` field cut to its origin, so a passkey in it stays hidden. The `#stored` twin of `PUT /api/v1/indexerproxy/{id}` shows the same targets.
+
 ## Secrets
 
 As Radarr, plus:
