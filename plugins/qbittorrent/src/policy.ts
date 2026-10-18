@@ -1,30 +1,11 @@
 import type { CompiledRules, PluginSettings } from '@synoikia/plugin-sdk';
 
-/** Operations that must stay locked whatever plugin.yaml says: they delete data, fetch or move files, run code or
- * change the instance. A plugin.yaml edit that drops one stops the plugin from loading. */
+/** Operations that must stay locked whatever plugin.yaml says: they delete downloaded data, run code or change the
+ * instance. A plugin.yaml edit that drops one stops the plugin from loading. */
 export const REQUIRED_LOCKS = [
-  'torrents.delete',
   'torrents.delete#with-files',
-  'torrents.add',
-  'torrents.setLocation',
-  'torrents.setSavePath',
-  'torrents.editCategory',
-  'torrents.createCategory#paths',
-  'torrents.removeCategories',
-  'torrents.deleteTags',
-  'torrents.addTrackers',
-  'torrents.editTracker',
-  'torrents.removeTrackers',
-  'torrents.setShareLimits#remove',
-  'torrents.stop#all',
-  'torrents.setCategory#all',
   'app.setPreferences',
   'app.shutdown',
-  'rss.addFeed',
-  'rss.setFeedURL',
-  'rss.removeItem',
-  'rss.setRule',
-  'rss.removeRule',
   'search.start',
   'search.installPlugin',
   'search.uninstallPlugin',

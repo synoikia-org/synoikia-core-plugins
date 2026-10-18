@@ -535,32 +535,6 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Stop torrents."
-    },
-    "group": "torrents",
-    "key": "torrents.stop#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "description": "One hash, several joined with |, or all (every torrent)",
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
       "summary": "Start torrents."
@@ -583,32 +557,6 @@
       "type": "object"
     },
     "typedConfirmation": false
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Start torrents."
-    },
-    "group": "torrents",
-    "key": "torrents.start#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "description": "One hash, several joined with |, or all (every torrent)",
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
   },
   {
     "attestationRequired": false,
@@ -639,32 +587,6 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Recheck torrents' data on disk."
-    },
-    "group": "torrents",
-    "key": "torrents.recheck#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "description": "One hash, several joined with |, or all (every torrent)",
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
       "summary": "Reannounce torrents to their trackers and DHT."
@@ -687,32 +609,6 @@
       "type": "object"
     },
     "typedConfirmation": false
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Reannounce torrents to their trackers and DHT."
-    },
-    "group": "torrents",
-    "key": "torrents.reannounce#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "description": "One hash, several joined with |, or all (every torrent)",
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
   },
   {
     "attestationRequired": false,
@@ -743,36 +639,6 @@
       "type": "object"
     },
     "typedConfirmation": false
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "description": "Torrents in automatic management move to the category's save path.",
-      "summary": "Set the category of torrents; an empty category clears it."
-    },
-    "group": "torrents",
-    "key": "torrents.setCategory#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "category": {
-          "type": "string"
-        },
-        "hashes": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes",
-        "category"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
   },
   {
     "attestationRequired": false,
@@ -808,37 +674,6 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Add tags to torrents."
-    },
-    "group": "torrents",
-    "key": "torrents.addTags#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "type": "string"
-        },
-        "tags": {
-          "description": "Tags joined with ,",
-          "minLength": 1,
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes",
-        "tags"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
       "summary": "Remove tags from torrents."
@@ -866,37 +701,6 @@
       "type": "object"
     },
     "typedConfirmation": false
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Remove tags from torrents."
-    },
-    "group": "torrents",
-    "key": "torrents.removeTags#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "type": "string"
-        },
-        "tags": {
-          "description": "Tags joined with ,",
-          "minLength": 1,
-          "type": "string"
-        }
-      },
-      "required": [
-        "hashes",
-        "tags"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
   },
   {
     "attestationRequired": false,
@@ -931,36 +735,6 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Set the download limit of torrents, in bytes/s; 0 or -1 for none."
-    },
-    "group": "torrents",
-    "key": "torrents.setDownloadLimit#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "type": "string"
-        },
-        "limit": {
-          "minimum": -1,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "hashes",
-        "limit"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
       "summary": "Set the upload limit of torrents, in bytes/s; 0 or -1 for none."
@@ -991,39 +765,9 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Set the upload limit of torrents, in bytes/s; 0 or -1 for none."
-    },
-    "group": "torrents",
-    "key": "torrents.setUploadLimit#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "type": "string"
-        },
-        "limit": {
-          "minimum": -1,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "hashes",
-        "limit"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
-      "description": "Limits are -2 for the global limit, -1 for none; the time limits are in minutes. `shareLimitAction` (5.1 and later) is Default, Stop, Remove, RemoveWithContent or EnableSuperSeeding; Remove and RemoveWithContent are locked.",
+      "description": "Limits are -2 for the global limit, -1 for none; the time limits are in minutes. `shareLimitAction` (5.1 and later) is Default, Stop, Remove, RemoveWithContent or EnableSuperSeeding; RemoveWithContent deletes the data when the limit is reached.",
       "summary": "Set the share limits of torrents."
     },
     "group": "torrents",
@@ -1067,106 +811,6 @@
       "type": "object"
     },
     "typedConfirmation": false
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "description": "Limits are -2 for the global limit, -1 for none; the time limits are in minutes. `shareLimitAction` (5.1 and later) is Default, Stop, Remove, RemoveWithContent or EnableSuperSeeding; Remove and RemoveWithContent are locked.",
-      "summary": "Set the share limits of torrents."
-    },
-    "group": "torrents",
-    "key": "torrents.setShareLimits#remove",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "type": "string"
-        },
-        "inactiveSeedingTimeLimit": {
-          "minimum": -2,
-          "type": "integer"
-        },
-        "ratioLimit": {
-          "minimum": -2,
-          "type": "number"
-        },
-        "seedingTimeLimit": {
-          "minimum": -2,
-          "type": "integer"
-        },
-        "shareLimitAction": {
-          "enum": [
-            "Default",
-            "Stop",
-            "Remove",
-            "RemoveWithContent",
-            "EnableSuperSeeding"
-          ]
-        }
-      },
-      "required": [
-        "hashes",
-        "ratioLimit",
-        "seedingTimeLimit",
-        "inactiveSeedingTimeLimit"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "description": "Limits are -2 for the global limit, -1 for none; the time limits are in minutes. `shareLimitAction` (5.1 and later) is Default, Stop, Remove, RemoveWithContent or EnableSuperSeeding; Remove and RemoveWithContent are locked.",
-      "summary": "Set the share limits of torrents."
-    },
-    "group": "torrents",
-    "key": "torrents.setShareLimits#all",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "hashes": {
-          "type": "string"
-        },
-        "inactiveSeedingTimeLimit": {
-          "minimum": -2,
-          "type": "integer"
-        },
-        "ratioLimit": {
-          "minimum": -2,
-          "type": "number"
-        },
-        "seedingTimeLimit": {
-          "minimum": -2,
-          "type": "integer"
-        },
-        "shareLimitAction": {
-          "enum": [
-            "Default",
-            "Stop",
-            "Remove",
-            "RemoveWithContent",
-            "EnableSuperSeeding"
-          ]
-        }
-      },
-      "required": [
-        "hashes",
-        "ratioLimit",
-        "seedingTimeLimit",
-        "inactiveSeedingTimeLimit"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
   },
   {
     "attestationRequired": false,
@@ -1396,41 +1040,6 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
-    "docs": {
-      "summary": "Create a category, optionally with its own save path."
-    },
-    "group": "categories",
-    "key": "torrents.createCategory#paths",
-    "kind": "command",
-    "locked": true,
-    "paramsSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "category": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "downloadPath": {
-          "type": "string"
-        },
-        "downloadPathEnabled": {
-          "type": "boolean"
-        },
-        "savePath": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "category"
-      ],
-      "type": "object"
-    },
-    "typedConfirmation": true
-  },
-  {
-    "attestationRequired": false,
-    "classification": "write",
     "classificationReason": "declared:write",
     "docs": {
       "summary": "Create tags."
@@ -1575,14 +1184,14 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Remove torrents; with deleteFiles, their downloaded data too."
     },
     "group": "torrents",
     "key": "torrents.delete",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1600,13 +1209,14 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
     "classificationReason": "locked:destructive",
     "docs": {
+      "description": "Removes torrents and deletes their downloaded data from disk. Locked: the data is gone.",
       "summary": "Remove torrents; with deleteFiles, their downloaded data too."
     },
     "group": "torrents",
@@ -1635,7 +1245,7 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "description": "`urls` holds http(s) URLs and magnet links, one per line; a masked URL from search.results is taken as shown. No torrent files from disk. Without `savepath`, the category's or the default save path applies.",
       "summary": "Add torrents from URLs or magnet links."
@@ -1643,7 +1253,7 @@
     "group": "torrents",
     "key": "torrents.add",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1738,19 +1348,19 @@
     "sensitiveParams": [
       "/urls"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Move torrents' data to another directory; turns off automatic management."
     },
     "group": "torrents",
     "key": "torrents.setLocation",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1768,19 +1378,19 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Set the save path of torrents in manual management, moving their data."
     },
     "group": "torrents",
     "key": "torrents.setSavePath",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1799,19 +1409,19 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Change a category's save paths; its torrents in automatic management move with it."
     },
     "group": "categories",
     "key": "torrents.editCategory",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1835,19 +1445,19 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Delete categories."
     },
     "group": "categories",
     "key": "torrents.removeCategories",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1862,19 +1472,19 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Delete tags, removing them from every torrent."
     },
     "group": "tags",
     "key": "torrents.deleteTags",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1889,19 +1499,19 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Add trackers to one torrent."
     },
     "group": "trackers",
     "key": "torrents.addTrackers",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1923,12 +1533,12 @@
     "sensitiveParams": [
       "/urls"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "description": "`url` is the tracker as torrents.trackers shows it; masked is fine.",
       "summary": "Change one tracker's URL or tier on one torrent."
@@ -1936,7 +1546,7 @@
     "group": "trackers",
     "key": "torrents.editTracker",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1967,12 +1577,12 @@
       "/url",
       "/newUrl"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "description": "`urls` are trackers as torrents.trackers shows them (masked is fine), joined with |.",
       "summary": "Remove trackers from one torrent."
@@ -1980,7 +1590,7 @@
     "group": "trackers",
     "key": "torrents.removeTrackers",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2001,7 +1611,7 @@
     "sensitiveParams": [
       "/urls"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
@@ -2055,14 +1665,14 @@
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Subscribe to an RSS feed."
     },
     "group": "rss",
     "key": "rss.addFeed",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2089,19 +1699,19 @@
     "sensitiveParams": [
       "/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Change the URL of an RSS feed."
     },
     "group": "rss",
     "key": "rss.setFeedURL",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2123,19 +1733,19 @@
     "sensitiveParams": [
       "/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Remove an RSS feed, or a folder with every feed in it."
     },
     "group": "rss",
     "key": "rss.removeItem",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2149,12 +1759,12 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "description": "`ruleDef` is the rule as rss.rules shows it; `affectedFeeds` takes feed URLs as rss.items shows them (masked is fine). Matching articles are then downloaded without another approval.",
       "summary": "Create or replace an RSS auto-downloading rule."
@@ -2162,7 +1772,7 @@
     "group": "rss",
     "key": "rss.setRule",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2186,19 +1796,19 @@
       "/ruleDef/torrentParams/ssl_certificate",
       "/ruleDef/torrentParams/ssl_dh_params"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "declared:write",
     "docs": {
       "summary": "Delete an RSS auto-downloading rule."
     },
     "group": "rss",
     "key": "rss.removeRule",
     "kind": "command",
-    "locked": true,
+    "locked": false,
     "paramsSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2212,7 +1822,7 @@
       ],
       "type": "object"
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "attestationRequired": false,

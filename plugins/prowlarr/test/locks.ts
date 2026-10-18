@@ -1,7 +1,7 @@
 import { INSTANCE } from './fake-prowlarr.js';
 
-/** One call per locked key (every key plugin.yaml locks by name, every split twin, and a sample of the deletes the
- * `DELETE *` rule locks), and the literal an approver must type for it against the fake Prowlarr. */
+/** One call per locked key (every key plugin.yaml locks by name, every split twin, and a sample of the bulk deletes
+ * the bulk delete pattern locks), and the literal an approver must type for it against the fake Prowlarr. */
 export interface LockCase {
   key: string;
   request: { method: string; path: string; body?: unknown; query?: Record<string, unknown> };
@@ -26,11 +26,6 @@ const EVIL = [
   field('useSsl', true),
   field('password', '********', 'password'),
 ];
-const RADARR = [
-  field('prowlarrUrl', 'http://prowlarr.lan:9696'),
-  field('baseUrl', 'http://radarr.lan:7878'),
-  field('apiKey', 'radarr-key-131313', 'apiKey'),
-];
 
 export const LOCK_CASES: LockCase[] = [
   {
@@ -54,136 +49,14 @@ export const LOCK_CASES: LockCase[] = [
     confirm: BACKUP,
   },
   {
-    key: 'DELETE /api/v1/system/backup/{id}',
-    request: { method: 'DELETE', path: '/api/v1/system/backup/21' },
-    confirm: BACKUP,
-  },
-  {
-    key: 'POST /api/v1/downloadclient',
-    request: {
-      method: 'POST',
-      path: '/api/v1/downloadclient',
-      body: provider('SAB', 'Sabnzbd', [
-        field('host', 'sab.lan'),
-        field('port', 8085),
-        field('apiKey', 'sab-key-777777', 'apiKey'),
-      ]),
-    },
-    confirm: 'SAB',
-  },
-  {
-    key: 'PUT /api/v1/downloadclient/{id}',
-    request: { method: 'PUT', path: '/api/v1/downloadclient/6', body: provider('Renamed', 'QBittorrent', EVIL, 6) },
-    confirm: 'qBit',
-  },
-  {
-    key: 'POST /api/v1/indexer',
-    request: {
-      method: 'POST',
-      path: '/api/v1/indexer',
-      body: provider('Geek2', 'Newznab', [
-        field('baseUrl', 'https://api.example.org'),
-        field('apiKey', 'idx-key-888888', 'apiKey'),
-      ]),
-    },
-    confirm: 'Geek2',
-  },
-  {
-    key: 'PUT /api/v1/indexer/{id}',
-    request: {
-      method: 'PUT',
-      path: '/api/v1/indexer/1',
-      body: provider('Not NZBgeek', 'Newznab', [field('baseUrl', 'https://collector.example')], 1),
-    },
-    confirm: 'NZBgeek',
-  },
-  {
     key: 'PUT /api/v1/indexer/bulk',
     request: { method: 'PUT', path: '/api/v1/indexer/bulk', body: { ids: [1, 2], tags: [12], applyTags: 'add' } },
     confirm: '2 indexers',
   },
   {
-    key: 'POST /api/v1/indexerproxy',
-    request: {
-      method: 'POST',
-      path: '/api/v1/indexerproxy',
-      body: { ...provider('Collector', 'Http', [field('host', 'collector.example'), field('port', 3128)]), tags: [] },
-    },
-    confirm: 'Collector',
-  },
-  {
-    key: 'PUT /api/v1/indexerproxy/{id}',
-    request: {
-      method: 'PUT',
-      path: '/api/v1/indexerproxy/5',
-      body: provider('FlareSolverr', 'FlareSolverr', [field('host', 'https://collector.example/v1')], 5),
-    },
-    confirm: 'FlareSolverr',
-  },
-  {
-    key: 'POST /api/v1/notification',
-    request: {
-      method: 'POST',
-      path: '/api/v1/notification',
-      body: provider('Hook', 'Webhook', [field('url', 'https://hooks.example.com/t/secret-hook-999999')]),
-    },
-    confirm: 'Hook',
-  },
-  {
-    key: 'PUT /api/v1/notification/{id}',
-    request: { method: 'PUT', path: '/api/v1/notification/9', body: provider('Discord', 'Discord', [], 9) },
-    confirm: 'Discord',
-  },
-  {
-    key: 'POST /api/v1/applications',
-    request: {
-      method: 'POST',
-      path: '/api/v1/applications',
-      body: { ...provider('Radarr', 'Radarr', RADARR), syncLevel: 'fullSync' },
-    },
-    confirm: 'Radarr',
-  },
-  {
-    key: 'PUT /api/v1/applications/{id}',
-    request: {
-      method: 'PUT',
-      path: '/api/v1/applications/4',
-      body: provider('Renamed', 'Sonarr', [field('baseUrl', 'https://collector.example')], 4),
-    },
-    confirm: 'Sonarr',
-  },
-  {
     key: 'PUT /api/v1/applications/bulk',
     request: { method: 'PUT', path: '/api/v1/applications/bulk', body: { ids: [4], syncLevel: 'fullSync' } },
     confirm: '1 application',
-  },
-  {
-    key: 'POST /api/v1/applications/test',
-    request: { method: 'POST', path: '/api/v1/applications/test', body: provider('Radarr', 'Radarr', RADARR) },
-    confirm: 'Radarr',
-  },
-  {
-    key: 'POST /api/v1/applications/action/{name}',
-    request: {
-      method: 'POST',
-      path: '/api/v1/applications/action/getProfiles',
-      body: provider('Radarr', 'Radarr', RADARR),
-    },
-    confirm: 'Radarr',
-  },
-  {
-    key: 'POST /api/v1/notification/test',
-    request: {
-      method: 'POST',
-      path: '/api/v1/notification/test',
-      body: provider('Discord', 'Discord', [field('webHookUrl', 'https://collector.example/x')], 9),
-    },
-    confirm: 'Discord',
-  },
-  {
-    key: 'POST /api/v1/notification/testall',
-    request: { method: 'POST', path: '/api/v1/notification/testall' },
-    confirm: INSTANCE,
   },
   {
     key: 'POST /api/v1/applications/testall',
@@ -200,27 +73,61 @@ export const LOCK_CASES: LockCase[] = [
     confirm: INSTANCE,
   },
   {
-    key: 'POST /api/v1/notification/action/{name}',
-    request: {
-      method: 'POST',
-      path: '/api/v1/notification/action/getDevices',
-      body: provider('New', 'Gotify', [field('server', 'https://gotify.example')]),
-    },
-    confirm: INSTANCE,
-  },
-  {
     key: 'POST /api/v1/command#heavy',
     request: { method: 'POST', path: '/api/v1/command', body: { name: 'ApplicationIndexerSync', forceSync: true } },
     confirm: 'ApplicationIndexerSync',
   },
-  ...(['downloadclient', 'indexer', 'indexerproxy', 'applications'] as const).flatMap((resource) => {
-    const [id, name] = {
-      downloadclient: [6, 'qBit'],
-      indexer: [2, 'PrivateHD'],
-      indexerproxy: [10, 'Socks'],
-      applications: [4, 'Sonarr'],
-    }[resource] as [number, string];
-    const body = provider(name, 'Any', EVIL, id);
+  {
+    key: 'POST /api/v1/notification#script',
+    request: {
+      method: 'POST',
+      path: '/api/v1/notification',
+      body: provider('Run it', 'CustomScript', [field('path', '/tmp/evil.sh')]),
+    },
+    confirm: 'Run it',
+  },
+  {
+    key: 'PUT /api/v1/notification/{id}#script',
+    request: {
+      method: 'PUT',
+      path: '/api/v1/notification/9',
+      body: provider('Renamed', 'CustomScript', [field('path', '/tmp/evil.sh')], 9),
+    },
+    confirm: 'Discord',
+  },
+  {
+    key: 'POST /api/v1/notification/test#script',
+    request: {
+      method: 'POST',
+      path: '/api/v1/notification/test',
+      body: provider('New', 'Webhook', [field('url', 'https://h.example'), field('scriptPath', '/tmp/evil.sh')]),
+    },
+    confirm: 'New',
+  },
+  {
+    key: 'POST /api/v1/notification/testall#script',
+    request: { method: 'POST', path: '/api/v1/notification/testall' },
+    confirm: INSTANCE,
+  },
+  {
+    key: 'POST /api/v1/notification/action/{name}#script',
+    request: {
+      method: 'POST',
+      path: '/api/v1/notification/action/getDevices',
+      body: provider('Discord', 'CustomScript', [field('path', '/tmp/evil.sh')], 9),
+    },
+    confirm: 'Discord',
+  },
+  ...(['downloadclient', 'indexer', 'indexerproxy', 'applications', 'notification'] as const).flatMap((resource) => {
+    const [id, name, implementation] = {
+      downloadclient: [6, 'qBit', 'QBittorrent'],
+      indexer: [2, 'PrivateHD', 'Cardigann'],
+      indexerproxy: [10, 'Socks', 'Socks5'],
+      applications: [4, 'Sonarr', 'Sonarr'],
+      notification: [9, 'Discord', 'Discord'],
+    }[resource] as [number, string, string];
+    // The stored provider's own type, sent to a different host with its stored password.
+    const body = provider(name, implementation, EVIL, id);
     return [
       {
         key: `POST /api/v1/${resource}/test#stored`,
@@ -232,18 +139,45 @@ export const LOCK_CASES: LockCase[] = [
         request: { method: 'POST', path: `/api/v1/${resource}/action/getCategories`, body },
         confirm: name,
       },
+      // A save with a new host and the stored password kept as ********: the upstream tests it with that password.
+      {
+        key: `PUT /api/v1/${resource}/{id}#stored`,
+        request: { method: 'PUT', path: `/api/v1/${resource}/${id}`, body },
+        confirm: name,
+      },
     ];
   }),
-  { key: 'DELETE /api/v1/indexer/{id}', request: { method: 'DELETE', path: '/api/v1/indexer/1' }, confirm: 'NZBgeek' },
+  ...(
+    [
+      ['POST /api/v1/downloadclient#folder', 'POST', '/api/v1/downloadclient', undefined, 'Drop'],
+      ['PUT /api/v1/downloadclient/{id}#folder', 'PUT', '/api/v1/downloadclient/6', 6, 'qBit'],
+      ['POST /api/v1/downloadclient/test#folder', 'POST', '/api/v1/downloadclient/test', undefined, 'Drop'],
+      [
+        'POST /api/v1/downloadclient/action/{name}#folder',
+        'POST',
+        '/api/v1/downloadclient/action/getCategories',
+        6,
+        'qBit',
+      ],
+    ] as const
+  ).map(([key, method, path, id, confirm]) => ({
+    key,
+    request: {
+      method,
+      path,
+      body: provider(
+        'Drop',
+        'TorrentBlackhole',
+        [field('torrentFolder', '/tmp/drop'), field('watchFolder', '/tmp/w')],
+        id,
+      ),
+    },
+    confirm,
+  })),
   {
     key: 'DELETE /api/v1/indexer/bulk',
     request: { method: 'DELETE', path: '/api/v1/indexer/bulk', body: { ids: [1, 2] } },
     confirm: '2 indexers',
-  },
-  {
-    key: 'DELETE /api/v1/applications/{id}',
-    request: { method: 'DELETE', path: '/api/v1/applications/4' },
-    confirm: 'Sonarr',
   },
   {
     key: 'DELETE /api/v1/applications/bulk',
@@ -251,29 +185,8 @@ export const LOCK_CASES: LockCase[] = [
     confirm: '1 application',
   },
   {
-    key: 'DELETE /api/v1/indexerproxy/{id}',
-    request: { method: 'DELETE', path: '/api/v1/indexerproxy/10' },
-    confirm: 'Socks',
-  },
-  {
     key: 'DELETE /api/v1/downloadclient/bulk',
     request: { method: 'DELETE', path: '/api/v1/downloadclient/bulk', body: { ids: [6] } },
     confirm: '1 download client',
-  },
-  {
-    key: 'DELETE /api/v1/notification/{id}',
-    request: { method: 'DELETE', path: '/api/v1/notification/14' },
-    confirm: 'Hook',
-  },
-  {
-    key: 'DELETE /api/v1/appprofile/{id}',
-    request: { method: 'DELETE', path: '/api/v1/appprofile/11' },
-    confirm: 'Standard',
-  },
-  { key: 'DELETE /api/v1/tag/{id}', request: { method: 'DELETE', path: '/api/v1/tag/12' }, confirm: 'flaresolverr' },
-  {
-    key: 'DELETE /api/v1/customfilter/{id}',
-    request: { method: 'DELETE', path: '/api/v1/customfilter/13' },
-    confirm: 'Torrents',
   },
 ];

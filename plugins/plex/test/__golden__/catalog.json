@@ -1,88 +1,114 @@
 [
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "activities",
     "key": "DELETE /activities/{activityId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "butler",
     "key": "DELETE /butler",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "butler",
     "key": "DELETE /butler/{butlerTask}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "hubs",
     "key": "DELETE /hubs/sections/{sectionId}/manage",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "hubs",
     "key": "DELETE /hubs/sections/{sectionId}/manage/{identifier}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/caches",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/metadata/{ids}",
     "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "verb:DELETE",
+    "group": "library",
+    "key": "DELETE /library/metadata/{ids}/marker/{marker}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "library",
+    "key": "DELETE /library/metadata/{ids}/marker/{marker}#many",
+    "kind": "rest",
     "locked": true,
     "needsReview": false,
     "sensitiveParams": [
@@ -92,9 +118,22 @@
   },
   {
     "classification": "write",
+    "classificationReason": "verb:DELETE",
+    "group": "library",
+    "key": "DELETE /library/metadata/{ids}/media/{mediaItem}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "library",
-    "key": "DELETE /library/metadata/{ids}/marker/{marker}",
+    "key": "DELETE /library/metadata/{ids}/media/{mediaItem}#many",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -107,7 +146,7 @@
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "library",
-    "key": "DELETE /library/metadata/{ids}/media/{mediaItem}",
+    "key": "DELETE /library/metadata/{ids}#many",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -131,68 +170,68 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/sections/{sectionId}/collection/{collectionId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/sections/{sectionId}/indexes",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/sections/{sectionId}/intros",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/sections/{sectionId}/refresh",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library",
     "key": "DELETE /library/sections/all/refresh",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -235,29 +274,29 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "dvrs",
     "key": "DELETE /livetv/dvrs/{dvrId}/reloadGuide",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "live_tv",
     "key": "DELETE /livetv/sessions/{sessionId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -274,146 +313,146 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "devices",
     "key": "DELETE /media/grabbers/devices/{deviceId}/scan",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "subscriptions",
     "key": "DELETE /media/grabbers/operations/{operationId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "provider",
     "key": "DELETE /media/providers/{provider}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "subscriptions",
     "key": "DELETE /media/subscriptions/{subscriptionId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "playlists",
     "key": "DELETE /playlists",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library_playlists",
     "key": "DELETE /playlists/{playlistId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library_playlists",
     "key": "DELETE /playlists/{playlistId}/items",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "library_playlists",
     "key": "DELETE /playlists/{playlistId}/items/{generatorId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "play_queue",
     "key": "DELETE /playQueues/{playQueueId}/items",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "play_queue",
     "key": "DELETE /playQueues/{playQueueId}/items/{playQueueItemId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "status",
     "key": "DELETE /status/sessions/history/{historyId}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "read",
@@ -1695,12 +1734,12 @@
     "group": "library",
     "key": "GET /library/sections/{sectionId}/unmatch",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "read",
@@ -2289,16 +2328,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "reviewed:get-changes-state",
     "group": "play_queue",
     "key": "GET /playQueues/{playQueueId}#own",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "read",
@@ -2588,16 +2627,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "butler",
     "key": "POST /butler/{butlerTask}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -3174,16 +3213,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "status",
     "key": "POST /status/sessions/terminate",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -3603,16 +3642,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:PUT",
     "group": "library",
     "key": "PUT /library/sections/{sectionId}/analyze",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/query/url"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",

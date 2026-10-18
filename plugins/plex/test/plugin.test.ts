@@ -82,7 +82,7 @@ describe('Plex plugin', () => {
     fake.specFetches.length = 0;
     const result = await plugin.syncCatalog();
     expect(result).toMatchObject({ upstreamVersion: VERSION, sourceRef: SPEC_REF });
-    expect(result.operations).toHaveLength(306);
+    expect(result.operations).toHaveLength(309);
     expect(fake.specFetches).toEqual([{ ref: SPEC_REF, token: undefined }]);
   });
 
@@ -164,12 +164,27 @@ describe('request keys', () => {
 });
 
 describe('summaries and targets', () => {
-  it('names the session, its user and player, and confirms on what it plays', async () => {
+  it('takes the unlocked #own twin when own takes the play queue over, else reads', async () => {
+    const queue = (query?: object) => resolve({ path: '/playQueues/55', ...(query ? { query } : {}) });
+    expect((await queue()).key).toBe('GET /playQueues/{playQueueId}');
+    expect((await queue({ own: 0 })).key).toBe('GET /playQueues/{playQueueId}');
+    for (const own of [1, 'true', 'yes'])
+      expect((await queue({ own })).key, JSON.stringify(own)).toBe('GET /playQueues/{playQueueId}#own');
+    // A list or an object is refused before the split, which also takes the twin for one.
+    for (const own of [{ x: 1 }, [1]])
+      await expect(queue({ own }), JSON.stringify(own)).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
+    const r = await queue({ own: 1 });
+    const summary = await plugin.summarize({ ...r, targets: [] });
+    expect(summary.confirmLiteral).toBeUndefined();
+    expect(summary.text).toContain('(takes the play queue over from the device playing it)');
+  });
+
+  it('names the session, its user and player; ending it is a regular write', async () => {
     const r = await resolve({ method: 'POST', path: '/status/sessions/terminate', query: { sessionId: 'sess-1' } });
     const targets = (await plugin.resolveTargets?.(r)) ?? [];
     expect(targets[0]?.name).toBe('alice playing Arrival (2016) [movie] on Living Room TV');
     const summary = await plugin.summarize({ ...r, targets });
-    expect(summary.confirmLiteral).toBe('Arrival');
+    expect(summary.confirmLiteral).toBeUndefined();
     expect(summary.text).toMatch(/^Plex POST \/status\/sessions\/terminate on alice playing/);
   });
 

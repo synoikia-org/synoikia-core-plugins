@@ -53,6 +53,7 @@ export function createRadarrPlugin(): PluginHandlers {
     handlers(kit) {
       const http = () => kit.client().http;
       const rules = compileRules(settings, { lookup: restLookup(http), custom });
+      const lookup = (path: string) => http().request('GET', path, { timeoutMs: settings.defaults.timeouts.lookup });
       const current = kit.lazy(async () => {
         const version = await kit.version();
         const { text, ref } = await fetchServarrSpec(SERVICE, settings.plugin.spec, version, kit.client().specBaseUrl);
@@ -74,7 +75,7 @@ export function createRadarrPlugin(): PluginHandlers {
           refuseMaskedValues(normalized.body);
           return normalized;
         },
-        splitWhen,
+        splitWhen: splitWhen(lookup),
       });
       return {
         async syncCatalog() {

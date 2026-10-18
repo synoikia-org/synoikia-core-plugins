@@ -8,10 +8,10 @@ Workflows:
 
 - Add an artist: `GET /api/v1/artist/lookup` (`term`) → `GET /api/v1/qualityprofile` + `GET /api/v1/metadataprofile` + `GET /api/v1/rootfolder` → `POST /api/v1/artist` with the hit, `qualityProfileId`, `metadataProfileId`, `rootFolderPath`, `monitored` and `addOptions.searchForMissingAlbums`.
 - Albums: `GET /api/v1/album` (`artistId`) → command `AlbumSearch`.
-- Search missing: `GET /api/v1/wanted/missing` → `POST /api/v1/command` `MissingAlbumSearch`.
+- Search missing: `GET /api/v1/wanted/missing` → command `MissingAlbumSearch`.
 - Downloads: `GET /api/v1/queue` (`includeArtist`), then `GET /api/v1/history`.
-- Upcoming: `GET /api/v1/calendar` (`start`, `end`).
+- Upcoming: `GET /api/v1/calendar`.
 
 Download links are masked and link guids cut; a release with a masked guid can't be grabbed by `POST /api/v1/release`.
 
-Locked (typed confirmation): deletes, moving files, bulk artist edits, file-changing commands, host, media and metadata settings, root folders, restart, backups, and editing download clients, indexers, import lists and notifications. No filesystem browsing, manual-import scans or log downloads.
+Locked: bulk edits and deletes, moving files, file-changing commands, scripts, blackhole folders, credentials sent to a new host, host, media and metadata settings, password reset, restart, backup restore. No filesystem browsing, manual imports or logs, though a new root folder lists the host folders under it.

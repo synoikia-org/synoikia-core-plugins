@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, settings } from '../src/plugin.js';
-import { LOCK_CASES } from './locks.js';
+import { LOCK_CASES, WRITE_CASES } from './locks.js';
 import { SPEC_TEXT } from './fake-mealie.js';
 
 /** The catalog from the pinned Mealie v3.28.0 spec: a rename upstream must fail here, not silently unlock. */
@@ -111,15 +111,41 @@ describe('Mealie catalog (pinned spec)', () => {
     expect(op('PUT /api/groups/ai-providers/providers/{provider_id}')?.sensitiveParams).not.toContain('/body/baseUrl');
   });
 
-  it('locks every delete, one a newer spec adds included', () => {
-    for (const o of catalog.operations.filter((o) => o.key.startsWith('DELETE ')))
-      expect(o, o.key).toMatchObject({ locked: true, typedConfirmation: true });
+  it('locks bulk deletes, one a newer spec adds included; single-item deletes are regular writes', () => {
+    for (const c of WRITE_CASES)
+      expect(op(c.key), c.key).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
+    for (const key of [
+      'POST /api/recipes/bulk-actions/delete',
+      'DELETE /api/households/shopping/items',
+      'DELETE /api/recipes/bulk-actions/export/purge',
+      'DELETE /api/admin/users/{item_id}',
+      'DELETE /api/admin/groups/{item_id}',
+      'DELETE /api/admin/households/{item_id}',
+      'DELETE /api/admin/backups/{file_name}',
+    ])
+      expect(op(key), key).toMatchObject({ locked: true, typedConfirmation: true });
     const spec = JSON.parse(SPEC_TEXT) as { paths: Record<string, unknown> };
-    const newer = { ...spec, paths: { ...spec.paths, '/api/pantry/{item_id}': { delete: { summary: 'Delete' } } } };
-    expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /api/pantry/{item_id}')).toMatchObject({
-      locked: true,
-      typedConfirmation: true,
+    const paths = {
+      ...spec.paths,
+      '/api/pantry/{item_id}': { delete: { summary: 'Delete' } },
+      '/api/pantry/bulk': { delete: { summary: 'Delete Many' } },
+      '/api/pantry/bulk-actions/delete': { post: { summary: 'Bulk Delete' } },
+      '/api/admin/pantries/{item_id}': { delete: { summary: 'Delete One' } },
+    };
+    const ops = buildCatalog({ ...spec, paths }).operations;
+    expect(ops.find((o) => o.key === 'DELETE /api/pantry/{item_id}')).toMatchObject({
+      locked: false,
+      classification: 'write',
     });
+    for (const key of [
+      'DELETE /api/pantry/bulk',
+      'POST /api/pantry/bulk-actions/delete',
+      'DELETE /api/admin/pantries/{item_id}',
+    ])
+      expect(
+        ops.find((o) => o.key === key),
+        key,
+      ).toMatchObject({ locked: true, typedConfirmation: true });
   });
 
   it('refuses a truncated spec', () => {

@@ -6,6 +6,8 @@ import { tagFor } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-sonarr.js';
 import { LOCK_CASES } from './locks.js';
 
+const LOCKED_TOTAL = 40;
+
 /** The catalog from the pinned Sonarr v4.0.20.3014 spec: a rename upstream must fail here, not silently unlock. */
 
 const catalog = buildCatalog(SPEC_TEXT);
@@ -18,27 +20,41 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Sonarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v3 included', () => {
-    expect(catalog.operations).toHaveLength(224);
+    expect(catalog.operations).toHaveLength(238);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v3\//);
   });
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(25);
+    expect(locked).toHaveLength(9);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
     }
   });
 
-  it('locks every delete, every split twin and nothing the rules do not name', () => {
+  it('locks bulk deletes and every split twin, and no single-item delete or write the rules do not name', () => {
+    const bulk = (k: string) => /^DELETE \S+\/(bulk|editor)$/.test(k);
     const locked = catalog.operations.filter((o) => o.locked).map((o) => o.key);
-    for (const o of catalog.operations.filter((x) => x.key.startsWith('DELETE ') || x.key.includes('#')))
+    for (const o of catalog.operations.filter((x) => bulk(x.key) || x.key.includes('#')))
       expect(o.locked, o.key).toBe(true);
     const named = new Set(lockedKeys(settings.rules));
-    const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
-    expect(extra).toEqual([]);
-    expect(locked).toHaveLength(61);
+    expect(locked.filter((k) => !bulk(k) && !k.includes('#') && !named.has(k))).toEqual([]);
+    for (const key of ['DELETE /api/v3/series/{id}', 'DELETE /api/v3/episodefile/{id}', 'DELETE /api/v3/tag/{id}'])
+      expect(op(key), key).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
+    for (const key of ['POST /api/v3/downloadclient', 'PUT /api/v3/indexer/{id}', 'POST /api/v3/release/push'])
+      expect(op(key), key).toMatchObject({ locked: false, classification: 'write' });
+    expect(locked).toHaveLength(LOCKED_TOTAL);
+  });
+
+  it('describes every operation, by hand where plugin.yaml says why it is locked or split', () => {
+    for (const o of catalog.operations) expect(o.docs?.description, o.key).toMatch(/\w/);
+    expect(op('GET /api/v3/series')?.docs?.description).toBe('List series');
+    expect(op('GET /api/v3/series/{id}')?.docs?.description).toBe('Get a series by id');
+    expect(op('DELETE /api/v3/series/{id}')?.docs?.description).toBe('Delete a series');
+    expect(op('POST /api/v3/downloadclient/test')?.docs?.description).toMatch(/#stored twin/);
+    for (const o of catalog.operations.filter((x) => x.locked || x.key.includes('#')))
+      expect(o.docs?.description, o.key).toMatch(/Locked|locked|twin/);
   });
 
   it('has a lock case for every named lock and every twin', () => {
@@ -50,8 +66,8 @@ describe('Sonarr catalog (pinned spec)', () => {
   });
 
   it('matches at least one operation with every rule pattern', () => {
-    // Forward-looking: v4 has no root folder PUT, a newer spec may add one.
-    const ahead = new Set(['PUT /api/v3/rootfolder/*']);
+    // Forward-looking: only newer specs have the UI password reset.
+    const ahead = new Set(['POST /reset-password*']);
     for (const pattern of settings.rules.flatMap((r) => listOf(r.match)).filter((p) => !ahead.has(p)))
       expect(
         [...keys].some((k) => globRe(pattern).test(k)),
@@ -121,23 +137,39 @@ describe('Sonarr catalog (pinned spec)', () => {
     ]);
   });
 
-  it('locks a delete a newer spec adds', () => {
+  it('locks a bulk delete a newer spec adds, and leaves a new single delete a regular write', () => {
     const spec = specOf();
-    const newer = { ...spec, paths: { ...spec.paths, '/api/v3/movie/{id}': { delete: { tags: ['Movie'] } } } };
-    expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /api/v3/movie/{id}')).toMatchObject({
-      locked: true,
-      typedConfirmation: true,
+    const paths = {
+      ...spec.paths,
+      '/api/v3/movie/{id}': { delete: { tags: ['Movie'] } },
+      '/api/v3/movie/bulk': { delete: { tags: ['Movie'] } },
+    };
+    const ops = buildCatalog({ ...spec, paths }).operations;
+    expect(ops.find((o) => o.key === 'DELETE /api/v3/movie/bulk')).toMatchObject({ locked: true });
+    expect(ops.find((o) => o.key === 'DELETE /api/v3/movie/{id}')).toMatchObject({
+      locked: false,
+      classification: 'write',
     });
   });
 
-  it('locks a root folder PUT a newer spec adds, confirmed on the new path', () => {
+  it('locks the UI password reset a newer spec adds, without requiring it', () => {
     const spec = specOf();
-    const item = { ...spec.paths['/api/v3/rootfolder/{id}'], put: { tags: ['RootFolder'] } };
-    const newer = { ...spec, paths: { ...spec.paths, '/api/v3/rootfolder/{id}': item } };
-    expect(buildCatalog(newer).operations.find((o) => o.key === 'PUT /api/v3/rootfolder/{id}')).toMatchObject({
-      locked: true,
-      typedConfirmation: true,
-    });
+    const form = { content: { 'multipart/form-data': { schema: { type: 'object' } } } };
+    const paths = {
+      ...spec.paths,
+      '/reset-password': { post: { tags: ['Authentication'], requestBody: form } },
+      '/reset-password/request': { post: { tags: ['Authentication'] } },
+    };
+    const ops = buildCatalog({ ...spec, paths }).operations;
+    for (const key of ['POST /reset-password', 'POST /reset-password/request'])
+      expect(
+        ops.find((o) => o.key === key),
+        key,
+      ).toMatchObject({ locked: true, typedConfirmation: true });
+    expect(ops.find((o) => o.key === 'POST /reset-password')?.sensitiveParams).toEqual(
+      expect.arrayContaining(['/body/password', '/body/token']),
+    );
+    expect(keys.has('POST /reset-password')).toBe(false);
   });
 
   it('refuses a truncated spec', () => {
@@ -157,32 +189,23 @@ describe('Sonarr catalog (pinned spec)', () => {
 describe('split predicates', () => {
   const call = (key: string, params: object) =>
     ({ key, method: key.split(' ')[0], template: key.split(' ')[1], params, request: {} }) as Parameters<
-      (typeof splitWhen)['heavy']
+      ReturnType<typeof splitWhen>['heavy']
     >[0];
+  const offline = splitWhen();
 
-  it('takes #delete-files and #move-files for any flag that is not plainly off', () => {
-    const del = (query?: object) => splitWhen['delete-files']!(call('DELETE /api/v3/series/{id}', { query }));
-    expect([undefined, { deleteFiles: false }, { deleteFiles: 'false' }].map((q) => del(q))).toEqual([
-      false,
-      false,
-      false,
-    ]);
-    expect([{ deleteFiles: true }, { deleteFiles: 'true' }, { deleteFiles: 1 }].map((q) => del(q))).toEqual([
+  it('takes #delete-files on a bulk delete for any flag that is not plainly off, and #move-files', () => {
+    const bulk = (body?: unknown) => offline['delete-files']!(call('DELETE /api/v3/series/editor', { body }));
+    expect([bulk({ seriesIds: [1] }), bulk({ seriesIds: [1], deleteFiles: 'false' })]).toEqual([false, false]);
+    expect([bulk({ seriesIds: [1], deleteFiles: true }), bulk({ deleteFiles: 1 }), bulk(undefined)]).toEqual([
       true,
       true,
       true,
     ]);
-    const bulk = (body?: unknown) => splitWhen['delete-files']!(call('DELETE /api/v3/series/editor', { body }));
-    expect([bulk({ seriesIds: [1] }), bulk({ seriesIds: [1], deleteFiles: true }), bulk(undefined)]).toEqual([
-      false,
-      true,
-      true,
-    ]);
-    expect(splitWhen['move-files']!(call('PUT /api/v3/series/{id}', { query: { moveFiles: 'True' } }))).toBe(true);
+    expect(offline['move-files']!(call('PUT /api/v3/series/{id}', { query: { moveFiles: 'True' } }))).toBe(true);
   });
 
   it('takes #heavy for any command not listed as quick, compared case-insensitively', () => {
-    const heavy = (body: unknown) => splitWhen.heavy!(call('POST /api/v3/command', { body }));
+    const heavy = (body: unknown) => offline.heavy!(call('POST /api/v3/command', { body }));
     expect(heavy({ name: 'SeriesSearch', seriesId: 1 })).toBe(false);
     expect(heavy({ name: 'rsssync' })).toBe(false);
     for (const name of [
@@ -203,10 +226,105 @@ describe('split predicates', () => {
     expect(heavy(undefined)).toBe(true);
   });
 
-  it('takes #stored when the body names a stored provider', () => {
-    const stored = (body: unknown) => splitWhen.stored!(call('POST /api/v3/downloadclient/test', { body }));
-    expect([stored({}), stored({ id: 0 }), stored({ id: null })]).toEqual([false, false, false]);
-    expect([stored({ id: 6 }), stored({ id: '6' })]).toEqual([true, true]);
+  const qbit = {
+    id: 6,
+    name: 'qBit',
+    implementation: 'QBittorrent',
+    fields: [
+      { name: 'host', value: 'qbittorrent.lan' },
+      { name: 'port', value: 8080 },
+      { name: 'urlBase', value: '' },
+      { name: 'useSsl', value: false },
+      { name: 'password', value: '********', privacy: 'password' },
+    ],
+  };
+  const KEY = 'POST /api/v3/downloadclient/test';
+  const withField = (name: string, value: unknown) => ({
+    ...qbit,
+    fields: qbit.fields.map((f) => (f.name === name ? { ...f, value } : f)),
+  });
+
+  it('takes #stored only when a stored connection is sent to another destination', async () => {
+    const seen: string[] = [];
+    const stored = splitWhen(async (path) => {
+      seen.push(path);
+      if (path === '/api/v3/downloadclient/6') return qbit;
+      throw new Error('404');
+    }).stored!;
+    const take = (body: unknown) => stored(call(KEY, { body }));
+    expect([await take({}), await take({ id: 0 }), await take({ id: null })]).toEqual([false, false, false]);
+    expect(await take(qbit)).toBe(false);
+    expect(await take({ ...withField('host', 'QBITTORRENT.LAN'), name: 'renamed' })).toBe(false);
+    expect(seen).toContain('/api/v3/downloadclient/6');
+    for (const body of [
+      withField('host', 'collector.example'),
+      withField('port', 443),
+      withField('useSsl', true),
+      withField('urlBase', '/x'),
+      { ...qbit, implementation: 'Transmission' },
+      { ...qbit, fields: qbit.fields.filter((f) => f.name !== 'host') },
+      { ...qbit, fields: [...qbit.fields, { name: 'proxyUrl', value: 'https://collector.example' }] },
+      { ...qbit, id: 99 },
+      { ...qbit, id: '6', fields: 'nope' },
+    ])
+      expect(await take(body), JSON.stringify(body)).toBe(true);
+    expect(await offline.stored!(call(KEY, { body: qbit }))).toBe(true);
+  });
+
+  it('takes #stored on a save whose destination changes, by the path id, and refuses another body id', async () => {
+    const get = async (path: string) => {
+      if (path === '/api/v3/downloadclient/6') return qbit;
+      throw new Error('404');
+    };
+    const PUT = 'PUT /api/v3/downloadclient/{id}';
+    const save = (body: unknown, id = '6') => splitWhen(get).stored!(call(PUT, { path: { id }, body }));
+    expect(await save(qbit)).toBe(false);
+    expect(await save({ ...qbit, id: undefined })).toBe(false);
+    // A new host with the stored password kept as ********: Servarr tests the client on save with that password.
+    expect(await save(withField('host', 'collector.example'))).toBe(true);
+    expect(await save({ ...qbit, id: undefined }, '99')).toBe(true);
+    await expect(save({ ...qbit, id: 7 })).rejects.toMatchObject({ code: 'INVALID_PARAMS' });
+    expect(await offline.stored!(call(PUT, { path: { id: '6' }, body: qbit }))).toBe(true);
+  });
+
+  it('takes #folder for a download client that writes files to a host folder', () => {
+    const folder = (body: unknown) => offline.folder!(call('POST /api/v3/downloadclient', { body }));
+    expect(folder(qbit)).toBe(false);
+    for (const body of [
+      { ...qbit, implementation: 'TorrentBlackhole' },
+      { ...qbit, implementation: 'usenetblackhole' },
+      { ...qbit, implementation: 'Pneumatic' },
+      { ...qbit, fields: [...qbit.fields, { name: 'watchFolder', value: '/w' }] },
+      { ...qbit, fields: [...qbit.fields, { name: 'nzbPath', value: '/n' }] },
+      { ...qbit, fields: [...qbit.fields, { name: 'x', type: 'path', value: '/x' }] },
+      { id: 6, name: 'no implementation' },
+      undefined,
+    ])
+      expect(folder(body), JSON.stringify(body)).toBe(true);
+  });
+
+  it('takes #script for a notification that runs a program, and testall while one is stored', async () => {
+    const script = (key: string, body: unknown, rows?: unknown) =>
+      splitWhen(async () => {
+        if (rows === undefined) throw new Error('down');
+        return rows;
+      }).script!(call(key, { body }));
+    const hook = { name: 'Hook', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example' }] };
+    expect(await script('POST /api/v3/notification', hook)).toBe(false);
+    for (const body of [
+      { name: 'Run', implementation: 'CustomScript', fields: [] },
+      { name: 'Run', implementation: 'customscript' },
+      { name: 'x', implementation: 'Other', fields: [{ name: 'Path', value: '/bin/sh' }] },
+      { name: 'x', implementation: 'Other', fields: [{ name: 'p', type: 'filePath', value: '/x' }] },
+      { id: 9, name: 'no implementation' },
+      undefined,
+    ])
+      expect(await script('PUT /api/v3/notification/{id}', body), JSON.stringify(body)).toBe(true);
+    const TESTALL = 'POST /api/v3/notification/testall';
+    expect(await script(TESTALL, undefined, [hook])).toBe(false);
+    expect(await script(TESTALL, undefined, [hook, { implementation: 'CustomScript' }])).toBe(true);
+    expect(await script(TESTALL, undefined, { not: 'a list' })).toBe(true);
+    expect(await script(TESTALL, undefined)).toBe(true);
   });
 });
 

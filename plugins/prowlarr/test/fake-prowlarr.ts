@@ -153,6 +153,12 @@ export function seed(): Record<string, Row[]> {
           field('headers', [{ key: 'Authorization', value: `Bearer ${SECRETS.headerToken}` }]),
         ],
       },
+      {
+        id: 30,
+        name: 'Post-import script',
+        implementation: 'CustomScript',
+        fields: [field('path', '/config/scripts/notify.sh'), field('arguments', '')],
+      },
     ],
     appprofile: [{ id: 11, name: 'Standard', enableRss: true, enableInteractiveSearch: true }],
     tag: [{ id: 12, label: 'flaresolverr' }],

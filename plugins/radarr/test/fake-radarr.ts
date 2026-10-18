@@ -103,6 +103,12 @@ export function seed(): Record<string, Row[]> {
           field('headers', [{ key: 'Authorization', value: `Bearer ${SECRETS.headerToken}` }]),
         ],
       },
+      {
+        id: 30,
+        name: 'Post-import script',
+        implementation: 'CustomScript',
+        fields: [field('path', '/config/scripts/notify.sh'), field('arguments', '')],
+      },
     ],
     metadata: [{ id: 10, name: 'Kodi (XBMC) / Emby', implementation: 'XbmcMetadata', fields: [] }],
     customformat: [{ id: 11, name: 'x265' }],

@@ -1,23 +1,23 @@
 [
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "autotagging",
     "key": "DELETE /api/v3/autotagging/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "blocklist",
     "key": "DELETE /api/v3/blocklist/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -31,33 +31,33 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "command",
     "key": "DELETE /api/v3/command/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "customfilter",
     "key": "DELETE /api/v3/customfilter/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "customformat",
     "key": "DELETE /api/v3/customformat/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -71,26 +71,26 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "delayprofile",
     "key": "DELETE /api/v3/delayprofile/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "downloadclient",
     "key": "DELETE /api/v3/downloadclient/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -107,13 +107,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "importlistexclusion",
     "key": "DELETE /api/v3/exclusions/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -127,16 +127,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "importlist",
     "key": "DELETE /api/v3/importlist/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -153,16 +153,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "indexer",
     "key": "DELETE /api/v3/indexer/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -179,36 +179,26 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "metadata",
     "key": "DELETE /api/v3/metadata/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "movie",
     "key": "DELETE /api/v3/movie/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
-  },
-  {
-    "classification": "write",
-    "classificationReason": "locked:destructive",
-    "group": "movie",
-    "key": "DELETE /api/v3/movie/{id}#delete-files",
-    "kind": "rest",
-    "locked": true,
-    "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -232,13 +222,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "moviefile",
     "key": "DELETE /api/v3/moviefile/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -252,36 +242,36 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "notification",
     "key": "DELETE /api/v3/notification/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "qualityprofile",
     "key": "DELETE /api/v3/qualityprofile/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "queue",
     "key": "DELETE /api/v3/queue/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -295,11 +285,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "releaseprofile",
     "key": "DELETE /api/v3/releaseprofile/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveResult": {
       "deep": true,
@@ -309,47 +299,47 @@
         "url"
       ]
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "remotepathmapping",
     "key": "DELETE /api/v3/remotepathmapping/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "rootfolder",
     "key": "DELETE /api/v3/rootfolder/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "backup",
     "key": "DELETE /api/v3/system/backup/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:DELETE",
     "group": "tag",
     "key": "DELETE /api/v3/tag/{id}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "read",
@@ -1612,16 +1602,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "downloadclient",
     "key": "POST /api/v3/downloadclient",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -1635,6 +1625,19 @@
       "/body/fields"
     ],
     "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "POST /api/v3/downloadclient/action/{name}#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1666,6 +1669,19 @@
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "downloadclient",
+    "key": "POST /api/v3/downloadclient/test#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
     "key": "POST /api/v3/downloadclient/test#stored",
     "kind": "rest",
     "locked": true,
@@ -1687,6 +1703,19 @@
       "/body/fields"
     ],
     "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "POST /api/v3/downloadclient#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
   },
   {
     "classification": "write",
@@ -1728,16 +1757,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "importlist",
     "key": "POST /api/v3/importlist",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -1819,16 +1848,16 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "indexer",
     "key": "POST /api/v3/indexer",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -1969,35 +1998,35 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "notification",
     "key": "POST /api/v3/notification",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "notification",
     "key": "POST /api/v3/notification/action/{name}",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/fields"
     ],
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "notification",
-    "key": "POST /api/v3/notification/test",
+    "key": "POST /api/v3/notification/action/{name}#script",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -2010,7 +2039,85 @@
     "classification": "write",
     "classificationReason": "locked:destructive",
     "group": "notification",
+    "key": "POST /api/v3/notification/action/{name}#stored",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "verb:POST",
+    "group": "notification",
+    "key": "POST /api/v3/notification/test",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "POST /api/v3/notification/test#script",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "POST /api/v3/notification/test#stored",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "verb:POST",
+    "group": "notification",
     "key": "POST /api/v3/notification/testall",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "POST /api/v3/notification/testall#script",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "POST /api/v3/notification#script",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -2069,11 +2176,11 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "releasepush",
     "key": "POST /api/v3/release/push",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
     "sensitiveParams": [
       "/body/downloadUrl",
@@ -2090,7 +2197,7 @@
         "url"
       ]
     },
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -2122,13 +2229,13 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:POST",
     "group": "rootfolder",
     "key": "POST /api/v3/rootfolder",
     "kind": "rest",
-    "locked": true,
+    "locked": false,
     "needsReview": false,
-    "typedConfirmation": true
+    "typedConfirmation": false
   },
   {
     "classification": "write",
@@ -2349,9 +2456,35 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:PUT",
     "group": "downloadclient",
     "key": "PUT /api/v3/downloadclient/{id}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "PUT /api/v3/downloadclient/{id}#folder",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "downloadclient",
+    "key": "PUT /api/v3/downloadclient/{id}#stored",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -2385,9 +2518,22 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:PUT",
     "group": "importlist",
     "key": "PUT /api/v3/importlist/{id}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "importlist",
+    "key": "PUT /api/v3/importlist/{id}#stored",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -2411,9 +2557,22 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:PUT",
     "group": "indexer",
     "key": "PUT /api/v3/indexer/{id}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "indexer",
+    "key": "PUT /api/v3/indexer/{id}#stored",
     "kind": "rest",
     "locked": true,
     "needsReview": false,
@@ -2510,9 +2669,35 @@
   },
   {
     "classification": "write",
-    "classificationReason": "locked:destructive",
+    "classificationReason": "verb:PUT",
     "group": "notification",
     "key": "PUT /api/v3/notification/{id}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": false
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "PUT /api/v3/notification/{id}#script",
+    "kind": "rest",
+    "locked": true,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/body/fields"
+    ],
+    "typedConfirmation": true
+  },
+  {
+    "classification": "write",
+    "classificationReason": "locked:destructive",
+    "group": "notification",
+    "key": "PUT /api/v3/notification/{id}#stored",
     "kind": "rest",
     "locked": true,
     "needsReview": false,

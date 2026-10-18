@@ -1,7 +1,7 @@
 import { INSTANCE } from './fake-plex.js';
 
-/** One call per locked key (every key plugin.yaml locks by name, every split twin, and a sample of the deletes the
- * `DELETE *` rule locks), and the literal an approver must type for it against the fake Plex. */
+/** One call per locked key (every key plugin.yaml locks by name and every split twin), and the literal an approver
+ * must type for it against the fake Plex. */
 export interface LockCase {
   /** Unique label; the resolved key unless one key has several cases. */
   name: string;
@@ -26,8 +26,6 @@ export const LOCK_CASES: LockCase[] = [
       'Movies',
     ),
   ),
-  lock('PUT /library/sections/{sectionId}/analyze', { method: 'PUT', path: '/library/sections/2/analyze' }, 'TV Shows'),
-  lock('GET /library/sections/{sectionId}/unmatch', { method: 'GET', path: '/library/sections/1/unmatch' }, 'Movies'),
   ...(['GET', 'POST'] as const).map((method) =>
     lock(
       `${method} /library/sections/{sectionId}/optimize`,
@@ -58,17 +56,16 @@ export const LOCK_CASES: LockCase[] = [
     { method: 'PUT', path: '/library/sections/1/all', query: { type: 1, 'contentRating.value': 'G' } },
     'Movies',
   ),
-  lock('DELETE /library/metadata/{ids}', { method: 'DELETE', path: '/library/metadata/101' }, 'Inception'),
+  lock('DELETE /library/metadata/{ids}#many', { method: 'DELETE', path: '/library/metadata/101,102' }, '2 items'),
   lock(
-    'DELETE /library/metadata/{ids}',
-    { method: 'DELETE', path: '/library/metadata/101,102' },
+    'DELETE /library/metadata/{ids}/media/{mediaItem}#many',
+    { method: 'DELETE', path: '/library/metadata/101,102/media/5' },
     '2 items',
-    'DELETE /library/metadata/{ids} (two items)',
   ),
   lock(
-    'DELETE /library/metadata/{ids}/media/{mediaItem}',
-    { method: 'DELETE', path: '/library/metadata/101/media/5' },
-    'Inception',
+    'DELETE /library/metadata/{ids}/marker/{marker}#many',
+    { method: 'DELETE', path: '/library/metadata/101,102/marker/9' },
+    '2 items',
   ),
   lock(
     'POST /library/metadata/{ids}/extras',
@@ -96,15 +93,6 @@ export const LOCK_CASES: LockCase[] = [
   ),
   lock('PUT /updater/apply', { method: 'PUT', path: '/updater/apply' }, INSTANCE),
   lock('POST /butler', { method: 'POST', path: '/butler' }, INSTANCE),
-  lock('POST /butler/{butlerTask}', { method: 'POST', path: '/butler/BackupDatabase' }, 'BackupDatabase'),
-  lock(
-    'POST /status/sessions/terminate',
-    { method: 'POST', path: '/status/sessions/terminate', query: { sessionId: 'sess-1', reason: 'Maintenance' } },
-    'Arrival',
-  ),
-  lock('DELETE /playlists', { method: 'DELETE', path: '/playlists', query: { ratingKey: 401 } }, 'Road Trip'),
-  lock('DELETE /playlists/{playlistId}', { method: 'DELETE', path: '/playlists/401' }, 'Road Trip'),
-  lock('DELETE /playlists/{playlistId}/items', { method: 'DELETE', path: '/playlists/401/items' }, 'Road Trip'),
   lock(
     'POST /media/providers',
     { method: 'POST', path: '/media/providers', query: { url: 'https://provider.example/p?key=provider-key-999999' } },
@@ -125,14 +113,6 @@ export const LOCK_CASES: LockCase[] = [
     { method: 'GET', path: '/library/sections/1/all', query: { asyncAugmentMetadata: true } },
     'Movies',
   ),
-  lock('DELETE /butler', { method: 'DELETE', path: '/butler' }, INSTANCE),
-  lock('DELETE /library/caches', { method: 'DELETE', path: '/library/caches' }, INSTANCE),
-  lock(
-    'DELETE /library/sections/{sectionId}/collection/{collectionId}',
-    { method: 'DELETE', path: '/library/sections/1/collection/201' },
-    'Nolan Films',
-  ),
-  lock('DELETE /activities/{activityId}', { method: 'DELETE', path: '/activities/act-123' }, 'act-123'),
   lock(
     'GET /library/metadata/{ids}/subtitles',
     {
@@ -154,7 +134,6 @@ export const LOCK_CASES: LockCase[] = [
     'Movies',
     'GET /library/sections/{sectionId}/all#refresh (refreshAnalysis)',
   ),
-  lock('GET /playQueues/{playQueueId}#own', { method: 'GET', path: '/playQueues/55', query: { own: 1 } }, '55'),
   ...(['move', 'edit', 'prefs'] as const).map((action) =>
     lock(
       `PUT /library/sections/{sectionId}/${action}`,
@@ -186,5 +165,21 @@ export const LOCK_CASES: LockCase[] = [
       { method: 'PUT', path: `/media/grabbers/devices/dev-1/${action}` },
       'dev-1',
     ),
+  ),
+  lock('DELETE /livetv/dvrs/{dvrId}', { method: 'DELETE', path: '/livetv/dvrs/7' }, '7'),
+  lock(
+    'DELETE /livetv/dvrs/{dvrId}/lineups',
+    { method: 'DELETE', path: '/livetv/dvrs/7/lineups', query: { lineup: 'x' } },
+    '7',
+  ),
+  lock(
+    'DELETE /livetv/dvrs/{dvrId}/devices/{deviceId}',
+    { method: 'DELETE', path: '/livetv/dvrs/7/devices/dev-1' },
+    '7',
+  ),
+  lock(
+    'DELETE /media/grabbers/devices/{deviceId}',
+    { method: 'DELETE', path: '/media/grabbers/devices/dev-1' },
+    'dev-1',
   ),
 ];

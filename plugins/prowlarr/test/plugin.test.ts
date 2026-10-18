@@ -66,7 +66,7 @@ describe('Prowlarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 118,
+      count: 134,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -129,6 +129,41 @@ describe('Prowlarr plugin', () => {
     );
   });
 
+  it('takes #stored for a download client test only when the destination changes', async () => {
+    const key = async (body: object) =>
+      (await resolve({ method: 'POST', path: '/api/v1/downloadclient/test', body })).key;
+    const stored = structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    const fields = stored.fields as { name: string; value: unknown }[];
+    expect(await key(stored)).toBe('POST /api/v1/downloadclient/test');
+    const moved = fields.map((f) => (f.name === 'host' ? { ...f, value: 'collector.example' } : f));
+    expect(await key({ ...stored, fields: moved })).toBe('POST /api/v1/downloadclient/test#stored');
+    expect(await key({ ...stored, id: 404 })).toBe('POST /api/v1/downloadclient/test#stored');
+  });
+
+  it('takes #stored for an application test only when the destination changes', async () => {
+    const key = async (body: object) =>
+      (await resolve({ method: 'POST', path: '/api/v1/applications/test', body })).key;
+    const app = structuredClone(fake.store.get('applications')!.get(4)!);
+    expect(await key(app)).toBe('POST /api/v1/applications/test');
+    const fields = app.fields as { name: string; value: unknown }[];
+    const moved = fields.map((f) => (f.name === 'baseUrl' ? { ...f, value: 'http://collector.example' } : f));
+    expect(await key({ ...app, fields: moved })).toBe('POST /api/v1/applications/test#stored');
+  });
+
+  it('takes #script for a notification that runs a program', async () => {
+    const key = async (request: object) => (await resolve(request)).key;
+    const webhook = { name: 'New', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example' }] };
+    expect(await key({ method: 'POST', path: '/api/v1/notification', body: webhook })).toBe(
+      'POST /api/v1/notification',
+    );
+    expect(
+      await key({ method: 'POST', path: '/api/v1/notification', body: { ...webhook, implementation: 'CustomScript' } }),
+    ).toBe('POST /api/v1/notification#script');
+    expect(await key({ method: 'POST', path: '/api/v1/notification/testall' })).toBe(
+      'POST /api/v1/notification/testall#script',
+    );
+  });
+
   it('refuses a write carrying a masked value from an earlier result', async () => {
     await expect(
       resolve({ method: 'PUT', path: '/api/v1/config/host/1', body: { id: 1, password: '[REDACTED]' } }),
@@ -141,10 +176,13 @@ describe('Prowlarr plugin', () => {
       resolve({ method: 'POST', path: '/api/v1/search', body: { guid: 'https://privatehd.example/[REDACTED]' } }),
     ).rejects.toMatchObject({ code: ErrorCodes.InvalidParams });
     // Prowlarr's own mask keeps the stored secret, so it passes.
-    const kept = [{ name: 'apiKey', value: '********', privacy: 'apiKey' }];
-    await expect(
-      resolve({ method: 'PUT', path: '/api/v1/applications/4', body: { id: 4, name: 'Sonarr', fields: kept } }),
-    ).resolves.toMatchObject({ key: 'PUT /api/v1/applications/{id}' });
+    const kept = structuredClone(fake.store.get('applications')!.get(4)!);
+    kept.fields = (kept.fields as { name: string; value: unknown }[]).map((f) =>
+      f.name === 'apiKey' ? { ...f, value: '********' } : f,
+    );
+    await expect(resolve({ method: 'PUT', path: '/api/v1/applications/4', body: kept })).resolves.toMatchObject({
+      key: 'PUT /api/v1/applications/{id}',
+    });
   });
 
   it('names the connections and destinations a call acts on', async () => {
@@ -174,8 +212,12 @@ describe('Prowlarr plugin', () => {
       implementation: 'Cardigann',
       fields: [{ name: 'baseUrl', value: 'https://collector.example/x' }],
     };
+    // A stored indexer is named by its stored name; a new one by the body's, escaped.
     await expect(targets('POST /api/v1/indexer/test#stored', { body })).resolves.toEqual([
-      { kind: 'indexer', id: '2', name: 'indexer PrivateHD\\u202e (Cardigann) → https://collector.example' },
+      { kind: 'indexer', id: '2', name: 'indexer PrivateHD (Cardigann) → https://collector.example' },
+    ]);
+    await expect(targets('POST /api/v1/indexer', { body: { ...body, id: undefined } })).resolves.toEqual([
+      { kind: 'indexer', id: 'new', name: 'indexer PrivateHD\\u202e (Cardigann) → https://collector.example' },
     ]);
     await expect(targets('GET /api/v1/indexer/{id}', { path: { id: '1' } })).resolves.toEqual([]);
   });
@@ -190,7 +232,8 @@ describe('Prowlarr plugin', () => {
     expect(text).toMatch(
       /^Prowlarr POST \/api\/v1\/applications on applications X \(Radarr\) → http:\/\/radarr\.lan:7878 \{/,
     );
-    expect(confirmLiteral).toBe('X');
+    // A new download client is a regular write: core approves it without a typed literal.
+    expect(confirmLiteral).toBeUndefined();
   });
 
   it('masks provider and Cardigann secrets in results, and link-shaped release guids', async () => {
@@ -412,11 +455,11 @@ describe('case-insensitive binding', () => {
   it('takes the locked twin whatever the case of the id or command name', async () => {
     const stored = await resolve({
       method: 'POST',
-      path: '/api/v1/downloadclient/test',
+      path: '/api/v1/indexer/test',
       body: { Id: 6, Name: 'x', Fields: [] },
     });
     expect(stored).toMatchObject({
-      key: 'POST /api/v1/downloadclient/test#stored',
+      key: 'POST /api/v1/indexer/test#stored',
       params: { body: { id: 6, name: 'x', fields: [] } },
     });
     expect(await key({ method: 'POST', path: '/api/v1/command', body: { Name: 'ApplicationIndexerSync' } })).toBe(

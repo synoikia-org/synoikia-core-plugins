@@ -56,10 +56,22 @@ const URL_SECRETS = ['trailer-signature-888888', 'provider-key-999999', 'subtitl
 
 describe('Plex end to end (fake Plex)', () => {
   it('syncs the PMS operations of the pinned spec', () => {
-    expect(h.operations()).toHaveLength(306);
+    expect(h.operations()).toHaveLength(309);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches.map((f) => f.ref)).toContain(SPEC_REF);
     expect(h.operation('PUT /:/prefs')).toMatchObject({ locked: true, typedConfirmation: true });
+  });
+
+  it('reads a play queue at Read, and asks before taking it over with own', async () => {
+    allow('GET /playQueues/{playQueueId}', 'read');
+    expect(h.operation('GET /playQueues/{playQueueId}')).toMatchObject({ classification: 'read', locked: false });
+    const read = await h.execute(call({ path: '/playQueues/55' }));
+    expect(read).toMatchObject({ ok: true });
+    expect(h.operation('GET /playQueues/{playQueueId}#own')).toMatchObject({
+      classification: 'write',
+      locked: false,
+      typedConfirmation: false,
+    });
   });
 
   it('lists libraries, recently added and searches at Read', async () => {
@@ -91,6 +103,31 @@ describe('Plex end to end (fake Plex)', () => {
     h.setOperationLevel('PUT /:/scrobble', null);
     expect(r.ok, JSON.stringify(r)).toBe(true);
     expect(shown[0]).toContain('Plex PUT /:/scrobble');
+  });
+
+  describe('single-item writes are regular writes: approved at Ask, no literal typed', () => {
+    it.each([
+      ['DELETE /library/metadata/{ids}', { method: 'DELETE', path: '/library/metadata/101' }],
+      ['DELETE /playlists/{playlistId}', { method: 'DELETE', path: '/playlists/401' }],
+      ['DELETE /library/caches', { method: 'DELETE', path: '/library/caches' }],
+      [
+        'POST /status/sessions/terminate',
+        { method: 'POST', path: '/status/sessions/terminate', query: { sessionId: 'sess-1' } },
+      ],
+    ])('%s', async (key, request) => {
+      expect(h.operation(key)).toMatchObject({ locked: false, classification: 'write' });
+      h.setOperationLevel(key, 'ask');
+      let literal: unknown = 'unset';
+      const r = await h.execute(call(request), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          a.approve();
+        },
+      });
+      h.setOperationLevel(key, null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal ?? null).toBeNull();
+    });
   });
 
   describe('every locked operation needs its literal typed', () => {

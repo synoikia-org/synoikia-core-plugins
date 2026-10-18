@@ -3,7 +3,7 @@
 # paths, `/api/v3` included (`GET /api/v3/series/{id}`); GET reads, other verbs write, anything unlisted is a write.
 
 defaults:
-  # A locked operation without its own literal (a DELETE a newer spec adds) confirms on its path id.
+  # A locked operation without its own literal confirms on its path id, else the instance name.
   confirm: [{ custom: path-id }, instance]
   timeouts: { request: 15000, lookup: 10000 }
 
@@ -27,53 +27,49 @@ exclude:
   - 'POST /api/v3/system/backup/restore/upload'
 
 rules:
-  # Irreversible, bulk, instance-wide, or sends credentials or data to a destination: a human types a confirmation.
+  # Bulk, instance-wide, sign-in, or runs a program: a human types a confirmation. Single-item writes and deletes
+  # are regular writes.
   - match:
-      - 'DELETE /api/v3/series/{id}'
       - 'PUT /api/v3/series/editor'
       - 'DELETE /api/v3/series/editor'
       - 'POST /api/v3/seasonpass'
-      - 'DELETE /api/v3/episodefile/{id}'
       - 'DELETE /api/v3/episodefile/bulk'
       - 'PUT /api/v3/config/host/{id}'
       # `useScriptImport` + `scriptImportPath` run any program on every import; also chmod, chown, recycle bin.
       - 'PUT /api/v3/config/mediamanagement/{id}'
-      # A root folder lists its unmapped subfolders: one at `/` lists the host's top-level directories.
-      - 'POST /api/v3/rootfolder'
       - 'POST /api/v3/system/shutdown'
       - 'POST /api/v3/system/restart'
       - 'POST /api/v3/system/backup/restore/{id}'
-      - 'DELETE /api/v3/system/backup/{id}'
-      - 'POST /api/v3/downloadclient'
-      - 'PUT /api/v3/downloadclient/{id}'
-      - 'POST /api/v3/indexer'
-      - 'PUT /api/v3/indexer/{id}'
-      - 'POST /api/v3/importlist'
-      - 'PUT /api/v3/importlist/{id}'
-      - 'POST /api/v3/notification'
-      - 'PUT /api/v3/notification/{id}'
-      # Sends a notification to whatever recipient the body names, or to every configured one.
-      - 'POST /api/v3/notification/test'
-      - 'POST /api/v3/notification/testall'
-      - 'POST /api/v3/notification/action/{name}'
-      # Sonarr fetches the release from any URL and hands it to a download client.
-      - 'POST /api/v3/release/push'
     locked: true
-  # A delete a newer spec adds is locked until reviewed.
-  - match: 'DELETE *'
+  # Every bulk or editor delete, including one a newer spec adds.
+  - match: ['DELETE */bulk', 'DELETE */editor']
     locked: true
-  # Not in v4's spec; Servarr's root folder PUT can change the path, so one a newer spec adds is locked.
-  - match: 'PUT /api/v3/rootfolder/*'
+  # Resets the UI sign-in; only newer specs have it, so it is a pattern, not a required key.
+  - match: 'POST /reset-password*'
     locked: true
 
-  # Locked twins picked per call (src/plugin.ts): deleting or moving files on disk, a command not in
-  # `plugin.quickCommands`, a provider test or action that reuses the stored credentials (`id` in the body).
-  - match: ['DELETE /api/v3/series/{id}', 'DELETE /api/v3/series/editor']
+  # Locked twins picked per call (src/catalog.ts): deleting files in bulk, moving files on disk, a command not in
+  # `plugin.quickCommands`, a notification that runs a program, a download client that writes to a host folder,
+  # and a provider save, test or action that sends the stored credentials to a destination other than the stored one.
+  - match: 'DELETE /api/v3/series/editor'
     split: delete-files
   - match: 'PUT /api/v3/series/{id}'
     split: move-files
   - match: 'POST /api/v3/command'
     split: heavy
+  - match:
+      - 'POST /api/v3/notification'
+      - 'PUT /api/v3/notification/{id}'
+      - 'POST /api/v3/notification/test'
+      - 'POST /api/v3/notification/testall'
+      - 'POST /api/v3/notification/action/{name}'
+    split: script
+  - match:
+      - 'POST /api/v3/downloadclient'
+      - 'PUT /api/v3/downloadclient/{id}'
+      - 'POST /api/v3/downloadclient/test'
+      - 'POST /api/v3/downloadclient/action/{name}'
+    split: folder
   - match:
       - 'POST /api/v3/downloadclient/test'
       - 'POST /api/v3/downloadclient/action/{name}'
@@ -81,9 +77,17 @@ rules:
       - 'POST /api/v3/indexer/action/{name}'
       - 'POST /api/v3/importlist/test'
       - 'POST /api/v3/importlist/action/{name}'
+      - 'POST /api/v3/notification/test'
+      - 'POST /api/v3/notification/action/{name}'
+      - 'PUT /api/v3/downloadclient/{id}'
+      - 'PUT /api/v3/indexer/{id}'
+      - 'PUT /api/v3/importlist/{id}'
+      - 'PUT /api/v3/notification/{id}'
     split: stored
+
+  # What each locked, split or twin operation does, and why it matters.
   - match: '*#delete-files'
-    description: '{base} with deleteFiles: also deletes the files from disk. Locked.'
+    description: '{base} with deleteFiles: also deletes the files of every listed series from disk. Locked.'
     summaryNote: '(also deletes the files from disk)'
   - match: '*#move-files'
     description: '{base} with moveFiles: moves the series folder on disk. Locked.'
@@ -93,21 +97,83 @@ rules:
       Starting a command that renames, moves or deletes files, clears data, updates, restarts or reconfigures
       Sonarr, or one not reviewed: locked.
     summaryNote: '(renames, moves or deletes files, clears data, or changes the application)'
+  - match: '*#script'
+    description: >-
+      {base} for a notification that runs a program (Custom Script, or a path or script field), or a test of every
+      notification while one does: Sonarr runs the program on its host. Locked.
+    summaryNote: '(runs a program on the Sonarr host)'
+  - match: '*#folder'
+    description: >-
+      {base} for a download client that writes files to a host folder (Torrent or Usenet Blackhole, Pneumatic, or a
+      folder or path field): Sonarr reads and writes that folder. Locked.
+    summaryNote: '(writes files to a folder on the Sonarr host)'
   - match: '*#stored'
     description: >-
-      {base} for a stored connection: Sonarr fills in its saved password or API key and contacts the host in the
-      body. Locked.
-    summaryNote: '(sends the stored credentials to the host in the body)'
-  - match: ['DELETE /api/v3/episodefile/{id}', 'DELETE /api/v3/episodefile/bulk']
-    summaryNote: '(deletes the files from disk)'
+      {base} for a stored connection whose host, port, URL, SSL or type changes (a save tests it too): Sonarr fills in the saved password
+      or API key and sends it to the new destination. Locked.
+    summaryNote: '(sends the stored credentials to a destination other than the stored one)'
+  - match: 'PUT /api/v3/series/editor'
+    description: >-
+      Changes many series at once: monitoring, quality profile, tags, root folder (moveFiles moves their folders).
+      Locked as a bulk edit.
+  - match: 'DELETE /api/v3/series/editor'
+    description: 'Deletes many series at once; with deleteFiles it takes the #delete-files twin. Locked as a bulk delete.'
   - match: 'POST /api/v3/seasonpass'
+    description: 'Changes series and season monitoring for many series at once. Locked as a bulk edit.'
     summaryNote: '(changes series and season monitoring in bulk)'
+  - match: 'DELETE /api/v3/episodefile/bulk'
+    description: 'Deletes many episode files from disk at once. Locked as a bulk delete.'
+    summaryNote: '(deletes the files from disk)'
+  - match: ['DELETE */bulk', 'DELETE */editor']
+    description: '{base}: deletes every item the body lists in one call. Locked as a bulk delete.'
   - match: 'PUT /api/v3/config/host/{id}'
+    description: >-
+      Changes the host settings: sign-in, API key, bind address, port, URL base, SSL, proxy and update script.
+      Locked: it can lock users out or expose Sonarr.
     summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
   - match: 'PUT /api/v3/config/mediamanagement/{id}'
+    description: >-
+      Changes media management: the import script, file permissions and owner, and the recycle bin. Locked: the
+      import script runs any program on every import.
     summaryNote: '(import script, file permissions and owner, recycle bin)'
+  - match: 'POST /api/v3/system/shutdown'
+    description: 'Shuts Sonarr down until someone starts it again. Locked.'
+  - match: 'POST /api/v3/system/restart'
+    description: 'Restarts Sonarr, stopping running commands and imports. Locked.'
   - match: 'POST /api/v3/system/backup/restore/{id}'
+    description: 'Restores a stored backup over the database and settings, then restarts. Locked.'
     summaryNote: '(replaces the database and settings, then restarts)'
+  - match: 'POST /reset-password*'
+    description: 'Resets the web UI sign-in password, or asks for a reset. Locked: it changes who can sign in.'
+    summaryNote: '(resets the UI login)'
+    sensitiveParams: [/body/password, /body/passwordConfirmation, /body/token]
+  - match: 'PUT /api/v3/series/{id}'
+    description: 'Changes a series: monitoring, quality profile, tags, path. With moveFiles it takes the #move-files twin.'
+  - match: 'POST /api/v3/command'
+    description: 'Runs a command (search, refresh, rescan, backup). One not in the quick list takes the #heavy twin.'
+  - match:
+      - 'POST /api/v3/downloadclient'
+      - 'PUT /api/v3/downloadclient/{id}'
+      - 'POST /api/v3/downloadclient/test'
+      - 'POST /api/v3/downloadclient/action/{name}'
+    description: >-
+      {base}: a client that writes files to a host folder takes the #folder twin, and a stored one sent to a new
+      destination the #stored twin.
+  - match: ['POST /api/v3/notification', 'POST /api/v3/notification/testall']
+    description: '{base}: a notification that runs a program takes the #script twin.'
+  - match:
+      ['PUT /api/v3/notification/{id}', 'POST /api/v3/notification/test', 'POST /api/v3/notification/action/{name}']
+    description: >-
+      {base}: a notification that runs a program takes the #script twin, and a stored one sent to a new destination
+      the #stored twin.
+  - match:
+      - 'POST /api/v3/indexer/test'
+      - 'POST /api/v3/indexer/action/{name}'
+      - 'PUT /api/v3/indexer/{id}'
+      - 'POST /api/v3/importlist/test'
+      - 'POST /api/v3/importlist/action/{name}'
+      - 'PUT /api/v3/importlist/{id}'
+    description: '{base}: a stored connection sent to a new destination (path or body `id`) takes the #stored twin.'
 
   # The literal an approver types: the stored item's name, never a body field the model writes except on create.
   - match: '* /api/v3/series/{id}*'
@@ -115,8 +181,6 @@ rules:
       lookup: { op: 'GET /api/v3/series/{id}', args: [{ id: { $param: /path/id } }], field: title }
   - match: ['* /api/v3/series/editor*', 'POST /api/v3/seasonpass', 'DELETE */bulk']
     confirm: [{ custom: count }, instance]
-  - match: ['POST /api/v3/rootfolder', 'PUT /api/v3/rootfolder/*']
-    confirm: { param: /body/path }
   - match: '* /api/v3/system/backup/*'
     confirm:
       lookup: { op: 'GET /api/v3/system/backup', find: { field: id, equals: { $param: /path/id } }, field: name }
@@ -125,32 +189,11 @@ rules:
       - 'PUT /api/v3/config/mediamanagement/{id}'
       - 'POST /api/v3/system/shutdown'
       - 'POST /api/v3/system/restart'
-      - 'POST /api/v3/notification/testall'
-      - 'POST /api/v3/release/push'
+      - 'POST /reset-password*'
+      - 'POST /api/v3/notification/testall#script'
     confirm: instance
   - match: '*#heavy'
     confirm: [{ custom: command }, instance]
-  - match:
-      - 'POST /api/v3/downloadclient'
-      - 'POST /api/v3/indexer'
-      - 'POST /api/v3/importlist'
-      - 'POST /api/v3/notification'
-    confirm: { param: /body/name }
-  - match: '* /api/v3/downloadclient/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/downloadclient/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v3/indexer/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/indexer/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v3/importlist/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/importlist/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v3/notification/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v3/metadata/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/metadata/{id}', args: [{ id: { $param: /path/id } }], field: name }
   - match: 'POST /api/v3/downloadclient/*#stored'
     confirm:
       lookup: { op: 'GET /api/v3/downloadclient/{id}', args: [{ id: { $param: /body/id } }], field: name }
@@ -160,49 +203,29 @@ rules:
   - match: 'POST /api/v3/importlist/*#stored'
     confirm:
       lookup: { op: 'GET /api/v3/importlist/{id}', args: [{ id: { $param: /body/id } }], field: name }
-  - match: ['POST /api/v3/notification/test', 'POST /api/v3/notification/action/{name}']
+  - match: 'PUT /api/v3/downloadclient/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v3/downloadclient/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v3/indexer/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v3/indexer/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v3/importlist/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v3/importlist/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: 'PUT /api/v3/notification/{id}#*'
+    confirm:
+      lookup: { op: 'GET /api/v3/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match: ['POST /api/v3/downloadclient#folder', 'POST /api/v3/downloadclient/*#folder']
+    confirm:
+      - lookup: { op: 'GET /api/v3/downloadclient/{id}', args: [{ id: { $param: /body/id } }], field: name }
+      - param: /body/name
+      - instance
+  - match:
+      ['POST /api/v3/notification#script', 'POST /api/v3/notification/*#script', 'POST /api/v3/notification/*#stored']
     confirm:
       - lookup: { op: 'GET /api/v3/notification/{id}', args: [{ id: { $param: /body/id } }], field: name }
+      - param: /body/name
       - instance
-  - match: 'DELETE /api/v3/tag/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/tag/{id}', args: [{ id: { $param: /path/id } }], field: label }
-  - match: 'DELETE /api/v3/qualityprofile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/qualityprofile/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v3/languageprofile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/languageprofile/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v3/customformat/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/customformat/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v3/releaseprofile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/releaseprofile/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v3/autotagging/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/autotagging/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v3/customfilter/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/customfilter/{id}', args: [{ id: { $param: /path/id } }], field: label }
-  - match: 'DELETE /api/v3/rootfolder/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/rootfolder/{id}', args: [{ id: { $param: /path/id } }], field: path }
-  - match: 'DELETE /api/v3/remotepathmapping/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/remotepathmapping/{id}', args: [{ id: { $param: /path/id } }], field: remotePath }
-  - match: 'DELETE /api/v3/importlistexclusion/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/importlistexclusion/{id}', args: [{ id: { $param: /path/id } }], field: title }
-  - match: 'DELETE /api/v3/episodefile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/episodefile/{id}', args: [{ id: { $param: /path/id } }], field: relativePath }
-  - match: 'DELETE /api/v3/command/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/command/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v3/queue/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v3/queue/details', find: { field: id, equals: { $param: /path/id } }, field: title }
 
   # Provider settings carry passwords, API keys and webhook URLs with tokens in `fields[].value`; the approver
   # sees the destination host as a target instead (src/targets.ts).
@@ -261,6 +284,8 @@ plugin:
   # Request keys the rules, targets and pointers read, in Sonarr's spelling. Sonarr binds query and body keys
   # case-insensitively, so `MoveFiles` or `Id` is renamed to this spelling, and two keys that differ only in case
   # are refused (src/request.ts).
+  # Top-level body keys that also decide where a provider connects, for the #stored check (src/stored.ts).
+  destinationKeys: []
   canonicalKeys:
     - id
     - name
@@ -288,3 +313,4 @@ plugin:
     - passwordConfirmation
     - proxyPassword
     - sslCertPassword
+    - token

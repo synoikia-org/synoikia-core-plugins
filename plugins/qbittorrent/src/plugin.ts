@@ -80,9 +80,6 @@ const lines = (v: unknown, sep: string) =>
 /** When a call takes a locked twin (plugin.yaml `split`). */
 const SPLIT_WHEN: Record<string, (params: CallParams) => boolean> = {
   'with-files': (p) => p.deleteFiles === true,
-  remove: (p) => p.shareLimitAction === 'Remove' || p.shareLimitAction === 'RemoveWithContent',
-  all: (p) => p.hashes === 'all',
-  paths: (p) => Boolean(p.savePath) || Boolean(p.downloadPath) || p.downloadPathEnabled === true,
 };
 
 const MAX_URLS = 100;
@@ -224,10 +221,6 @@ export function createQbittorrentPlugin(opts: QbittorrentOptions = {}): PluginHa
         custom: {
           host: ({ targets }) => (hasMissing(targets) ? undefined : host()),
           torrents: ({ targets }) => literals.torrents(targets),
-          categories: ({ targets }) => literals.categories(targets),
-          tags: ({ targets }) => literals.tags(targets),
-          rssItem: ({ targets }) => literals.rssItem(targets),
-          rssRule: ({ targets }) => literals.rssRule(targets),
           searchPlugins: ({ targets }) => literals.searchPlugins(targets),
         },
       });
