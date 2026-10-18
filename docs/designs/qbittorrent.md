@@ -75,6 +75,8 @@ Literals come from the targets, which the plugin reads back from qBittorrent (`t
 
 `src/policy.ts` lists the locks that must exist. The plugin refuses to load when one is missing or not locked, or when a rule names an operation `plugin.yaml` does not declare.
 
+`torrents.setShareLimits` is a regular write, `RemoveWithContent` included (owner decision): a limit that removes torrents with their data when reached is approved like any other write, and the summary spells the action out.
+
 Regular writes still go through core's approval: an admin decides at the group level. Their summaries keep the destination first: the path data moves to, the trackers and feeds by origin, and the torrents by name. Torrents in automatic management move when their category changes, so every `setCategory` summary names the path they move to, clearing included.
 
 Category names: 5.0 and 5.1 accept `../../root/.ssh` as a name (`Session::isValidCategoryName` refuses only `\`, a leading or trailing `/` and `//`), and the implicit save path keeps the `..`, which `Path`'s `QDir::cleanPath` then resolves out of the save root. So wherever a call names a category (`createCategory`, `editCategory`, `setCategory`, `add`, `removeCategories`, and `assignedCategory` or `torrentParams.category` in an `rss.setRule` definition) the plugin refuses a name with an empty, `.` or `..` segment (split on `/`, whatever the subcategory setting), a leading `/`, a backslash or a control character, and a segment that trims to `.` or `..` or ends in a space or dot (Win32 path normalization drops those, so `.. ` and `x.` act as `..` and `x`). An empty name still means no category.
