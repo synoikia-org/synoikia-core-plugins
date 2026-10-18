@@ -130,13 +130,18 @@ describe('Mealie catalog (pinned spec)', () => {
       '/api/pantry/{item_id}': { delete: { summary: 'Delete' } },
       '/api/pantry/bulk': { delete: { summary: 'Delete Many' } },
       '/api/pantry/bulk-actions/delete': { post: { summary: 'Bulk Delete' } },
+      '/api/admin/pantries/{item_id}': { delete: { summary: 'Delete One' } },
     };
     const ops = buildCatalog({ ...spec, paths }).operations;
     expect(ops.find((o) => o.key === 'DELETE /api/pantry/{item_id}')).toMatchObject({
       locked: false,
       classification: 'write',
     });
-    for (const key of ['DELETE /api/pantry/bulk', 'POST /api/pantry/bulk-actions/delete'])
+    for (const key of [
+      'DELETE /api/pantry/bulk',
+      'POST /api/pantry/bulk-actions/delete',
+      'DELETE /api/admin/pantries/{item_id}',
+    ])
       expect(
         ops.find((o) => o.key === key),
         key,

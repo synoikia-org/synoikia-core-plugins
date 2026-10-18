@@ -81,6 +81,9 @@ rules:
   # A bulk delete a newer spec adds.
   - match: ['DELETE */bulk*', '* */bulk-actions/delete*']
     locked: true
+  # Admin-area deletes remove accounts, whole tenants or backups, also one a newer spec adds.
+  - match: 'DELETE /api/admin/*'
+    locked: true
 
   # The literal an approver types: the thing the operation affects.
   # The stored user, never the body's username: the model writes the body.

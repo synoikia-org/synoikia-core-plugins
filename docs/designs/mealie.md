@@ -24,24 +24,25 @@ Excluded (the model has no business calling them, or they carry raw files and ba
 
 A lock adds a typed confirmation to core's approval. Single-item deletes are regular writes. The literal is what the operation affects:
 
-| Operations | Why | Literal |
-| --- | --- | --- |
-| Admin users: create, update, delete, unlock, password-reset token | Account and admin rights; a reset token takes over an account | username (lookup), email, or the group name |
-| Admin groups and households: create, update, delete; admin AI providers | Deleting one drops its recipes, plans and members | group or household name (lookup) |
-| `POST /api/admin/backups/{file_name}/restore`, `DELETE …/{file_name}` | Restore replaces every group, user and recipe | the backup file name |
-| `POST /api/admin/maintenance/clean/*` | Deletes files instance-wide | group name |
-| `POST /api/admin/email` | Sends mail from the instance to any address | the address |
-| `POST /api/recipes/bulk-actions/delete`, `DELETE …/export/purge`, `DELETE /api/households/shopping/items` (`ids`) | Bulk, irreversible | group name |
-| `DELETE */bulk*`, `* */bulk-actions/delete*` | A bulk delete a newer spec adds | group name |
-| `POST /api/users/api-tokens`, `DELETE /api/users/api-tokens/{token_id}` | Mints or revokes a credential (possibly this connection's) | token name, or the connection's user |
-| `PUT /api/users/password`, `POST /api/users/reset-password` | Credential change | username, or email |
-| `PUT /api/users/{item_id}`, `PUT /api/households/permissions` | User details and permissions | the stored username (lookup), never the body's |
-| Group AI providers: create, update, delete | `baseUrl` and headers decide where the stored key and recipes go | group name |
-| `POST /api/households/webhooks`, `PUT …/webhooks/{item_id}` | A webhook posts household data to its `url` | group name |
-| `PUT /api/groups/preferences`, `PUT /api/households/preferences` | Privacy flags make recipes public without sign-in | group name |
-| `POST /api/households/invitations`, `…/invitations/email` | Grants someone a way to join | group name, or the invitee's email |
+| Operations                                                                                                        | Why                                                                                                    | Literal                                        |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| Admin users: create, update, delete, unlock, password-reset token                                                 | Account and admin rights; a reset token takes over an account                                          | username (lookup), email, or the group name    |
+| Admin groups and households: create, update, delete; admin AI providers                                           | Deleting one drops its recipes, plans and members                                                      | group or household name (lookup)               |
+| `POST /api/admin/backups/{file_name}/restore`, `DELETE …/{file_name}`                                             | Restore replaces every group, user and recipe                                                          | the backup file name                           |
+| `POST /api/admin/maintenance/clean/*`                                                                             | Deletes files instance-wide                                                                            | group name                                     |
+| `POST /api/admin/email`                                                                                           | Sends mail from the instance to any address                                                            | the address                                    |
+| `POST /api/recipes/bulk-actions/delete`, `DELETE …/export/purge`, `DELETE /api/households/shopping/items` (`ids`) | Bulk, irreversible                                                                                     | group name                                     |
+| `DELETE */bulk*`, `* */bulk-actions/delete*`                                                                      | A bulk delete a newer spec adds                                                                        | group name                                     |
+| `DELETE /api/admin/*`                                                                                             | Every admin-area delete (users, groups, households, backups, AI providers), also one a newer spec adds | as above, else the group name                  |
+| `POST /api/users/api-tokens`, `DELETE /api/users/api-tokens/{token_id}`                                           | Mints or revokes a credential (possibly this connection's)                                             | token name, or the connection's user           |
+| `PUT /api/users/password`, `POST /api/users/reset-password`                                                       | Credential change                                                                                      | username, or email                             |
+| `PUT /api/users/{item_id}`, `PUT /api/households/permissions`                                                     | User details and permissions                                                                           | the stored username (lookup), never the body's |
+| Group AI providers: create, update, delete                                                                        | `baseUrl` and headers decide where the stored key and recipes go                                       | group name                                     |
+| `POST /api/households/webhooks`, `PUT …/webhooks/{item_id}`                                                       | A webhook posts household data to its `url`                                                            | group name                                     |
+| `PUT /api/groups/preferences`, `PUT /api/households/preferences`                                                  | Privacy flags make recipes public without sign-in                                                      | group name                                     |
+| `POST /api/households/invitations`, `…/invitations/email`                                                         | Grants someone a way to join                                                                           | group name, or the invitee's email             |
 
-Single-item deletes are regular writes: a recipe, comment, meal plan or rule, shopping list or item, food, unit, label, report, tag, category, tool, cookbook, notifier, recipe action, timeline event, share link, recipe image, favorite and webhook, and one a newer spec adds. Admin deletes of users, groups, households and backups stay locked: they delete accounts or whole tenants.
+Single-item deletes are regular writes: a recipe, comment, meal plan or rule, shopping list or item, food, unit, label, report, tag, category, tool, cookbook, notifier, recipe action, timeline event, share link, recipe image, favorite and webhook, and one a newer spec adds. Admin deletes of users, groups, households, backups and AI providers stay locked (owner decision), and so do API token and group AI provider deletes: they delete accounts, whole tenants or credentials.
 
 Literals never come from a body field the model writes about the target. Core redacts params whose names look secret (`token_id`) before the plugin summarizes them, so no literal is read from such a param.
 
