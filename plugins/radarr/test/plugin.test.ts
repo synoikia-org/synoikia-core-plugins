@@ -62,7 +62,7 @@ describe('Radarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 227,
+      count: 233,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -100,7 +100,11 @@ describe('Radarr plugin', () => {
     const key = async (request: object) => (await resolve(request)).key;
     expect(await key({ method: 'DELETE', path: '/api/v3/movie/1' })).toBe('DELETE /api/v3/movie/{id}');
     expect(await key({ method: 'DELETE', path: '/api/v3/movie/1', query: { deleteFiles: true } })).toBe(
-      'DELETE /api/v3/movie/{id}#delete-files',
+      'DELETE /api/v3/movie/{id}',
+    );
+    const editor = { method: 'DELETE', path: '/api/v3/movie/editor' };
+    expect(await key({ ...editor, body: { movieIds: [1], deleteFiles: true } })).toBe(
+      'DELETE /api/v3/movie/editor#delete-files',
     );
     expect(await key({ method: 'POST', path: '/api/v3/command', body: { name: 'RssSync' } })).toBe(
       'POST /api/v3/command',
@@ -113,6 +117,31 @@ describe('Radarr plugin', () => {
     );
     expect(await key({ method: 'POST', path: '/api/v3/indexer/test', body: { id: 7, name: 'x', fields: [] } })).toBe(
       'POST /api/v3/indexer/test#stored',
+    );
+  });
+
+  it('takes #stored for a download client test only when the destination changes', async () => {
+    const key = async (body: object) =>
+      (await resolve({ method: 'POST', path: '/api/v3/downloadclient/test', body })).key;
+    const stored = structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    const fields = stored.fields as { name: string; value: unknown }[];
+    expect(await key(stored)).toBe('POST /api/v3/downloadclient/test');
+    const moved = fields.map((f) => (f.name === 'host' ? { ...f, value: 'collector.example' } : f));
+    expect(await key({ ...stored, fields: moved })).toBe('POST /api/v3/downloadclient/test#stored');
+    expect(await key({ ...stored, id: 404 })).toBe('POST /api/v3/downloadclient/test#stored');
+  });
+
+  it('takes #script for a notification that runs a program', async () => {
+    const key = async (request: object) => (await resolve(request)).key;
+    const webhook = { name: 'New', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example' }] };
+    expect(await key({ method: 'POST', path: '/api/v3/notification', body: webhook })).toBe(
+      'POST /api/v3/notification',
+    );
+    expect(
+      await key({ method: 'POST', path: '/api/v3/notification', body: { ...webhook, implementation: 'CustomScript' } }),
+    ).toBe('POST /api/v3/notification#script');
+    expect(await key({ method: 'POST', path: '/api/v3/notification/testall' })).toBe(
+      'POST /api/v3/notification/testall#script',
     );
   });
 
@@ -196,7 +225,8 @@ describe('Radarr plugin', () => {
     expect(text).toMatch(
       /^Radarr POST \/api\/v3\/downloadclient on downloadclient X \(Sabnzbd\) → http:\/\/sab\.lan:8085 \{/,
     );
-    expect(confirmLiteral).toBe('X');
+    // A new download client is a regular write: core approves it without a typed literal.
+    expect(confirmLiteral).toBeUndefined();
   });
 
   it('masks provider secrets in results the way Radarr does, and webhook URLs to their origin', async () => {
@@ -406,9 +436,6 @@ describe('case-insensitive binding', () => {
   it('takes the locked twin whatever the case of the flag or id', async () => {
     const moved = await resolve({ method: 'PUT', path: '/api/v3/movie/1', query: { MoveFiles: 'true' }, body: {} });
     expect(moved).toMatchObject({ key: 'PUT /api/v3/movie/{id}#move-files', params: { query: { moveFiles: 'true' } } });
-    expect(await key({ method: 'DELETE', path: '/api/v3/movie/1', query: { DELETEFILES: 'True' } })).toBe(
-      'DELETE /api/v3/movie/{id}#delete-files',
-    );
     expect(
       await key({ method: 'DELETE', path: '/api/v3/movie/editor', body: { MovieIds: [1], DeleteFiles: true } }),
     ).toBe('DELETE /api/v3/movie/editor#delete-files');

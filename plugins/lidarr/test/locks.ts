@@ -1,7 +1,7 @@
 import { INSTANCE } from './fake-lidarr.js';
 
-/** One call per locked key (every key plugin.yaml locks by name, every split twin, and a sample of the deletes the
- * `DELETE *` rule locks), and the literal an approver must type for it against the fake Lidarr. */
+/** One call per locked key (every key plugin.yaml locks by name, every split twin, and a sample of the bulk deletes
+ * the bulk delete pattern locks), and the literal an approver must type for it against the fake Lidarr. */
 export interface LockCase {
   key: string;
   request: { method: string; path: string; body?: unknown; query?: Record<string, unknown> };
@@ -25,16 +25,6 @@ const EVIL = [
 ];
 
 export const LOCK_CASES: LockCase[] = [
-  {
-    key: 'DELETE /api/v1/artist/{id}',
-    request: { method: 'DELETE', path: '/api/v1/artist/1' },
-    confirm: 'Radiohead',
-  },
-  {
-    key: 'DELETE /api/v1/artist/{id}#delete-files',
-    request: { method: 'DELETE', path: '/api/v1/artist/1', query: { deleteFiles: true } },
-    confirm: 'Radiohead',
-  },
   {
     key: 'PUT /api/v1/artist/{id}#move-files',
     request: {
@@ -61,21 +51,6 @@ export const LOCK_CASES: LockCase[] = [
     confirm: '2 artists',
   },
   {
-    key: 'DELETE /api/v1/album/{id}',
-    request: { method: 'DELETE', path: '/api/v1/album/16', query: { addImportListExclusion: true } },
-    confirm: 'OK Computer',
-  },
-  {
-    key: 'DELETE /api/v1/album/{id}#delete-files',
-    request: { method: 'DELETE', path: '/api/v1/album/16', query: { deleteFiles: 'true' } },
-    confirm: 'OK Computer',
-  },
-  {
-    key: 'DELETE /api/v1/trackfile/{id}',
-    request: { method: 'DELETE', path: '/api/v1/trackfile/13' },
-    confirm: '/music/Radiohead/OK Computer (1997)/01 - Airbag.flac',
-  },
-  {
     key: 'DELETE /api/v1/trackfile/bulk',
     request: { method: 'DELETE', path: '/api/v1/trackfile/bulk', body: { trackFileIds: [13, 17] } },
     confirm: '2 track files',
@@ -99,16 +74,6 @@ export const LOCK_CASES: LockCase[] = [
     confirm: INSTANCE,
   },
   {
-    key: 'POST /api/v1/rootfolder',
-    request: { method: 'POST', path: '/api/v1/rootfolder', body: { name: 'Everything', path: '/' } },
-    confirm: '/',
-  },
-  {
-    key: 'PUT /api/v1/rootfolder/{id}',
-    request: { method: 'PUT', path: '/api/v1/rootfolder/5', body: { id: 5, name: 'Music', path: '/etc' } },
-    confirm: '/etc',
-  },
-  {
     key: 'PUT /api/v1/config/host/{id}',
     request: { method: 'PUT', path: '/api/v1/config/host/1', body: { id: 1, bindAddress: '*', urlBase: '/lidarr' } },
     confirm: INSTANCE,
@@ -129,123 +94,60 @@ export const LOCK_CASES: LockCase[] = [
     confirm: BACKUP,
   },
   {
-    key: 'DELETE /api/v1/system/backup/{id}',
-    request: { method: 'DELETE', path: '/api/v1/system/backup/21' },
-    confirm: BACKUP,
-  },
-  {
-    key: 'POST /api/v1/downloadclient',
-    request: {
-      method: 'POST',
-      path: '/api/v1/downloadclient',
-      body: provider('SAB', 'Sabnzbd', [
-        field('host', 'sab.lan'),
-        field('port', 8085),
-        field('apiKey', 'sab-key-777777', 'apiKey'),
-      ]),
-    },
-    confirm: 'SAB',
-  },
-  {
-    key: 'PUT /api/v1/downloadclient/{id}',
-    request: { method: 'PUT', path: '/api/v1/downloadclient/6', body: provider('Renamed', 'QBittorrent', EVIL, 6) },
-    confirm: 'qBit',
-  },
-  {
-    key: 'POST /api/v1/indexer',
-    request: {
-      method: 'POST',
-      path: '/api/v1/indexer',
-      body: provider('Geek2', 'Newznab', [
-        field('baseUrl', 'https://api.example.org'),
-        field('apiKey', 'idx-key-888888', 'apiKey'),
-      ]),
-    },
-    confirm: 'Geek2',
-  },
-  {
-    key: 'PUT /api/v1/indexer/{id}',
-    request: {
-      method: 'PUT',
-      path: '/api/v1/indexer/7',
-      body: provider('NZBgeek', 'Newznab', [field('baseUrl', 'https://collector.example')], 7),
-    },
-    confirm: 'NZBgeek',
-  },
-  {
-    key: 'POST /api/v1/importlist',
-    request: {
-      method: 'POST',
-      path: '/api/v1/importlist',
-      body: provider('My list', 'LidarrImport', [field('baseUrl', 'http://other-lidarr:8686')]),
-    },
-    confirm: 'My list',
-  },
-  {
-    key: 'PUT /api/v1/importlist/{id}',
-    request: { method: 'PUT', path: '/api/v1/importlist/8', body: provider('Lidarr Lossless', 'LidarrImport', [], 8) },
-    confirm: 'Lidarr Lossless',
-  },
-  {
-    key: 'POST /api/v1/notification',
-    request: {
-      method: 'POST',
-      path: '/api/v1/notification',
-      body: provider('Hook', 'Webhook', [field('url', 'https://hooks.example.com/t/secret-hook-999999')]),
-    },
-    confirm: 'Hook',
-  },
-  {
-    key: 'PUT /api/v1/notification/{id}',
-    request: { method: 'PUT', path: '/api/v1/notification/9', body: provider('Discord', 'Discord', [], 9) },
-    confirm: 'Discord',
-  },
-  {
-    key: 'POST /api/v1/notification/test',
-    request: {
-      method: 'POST',
-      path: '/api/v1/notification/test',
-      body: provider('Discord', 'Discord', [field('webHookUrl', 'https://collector.example/x')], 9),
-    },
-    confirm: 'Discord',
-  },
-  {
-    key: 'POST /api/v1/notification/testall',
-    request: { method: 'POST', path: '/api/v1/notification/testall' },
-    confirm: INSTANCE,
-  },
-  {
-    key: 'POST /api/v1/notification/action/{name}',
-    request: {
-      method: 'POST',
-      path: '/api/v1/notification/action/getDevices',
-      body: provider('New', 'Gotify', [field('server', 'https://gotify.example')]),
-    },
-    confirm: INSTANCE,
-  },
-  {
-    key: 'POST /api/v1/release/push',
-    request: {
-      method: 'POST',
-      path: '/api/v1/release/push',
-      body: {
-        title: 'Some.Artist-Some.Album-2020-FLAC',
-        downloadUrl: 'https://tracker.example/dl/1?passkey=pk-123456',
-        protocol: 'torrent',
-      },
-    },
-    confirm: INSTANCE,
-  },
-  {
     key: 'POST /api/v1/command#heavy',
     request: { method: 'POST', path: '/api/v1/command', body: { name: 'RetagFiles', artistId: 1, files: [13] } },
     confirm: 'RetagFiles',
   },
-  ...(['downloadclient', 'indexer', 'importlist'] as const).flatMap((resource) => {
-    const [id, name] = { downloadclient: [6, 'qBit'], indexer: [7, 'NZBgeek'], importlist: [8, 'Lidarr Lossless'] }[
-      resource
-    ] as [number, string];
-    const body = provider(name, 'Any', EVIL, id);
+  {
+    key: 'POST /api/v1/notification#script',
+    request: {
+      method: 'POST',
+      path: '/api/v1/notification',
+      body: provider('Run it', 'CustomScript', [field('path', '/tmp/evil.sh')]),
+    },
+    confirm: 'Run it',
+  },
+  {
+    key: 'PUT /api/v1/notification/{id}#script',
+    request: {
+      method: 'PUT',
+      path: '/api/v1/notification/9',
+      body: provider('Renamed', 'CustomScript', [field('path', '/tmp/evil.sh')], 9),
+    },
+    confirm: 'Discord',
+  },
+  {
+    key: 'POST /api/v1/notification/test#script',
+    request: {
+      method: 'POST',
+      path: '/api/v1/notification/test',
+      body: provider('New', 'Webhook', [field('url', 'https://h.example'), field('scriptPath', '/tmp/evil.sh')]),
+    },
+    confirm: 'New',
+  },
+  {
+    key: 'POST /api/v1/notification/testall#script',
+    request: { method: 'POST', path: '/api/v1/notification/testall' },
+    confirm: INSTANCE,
+  },
+  {
+    key: 'POST /api/v1/notification/action/{name}#script',
+    request: {
+      method: 'POST',
+      path: '/api/v1/notification/action/getDevices',
+      body: provider('Discord', 'CustomScript', [field('path', '/tmp/evil.sh')], 9),
+    },
+    confirm: 'Discord',
+  },
+  ...(['downloadclient', 'indexer', 'importlist', 'notification'] as const).flatMap((resource) => {
+    const [id, name, implementation] = {
+      downloadclient: [6, 'qBit', 'QBittorrent'],
+      indexer: [7, 'NZBgeek', 'Newznab'],
+      importlist: [8, 'Lidarr Lossless', 'LidarrImport'],
+      notification: [9, 'Discord', 'Discord'],
+    }[resource] as [number, string, string];
+    // The stored provider's own type, sent to a different host with its stored password.
+    const body = provider(name, implementation, EVIL, id);
     return [
       {
         key: `POST /api/v1/${resource}/test#stored`,
@@ -259,31 +161,9 @@ export const LOCK_CASES: LockCase[] = [
       },
     ];
   }),
-  { key: 'DELETE /api/v1/tag/{id}', request: { method: 'DELETE', path: '/api/v1/tag/3' }, confirm: 'kids' },
-  {
-    key: 'DELETE /api/v1/downloadclient/{id}',
-    request: { method: 'DELETE', path: '/api/v1/downloadclient/6' },
-    confirm: 'qBit',
-  },
-  {
-    key: 'DELETE /api/v1/queue/{id}',
-    request: { method: 'DELETE', path: '/api/v1/queue/41', query: { removeFromClient: true } },
-    confirm: 'Radiohead-OK.Computer-OKNOTOK-24BIT-WEB-FLAC-2017',
-  },
   {
     key: 'DELETE /api/v1/queue/bulk',
     request: { method: 'DELETE', path: '/api/v1/queue/bulk', body: { ids: [41] } },
     confirm: '1 item',
-  },
-  { key: 'DELETE /api/v1/blocklist/{id}', request: { method: 'DELETE', path: '/api/v1/blocklist/61' }, confirm: '61' },
-  {
-    key: 'DELETE /api/v1/metadataprofile/{id}',
-    request: { method: 'DELETE', path: '/api/v1/metadataprofile/18' },
-    confirm: 'Standard',
-  },
-  {
-    key: 'DELETE /api/v1/importlistexclusion/{id}',
-    request: { method: 'DELETE', path: '/api/v1/importlistexclusion/12' },
-    confirm: 'Nickelback',
   },
 ];

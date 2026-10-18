@@ -36,10 +36,11 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Radarr end to end (fake Radarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(227);
+    expect(h.operations()).toHaveLength(233);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
-    expect(h.operation('DELETE /api/v3/movie/{id}#delete-files')).toMatchObject({
+    expect(h.operation('DELETE /api/v3/movie/{id}')).toMatchObject({ locked: false, typedConfirmation: false });
+    expect(h.operation('DELETE /api/v3/movie/editor#delete-files')).toMatchObject({
       locked: true,
       typedConfirmation: true,
     });
@@ -76,6 +77,54 @@ describe('Radarr end to end (fake Radarr)', () => {
     expect(shown[0]).toContain('Radarr POST /api/v3/command');
   });
 
+  describe('single-item writes are regular writes: approved at Ask, no literal typed', () => {
+    const stored = () => structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    it.each([
+      ['DELETE /api/v3/movie/{id}', { method: 'DELETE', path: '/api/v3/movie/1', query: { deleteFiles: true } }],
+      ['POST /api/v3/downloadclient/test', { method: 'POST', path: '/api/v3/downloadclient/test', body: 'stored' }],
+      [
+        'POST /api/v3/notification',
+        {
+          method: 'POST',
+          path: '/api/v3/notification',
+          body: { name: 'New', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example/x' }] },
+        },
+      ],
+    ])('%s', async (key, request) => {
+      const req = 'body' in request && request.body === 'stored' ? { ...request, body: stored() } : request;
+      expect(h.operation(key)).toMatchObject({ locked: false, classification: 'write' });
+      h.setOperationLevel(key, 'ask');
+      let literal: unknown = 'unset';
+      const r = await h.execute(call(req), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          a.approve();
+        },
+      });
+      h.setOperationLevel(key, null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal ?? null).toBeNull();
+      expect(h.audit({ operationKey: key }).length).toBeGreaterThan(0);
+    });
+
+    it('takes the locked twin once the stored download client goes to another host', async () => {
+      const body = stored();
+      const fields = body.fields as { name: string; value: unknown }[];
+      body.fields = fields.map((f) => (f.name === 'host' ? { ...f, value: 'collector.example' } : f));
+      h.setOperationLevel('POST /api/v3/downloadclient/test#stored', 'ask');
+      let literal: unknown;
+      const r = await h.execute(call({ method: 'POST', path: '/api/v3/downloadclient/test', body }), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          a.approve(String(literal));
+        },
+      });
+      h.setOperationLevel('POST /api/v3/downloadclient/test#stored', null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal).toBe('qBit');
+    });
+  });
+
   describe('every locked operation needs its literal typed', () => {
     it.each(LOCK_CASES)('$key → "$confirm"', async ({ key, request, confirm }) => {
       h.setOperationLevel(key, 'ask');
@@ -103,7 +152,8 @@ describe('Radarr end to end (fake Radarr)', () => {
       for (const secret of ['sab-key-777777', 'idx-key-888888', 'secret-hook-999999', 'pk-123456', ...SECRET_VALUES])
         expect(text).not.toContain(secret);
       // The approver sees where a provider call sends data.
-      if (
+      if (key.includes('#script') && !key.includes('testall')) expect(shown[0]).toContain('runs /tmp/evil.sh');
+      else if (
         /(downloadclient|indexer|importlist|notification)(\/(test|action)|\/\{id\}|$)/.test(key) &&
         !key.includes('testall')
       )

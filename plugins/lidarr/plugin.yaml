@@ -3,7 +3,7 @@
 # paths, `/api/v1` included (`GET /api/v1/artist/{id}`); GET reads, other verbs write, anything unlisted is a write.
 
 defaults:
-  # A locked operation without its own literal (a DELETE a newer spec adds) confirms on its path id.
+  # A locked operation without its own literal confirms on its path id, else the instance name.
   confirm: [{ custom: path-id }, instance]
   timeouts: { request: 15000, lookup: 10000 }
 
@@ -28,54 +28,44 @@ exclude:
   - 'POST /api/v1/system/backup/restore/upload'
 
 rules:
-  # Irreversible, bulk, instance-wide, or sends credentials or data to a destination: a human types a confirmation.
+  # Bulk, instance-wide, sign-in, or runs a program: a human types a confirmation. Single-item writes and deletes
+  # are regular writes.
   - match:
-      - 'DELETE /api/v1/artist/{id}'
       - 'PUT /api/v1/artist/editor'
       - 'DELETE /api/v1/artist/editor'
-      - 'DELETE /api/v1/album/{id}'
-      # A track file delete removes the file from disk.
-      - 'DELETE /api/v1/trackfile/{id}'
-      - 'DELETE /api/v1/trackfile/bulk'
       - 'PUT /api/v1/config/host/{id}'
+      - 'DELETE /api/v1/trackfile/bulk'
       # The metadata server Lidarr trusts, and whether it rewrites the tags inside audio files.
       - 'PUT /api/v1/config/metadataprovider/{id}'
-      # Script import runs any program on each import; also permissions, owner group and the recycle bin.
+      # `useScriptImport` + `scriptImportPath` run any program on every import; also chmod, chown, recycle bin.
       - 'PUT /api/v1/config/mediamanagement/{id}'
-      # A root folder at `/` lists every folder under it as unmapped; Lidarr doesn't refuse a path change on PUT.
-      - 'POST /api/v1/rootfolder'
-      - 'PUT /api/v1/rootfolder/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/system/backup/restore/{id}'
-      - 'DELETE /api/v1/system/backup/{id}'
-      - 'POST /api/v1/downloadclient'
-      - 'PUT /api/v1/downloadclient/{id}'
-      - 'POST /api/v1/indexer'
-      - 'PUT /api/v1/indexer/{id}'
-      - 'POST /api/v1/importlist'
-      - 'PUT /api/v1/importlist/{id}'
-      - 'POST /api/v1/notification'
-      - 'PUT /api/v1/notification/{id}'
-      # Sends a notification to whatever recipient the body names, or to every configured one.
-      - 'POST /api/v1/notification/test'
-      - 'POST /api/v1/notification/testall'
-      - 'POST /api/v1/notification/action/{name}'
-      # Lidarr fetches the release from any URL and hands it to a download client.
-      - 'POST /api/v1/release/push'
     locked: true
-  # A delete a newer spec adds is locked until reviewed.
-  - match: 'DELETE *'
+  # Every bulk or editor delete, including one a newer spec adds.
+  - match: ['DELETE */bulk', 'DELETE */editor']
+    locked: true
+  # Resets the UI sign-in; only newer specs have it, so it is a pattern, not a required key.
+  - match: 'POST /reset-password*'
     locked: true
 
-  # Locked twins picked per call (src/plugin.ts): deleting or moving files on disk, a command not in
-  # `plugin.quickCommands`, a provider test or action that reuses the stored credentials (`id` in the body).
-  - match: ['DELETE /api/v1/artist/{id}', 'DELETE /api/v1/artist/editor', 'DELETE /api/v1/album/{id}']
+  # Locked twins picked per call (src/catalog.ts): deleting files in bulk, moving files on disk, a command not in
+  # `plugin.quickCommands`, a notification that runs a program, and a test or action that sends the stored
+  # credentials to a destination other than the stored one.
+  - match: 'DELETE /api/v1/artist/editor'
     split: delete-files
   - match: 'PUT /api/v1/artist/{id}'
     split: move-files
   - match: 'POST /api/v1/command'
     split: heavy
+  - match:
+      - 'POST /api/v1/notification'
+      - 'PUT /api/v1/notification/{id}'
+      - 'POST /api/v1/notification/test'
+      - 'POST /api/v1/notification/testall'
+      - 'POST /api/v1/notification/action/{name}'
+    split: script
   - match:
       - 'POST /api/v1/downloadclient/test'
       - 'POST /api/v1/downloadclient/action/{name}'
@@ -83,9 +73,13 @@ rules:
       - 'POST /api/v1/indexer/action/{name}'
       - 'POST /api/v1/importlist/test'
       - 'POST /api/v1/importlist/action/{name}'
+      - 'POST /api/v1/notification/test'
+      - 'POST /api/v1/notification/action/{name}'
     split: stored
+
+  # What each locked, split or twin operation does, and why it matters.
   - match: '*#delete-files'
-    description: '{base} with deleteFiles: also deletes the files from disk. Locked.'
+    description: '{base} with deleteFiles: also deletes the files of every listed artist from disk. Locked.'
     summaryNote: '(also deletes the files from disk)'
   - match: '*#move-files'
     description: '{base} with moveFiles: moves the artist folder on disk. Locked.'
@@ -95,31 +89,76 @@ rules:
       Starting a command that renames, retags, moves or deletes files, imports from a folder, clears data, updates,
       restarts or reconfigures Lidarr, or one not reviewed: locked.
     summaryNote: '(renames, retags, moves or deletes files, clears data, or changes the application)'
+  - match: '*#script'
+    description: >-
+      {base} for a notification that runs a program (Custom Script, or a path or script field), or a test of every
+      notification while one does: Lidarr runs the program on its host. Locked.
+    summaryNote: '(runs a program on the Lidarr host)'
   - match: '*#stored'
     description: >-
-      {base} for a stored connection: Lidarr fills in its saved password or API key and contacts the host in the
-      body. Locked.
-    summaryNote: '(sends the stored credentials to the host in the body)'
-  - match: ['DELETE /api/v1/trackfile/{id}', 'DELETE /api/v1/trackfile/bulk']
+      {base} for a stored connection whose host, port, URL, SSL or type changes: Lidarr fills in the saved password
+      or API key and sends it to the new destination. Locked.
+    summaryNote: '(sends the stored credentials to a destination other than the stored one)'
+  - match: 'PUT /api/v1/artist/editor'
+    description: >-
+      Changes many artists at once: monitoring, quality profile, tags, root folder (moveFiles moves their folders).
+      Locked as a bulk edit.
+  - match: 'DELETE /api/v1/artist/editor'
+    description: 'Deletes many artists at once; with deleteFiles it takes the #delete-files twin. Locked as a bulk delete.'
+  - match: ['DELETE */bulk', 'DELETE */editor']
+    description: '{base}: deletes every item the body lists in one call. Locked as a bulk delete.'
+  - match: 'DELETE /api/v1/trackfile/bulk'
+    description: 'Deletes many track files from disk at once. Locked as a bulk delete.'
     summaryNote: '(deletes the files from disk)'
-  - match: 'PUT /api/v1/config/host/{id}'
-    summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
   - match: 'PUT /api/v1/config/metadataprovider/{id}'
+    description: >-
+      Changes the metadata server Lidarr trusts and whether it rewrites the tags inside audio files. Locked as
+      instance configuration.
     summaryNote: '(metadata server, and whether Lidarr rewrites the tags in audio files)'
+  - match: 'PUT /api/v1/config/host/{id}'
+    description: >-
+      Changes the host settings: sign-in, API key, bind address, port, URL base, SSL, proxy and update script.
+      Locked: it can lock users out or expose Lidarr.
+    summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
   - match: 'PUT /api/v1/config/mediamanagement/{id}'
-    summaryNote: '(import script, file permissions and recycle bin)'
-  - match: ['POST /api/v1/rootfolder', 'PUT /api/v1/rootfolder/{id}']
-    summaryNote: '(Lidarr lists and imports every folder under it)'
+    description: >-
+      Changes media management: the import script, file permissions and owner, and the recycle bin. Locked: the
+      import script runs any program on every import.
+    summaryNote: '(import script, file permissions and owner, recycle bin)'
+  - match: 'POST /api/v1/system/shutdown'
+    description: 'Shuts Lidarr down until someone starts it again. Locked.'
+  - match: 'POST /api/v1/system/restart'
+    description: 'Restarts Lidarr, stopping running commands and imports. Locked.'
   - match: 'POST /api/v1/system/backup/restore/{id}'
+    description: 'Restores a stored backup over the database and settings, then restarts. Locked.'
     summaryNote: '(replaces the database and settings, then restarts)'
+  - match: 'POST /reset-password*'
+    description: 'Resets the web UI sign-in password, or asks for a reset. Locked: it changes who can sign in.'
+    summaryNote: '(resets the UI login)'
+    sensitiveParams: [/body/password, /body/passwordConfirmation, /body/token]
+  - match: 'PUT /api/v1/artist/{id}'
+    description: 'Changes an artist: monitoring, quality profile, tags, path. With moveFiles it takes the #move-files twin.'
+  - match: 'POST /api/v1/command'
+    description: 'Runs a command (search, refresh, rescan, backup). One not in the quick list takes the #heavy twin.'
+  - match: ['POST /api/v1/notification', 'PUT /api/v1/notification/{id}', 'POST /api/v1/notification/testall']
+    description: '{base}: a notification that runs a program takes the #script twin.'
+  - match: ['POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
+    description: >-
+      {base}: a notification that runs a program takes the #script twin, and a stored one sent to a new destination
+      the #stored twin.
+  - match:
+      - 'POST /api/v1/downloadclient/test'
+      - 'POST /api/v1/downloadclient/action/{name}'
+      - 'POST /api/v1/indexer/test'
+      - 'POST /api/v1/indexer/action/{name}'
+      - 'POST /api/v1/importlist/test'
+      - 'POST /api/v1/importlist/action/{name}'
+    description: '{base}: a stored connection (`id` in the body) sent to a new destination takes the #stored twin.'
 
   # The literal an approver types: the stored item's name, never a body field the model writes except on create.
   - match: '* /api/v1/artist/{id}*'
     confirm:
       lookup: { op: 'GET /api/v1/artist/{id}', args: [{ id: { $param: /path/id } }], field: artistName }
-  - match: '* /api/v1/album/{id}*'
-    confirm:
-      lookup: { op: 'GET /api/v1/album/{id}', args: [{ id: { $param: /path/id } }], field: title }
   - match: ['* /api/v1/artist/editor*', 'DELETE */bulk']
     confirm: [{ custom: count }, instance]
   - match: '* /api/v1/system/backup/*'
@@ -131,34 +170,11 @@ rules:
       - 'PUT /api/v1/config/mediamanagement/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
-      - 'POST /api/v1/notification/testall'
-      - 'POST /api/v1/release/push'
+      - 'POST /reset-password*'
+      - 'POST /api/v1/notification/testall#script'
     confirm: instance
-  - match: ['POST /api/v1/rootfolder', 'PUT /api/v1/rootfolder/{id}']
-    confirm: { param: /body/path }
   - match: '*#heavy'
     confirm: [{ custom: command }, instance]
-  - match:
-      - 'POST /api/v1/downloadclient'
-      - 'POST /api/v1/indexer'
-      - 'POST /api/v1/importlist'
-      - 'POST /api/v1/notification'
-    confirm: { param: /body/name }
-  - match: '* /api/v1/downloadclient/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/indexer/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/indexer/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/importlist/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/importlist/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/notification/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/metadata/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/metadata/{id}', args: [{ id: { $param: /path/id } }], field: name }
   - match: 'POST /api/v1/downloadclient/*#stored'
     confirm:
       lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /body/id } }], field: name }
@@ -168,46 +184,15 @@ rules:
   - match: 'POST /api/v1/importlist/*#stored'
     confirm:
       lookup: { op: 'GET /api/v1/importlist/{id}', args: [{ id: { $param: /body/id } }], field: name }
-  - match: ['POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
+  - match: 'PUT /api/v1/notification/{id}#script'
+    confirm:
+      lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match:
+      ['POST /api/v1/notification#script', 'POST /api/v1/notification/*#script', 'POST /api/v1/notification/*#stored']
     confirm:
       - lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /body/id } }], field: name }
+      - param: /body/name
       - instance
-  - match: 'DELETE /api/v1/tag/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/tag/{id}', args: [{ id: { $param: /path/id } }], field: label }
-  - match: 'DELETE /api/v1/qualityprofile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/qualityprofile/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v1/metadataprofile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/metadataprofile/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v1/customformat/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/customformat/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v1/autotagging/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/autotagging/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v1/customfilter/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/customfilter/{id}', args: [{ id: { $param: /path/id } }], field: label }
-  - match: 'DELETE /api/v1/rootfolder/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/rootfolder/{id}', args: [{ id: { $param: /path/id } }], field: path }
-  - match: 'DELETE /api/v1/remotepathmapping/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/remotepathmapping/{id}', args: [{ id: { $param: /path/id } }], field: remotePath }
-  - match: 'DELETE /api/v1/importlistexclusion/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/importlistexclusion/{id}', args: [{ id: { $param: /path/id } }], field: artistName }
-  - match: 'DELETE /api/v1/trackfile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/trackfile/{id}', args: [{ id: { $param: /path/id } }], field: path }
-  - match: 'DELETE /api/v1/command/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/command/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v1/queue/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/queue/details', find: { field: id, equals: { $param: /path/id } }, field: title }
 
   # Provider settings carry passwords, API keys and webhook URLs with tokens in `fields[].value`; the approver
   # sees the destination host as a target instead (src/targets.ts).
@@ -290,3 +275,4 @@ plugin:
     - sslCertPassword
     - useScriptImport
     - scriptImportPath
+    - token

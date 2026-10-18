@@ -1,8 +1,11 @@
 import { buildOpenApiCatalog, compileRules, isPlainObject, parsePluginSettings, stringOr } from '@synoikia/plugin-sdk';
 import type { CompiledRules, ConfirmContext, RestCall, RuleHooks } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
+import { withDescriptions } from './describe.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
 import { parseSpecSource } from './spec.js';
+import { runsScript, sendsStoredElsewhere } from './stored.js';
+import type { Get } from './stored.js';
 
 /** Radarr's catalog: the SDK's OpenAPI catalog over the spec for the instance's release, with plugin.yaml's rules
  * on top; keys are the spec's paths, `/api/v3` included. */
@@ -39,27 +42,24 @@ const body = (params: unknown) => (isPlainObject(params) ? params.body : undefin
 /** Set and not plainly false: a flag the upstream reads as true (`true`, `"true"`, `1`) takes the locked twin. */
 const flagOn = (v: unknown) => v !== undefined && v !== null && v !== false && v !== 'false' && v !== 0 && v !== '0';
 
-/** When a call takes its locked twin (plugin.yaml `split`); anything unexpected takes the twin. */
-export const splitWhen: Record<string, (call: RestCall) => boolean> = {
-  'delete-files': (call) =>
-    call.key === 'DELETE /api/v3/movie/{id}'
-      ? flagOn(call.params.query?.deleteFiles)
-      : !isPlainObject(call.params.body) || flagOn(call.params.body.deleteFiles),
-  'move-files': (call) => flagOn(call.params.query?.moveFiles),
-  heavy: (call) => {
-    const name = isPlainObject(call.params.body) ? call.params.body.name : undefined;
-    return typeof name !== 'string' || !settings.plugin.quickCommands.has(name.toLowerCase());
-  },
-  // Servarr fills stored secrets into a test or action for any `id` > 0.
-  stored: (call) => {
-    const id = isPlainObject(call.params.body) ? call.params.body.id : undefined;
-    return !(id === undefined || id === null || (typeof id === 'number' && id <= 0));
-  },
-};
+/** When a call takes its locked twin (plugin.yaml `split`); anything unexpected takes the twin. `get` reads the
+ * stored provider or notifications; without it, the twins that need a lookup are taken. */
+export function splitWhen(get?: Get): Record<string, (call: RestCall) => boolean | Promise<boolean>> {
+  return {
+    'delete-files': (call) => !isPlainObject(call.params.body) || flagOn(call.params.body.deleteFiles),
+    'move-files': (call) => flagOn(call.params.query?.moveFiles),
+    heavy: (call) => {
+      const name = isPlainObject(call.params.body) ? call.params.body.name : undefined;
+      return typeof name !== 'string' || !settings.plugin.quickCommands.has(name.toLowerCase());
+    },
+    stored: (call) => sendsStoredElsewhere(get, call.key, call.params.body),
+    script: (call) => runsScript(get, call.key, call.params.body),
+  };
+}
 
 /** Named confirmation sources plugin.yaml uses. */
 export const custom: NonNullable<RuleHooks['custom']> = {
-  // The first path id: the literal for a locked operation plugin.yaml gives none (a newer DELETE).
+  // The first path id: the literal for a locked operation plugin.yaml gives none.
   'path-id': ({ params }: ConfirmContext) => {
     const path = isPlainObject(params) && isPlainObject(params.path) ? params.path : {};
     return Object.values(path).map(stringOr).find(Boolean);
@@ -87,7 +87,11 @@ export const policy = compileRules(settings, { custom });
 const LOCKED_KEYS = lockedKeys(settings.rules);
 
 export function buildCatalog(spec: string | Record<string, unknown>, rules: CompiledRules<unknown> = policy) {
-  const catalog = buildOpenApiCatalog(spec, { service: SERVICE, rules, minOperations: settings.plugin.minOperations });
+  const catalog = buildOpenApiCatalog(withDescriptions(spec, SERVICE), {
+    service: SERVICE,
+    rules,
+    minOperations: settings.plugin.minOperations,
+  });
   requireLockedKeys(catalog.operations, LOCKED_KEYS, SERVICE);
   return catalog;
 }

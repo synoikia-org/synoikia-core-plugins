@@ -62,7 +62,7 @@ describe('Lidarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 225,
+      count: 230,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -111,10 +111,14 @@ describe('Lidarr plugin', () => {
     const key = async (request: object) => (await resolve(request)).key;
     expect(await key({ method: 'DELETE', path: '/api/v1/artist/1' })).toBe('DELETE /api/v1/artist/{id}');
     expect(await key({ method: 'DELETE', path: '/api/v1/artist/1', query: { deleteFiles: true } })).toBe(
-      'DELETE /api/v1/artist/{id}#delete-files',
+      'DELETE /api/v1/artist/{id}',
+    );
+    const editor = { method: 'DELETE', path: '/api/v1/artist/editor' };
+    expect(await key({ ...editor, body: { artistIds: [1], deleteFiles: true } })).toBe(
+      'DELETE /api/v1/artist/editor#delete-files',
     );
     expect(await key({ method: 'DELETE', path: '/api/v1/album/16', query: { deleteFiles: true } })).toBe(
-      'DELETE /api/v1/album/{id}#delete-files',
+      'DELETE /api/v1/album/{id}',
     );
     expect(await key({ method: 'PUT', path: '/api/v1/album/16', body: { id: 16, monitored: true } })).toBe(
       'PUT /api/v1/album/{id}',
@@ -130,6 +134,31 @@ describe('Lidarr plugin', () => {
     );
     expect(await key({ method: 'POST', path: '/api/v1/indexer/test', body: { id: 7, name: 'x', fields: [] } })).toBe(
       'POST /api/v1/indexer/test#stored',
+    );
+  });
+
+  it('takes #stored for a download client test only when the destination changes', async () => {
+    const key = async (body: object) =>
+      (await resolve({ method: 'POST', path: '/api/v1/downloadclient/test', body })).key;
+    const stored = structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    const fields = stored.fields as { name: string; value: unknown }[];
+    expect(await key(stored)).toBe('POST /api/v1/downloadclient/test');
+    const moved = fields.map((f) => (f.name === 'host' ? { ...f, value: 'collector.example' } : f));
+    expect(await key({ ...stored, fields: moved })).toBe('POST /api/v1/downloadclient/test#stored');
+    expect(await key({ ...stored, id: 404 })).toBe('POST /api/v1/downloadclient/test#stored');
+  });
+
+  it('takes #script for a notification that runs a program', async () => {
+    const key = async (request: object) => (await resolve(request)).key;
+    const webhook = { name: 'New', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example' }] };
+    expect(await key({ method: 'POST', path: '/api/v1/notification', body: webhook })).toBe(
+      'POST /api/v1/notification',
+    );
+    expect(
+      await key({ method: 'POST', path: '/api/v1/notification', body: { ...webhook, implementation: 'CustomScript' } }),
+    ).toBe('POST /api/v1/notification#script');
+    expect(await key({ method: 'POST', path: '/api/v1/notification/testall' })).toBe(
+      'POST /api/v1/notification/testall#script',
     );
   });
 
@@ -218,7 +247,8 @@ describe('Lidarr plugin', () => {
     expect(text).toMatch(
       /^Lidarr POST \/api\/v1\/downloadclient on downloadclient X \(Sabnzbd\) → http:\/\/sab\.lan:8085 \{/,
     );
-    expect(confirmLiteral).toBe('X');
+    // A new download client is a regular write: core approves it without a typed literal.
+    expect(confirmLiteral).toBeUndefined();
   });
 
   it('masks provider secrets in results the way Lidarr does, and webhook URLs to their origin', async () => {
@@ -427,9 +457,6 @@ describe('case-insensitive binding', () => {
       key: 'PUT /api/v1/artist/{id}#move-files',
       params: { query: { moveFiles: 'true' } },
     });
-    expect(await key({ method: 'DELETE', path: '/api/v1/artist/1', query: { DELETEFILES: 'True' } })).toBe(
-      'DELETE /api/v1/artist/{id}#delete-files',
-    );
     expect(
       await key({ method: 'DELETE', path: '/api/v1/artist/editor', body: { ArtistIds: [1], DeleteFiles: true } }),
     ).toBe('DELETE /api/v1/artist/editor#delete-files');

@@ -1,6 +1,7 @@
 import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
+import { programsOf } from './stored.js';
 
 /** What a non-GET call acts on, for the approver: the stored series by title, year and folder, episode files by
  * series and file name, a provider connection by name with the hosts it sends to, the import script a media
@@ -89,11 +90,13 @@ async function provider(get: Get, resource: string, body: unknown, id: string | 
       to = [];
     }
   }
+  // A notification that runs a program shows it: its path field is hidden with the other provider fields.
+  const runs = resource === 'notification' ? programsOf(source) : [];
   return [
     {
       kind: resource,
       id: id ?? 'new',
-      name: `${resource} ${name}${impl ? ` (${impl})` : ''}${to.length ? ` → ${to.join(', ')}` : ''}`,
+      name: `${resource} ${name}${impl ? ` (${impl})` : ''}${to.length ? ` → ${to.join(', ')}` : ''}${runs.length ? `, runs ${runs.join(', ')}` : ''}`,
     },
   ];
 }

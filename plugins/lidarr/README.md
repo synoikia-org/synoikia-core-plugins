@@ -31,9 +31,11 @@ A base URL, the API key from Settings → General → Security (sent as `X-Api-K
 | `src/fields.ts`   | Provider `fields[]`: secret masking in results, destinations, refusing masked values in writes           |
 | `src/targets.ts`  | Artists, albums, track files and provider connections a call acts on, shown to the approver              |
 | `src/request.ts`  | Case-insensitive keys: refuses case duplicates, renames the keys the rules read                          |
+| `src/stored.ts`   | Split checks that read upstream: a changed destination (`#stored`), a notification that runs a program   |
+| `src/describe.ts` | Generated descriptions for operations the spec leaves undocumented                                       |
 | `src/locks.ts`    | Refuses a spec that lacks a locked operation                                                             |
 | `test/`           | A fake Lidarr serving the pinned v3.1.6.5078 spec, unit, golden and e2e tests                            |
 
 ## Locked operations
 
-Every delete (track file deletes remove the file from disk); deleting artist or album files, moving artist folders; bulk artist edits; commands that rename, retag, move or delete files or change the application; host, media-management and metadata-provider settings; adding or changing root folders; shutdown and restart; backup restore; creating or changing download clients, indexers, import lists and notifications; notification tests; provider tests that reuse stored credentials; release push. Reasons and literals are in the design note and `plugin.yaml`.
+Bulk edits and deletes (the artist editor, every `…/bulk` and `…/editor` delete, track files included); moving artist folders; commands that rename, retag, move or delete files or change the application; notifications that run a program (`#script`); provider and notification tests and actions that send the stored credentials to another destination (`#stored`); host, media-management and metadata-provider settings; the UI password reset; shutdown and restart; backup restore. Single-item creates, edits and deletes, `deleteFiles` included, are regular writes. Reasons and literals are in the design note and `plugin.yaml`.
