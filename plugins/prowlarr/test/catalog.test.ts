@@ -6,6 +6,8 @@ import { tagFor } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-prowlarr.js';
 import { LOCK_CASES } from './locks.js';
 
+const LOCKED_TOTAL = 27;
+
 /** The catalog from the pinned Prowlarr v2.6.5.5623 spec: a rename upstream must fail here, not silently unlock. */
 
 const catalog = buildCatalog(SPEC_TEXT);
@@ -18,27 +20,38 @@ const VERBS = ['get', 'post', 'put', 'patch', 'delete'];
 
 describe('Prowlarr catalog (pinned spec)', () => {
   it('keys every operation by the spec path, /api/v1 included', () => {
-    expect(catalog.operations).toHaveLength(118);
+    expect(catalog.operations).toHaveLength(125);
     for (const key of keys) expect(key).toMatch(/^(GET|POST|PUT|DELETE) \/api\/v1\//);
   });
 
   it('has every key plugin.yaml locks, and each one is locked', () => {
     const locked = lockedKeys(settings.rules);
-    expect(locked).toHaveLength(24);
+    expect(locked).toHaveLength(8);
     for (const key of locked) {
       expect(keys).toContain(key);
       expect(op(key)).toMatchObject({ locked: true, typedConfirmation: true, classification: 'write' });
     }
   });
 
-  it('locks every delete, every split twin and nothing the rules do not name', () => {
+  it('locks bulk deletes and every split twin, and no single-item delete or write the rules do not name', () => {
+    const bulk = (k: string) => /^DELETE \S+\/(bulk|editor)$/.test(k);
     const locked = catalog.operations.filter((o) => o.locked).map((o) => o.key);
-    for (const o of catalog.operations.filter((x) => x.key.startsWith('DELETE ') || x.key.includes('#')))
+    for (const o of catalog.operations.filter((x) => bulk(x.key) || x.key.includes('#')))
       expect(o.locked, o.key).toBe(true);
     const named = new Set(lockedKeys(settings.rules));
-    const extra = locked.filter((k) => !k.startsWith('DELETE ') && !k.includes('#') && !named.has(k));
-    expect(extra).toEqual([]);
-    expect(locked).toHaveLength(45);
+    expect(locked.filter((k) => !bulk(k) && !k.includes('#') && !named.has(k))).toEqual([]);
+    for (const key of ['DELETE /api/v1/indexer/{id}', 'DELETE /api/v1/applications/{id}', 'DELETE /api/v1/tag/{id}'])
+      expect(op(key), key).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
+    expect(locked).toHaveLength(LOCKED_TOTAL);
+  });
+
+  it('describes every operation, by hand where plugin.yaml says why it is locked or split', () => {
+    for (const o of catalog.operations) expect(o.docs?.description, o.key).toMatch(/\w/);
+    expect(op('GET /api/v1/indexer')?.docs?.description).toBe('List indexers');
+    expect(op('GET /api/v1/indexer/{id}')?.docs?.description).toBe('Get an indexer by id');
+    expect(op('DELETE /api/v1/indexer/{id}')?.docs?.description).toBe('Delete an indexer');
+    for (const o of catalog.operations.filter((x) => x.locked || x.key.includes('#')))
+      expect(o.docs?.description, o.key).toMatch(/Locked|locked|twin/);
   });
 
   it('has a lock case for every named lock and every twin', () => {
@@ -49,26 +62,29 @@ describe('Prowlarr catalog (pinned spec)', () => {
     for (const key of cases) expect(op(key)?.locked, key).toBe(true);
   });
 
-  it('locks application changes, tests and actions, indexer and proxy writes, and the bulk editors', () => {
+  it('locks bulk edits, application tests to every app and instance settings; single provider writes are regular', () => {
     for (const key of [
-      'POST /api/v1/applications',
-      'PUT /api/v1/applications/{id}',
       'PUT /api/v1/applications/bulk',
-      'POST /api/v1/applications/test',
       'POST /api/v1/applications/testall',
       'PUT /api/v1/config/development/{id}',
       'POST /api/v1/applications/test#stored',
-      'POST /api/v1/applications/action/{name}',
       'POST /api/v1/applications/action/{name}#stored',
+      'PUT /api/v1/indexer/bulk',
+      'DELETE /api/v1/indexer/bulk',
+    ])
+      expect(op(key), key).toMatchObject({ locked: true, typedConfirmation: true });
+    for (const key of [
+      'POST /api/v1/applications',
+      'PUT /api/v1/applications/{id}',
+      'POST /api/v1/applications/test',
+      'POST /api/v1/applications/action/{name}',
       'DELETE /api/v1/applications/{id}',
       'POST /api/v1/indexer',
       'PUT /api/v1/indexer/{id}',
-      'PUT /api/v1/indexer/bulk',
-      'DELETE /api/v1/indexer/bulk',
       'POST /api/v1/indexerproxy',
       'PUT /api/v1/indexerproxy/{id}',
     ])
-      expect(op(key), key).toMatchObject({ locked: true, typedConfirmation: true });
+      expect(op(key), key).toMatchObject({ locked: false, classification: 'write' });
     for (const key of ['GET /api/v1/search', 'GET /api/v1/history', 'GET /api/v1/indexerstats', 'GET /api/v1/indexer'])
       expect(op(key), key).toMatchObject({ locked: false, classification: 'read' });
     for (const key of ['POST /api/v1/search', 'POST /api/v1/search/bulk', 'POST /api/v1/indexer/testall'])
@@ -76,7 +92,9 @@ describe('Prowlarr catalog (pinned spec)', () => {
   });
 
   it('matches at least one operation with every rule pattern', () => {
-    for (const pattern of settings.rules.flatMap((r) => listOf(r.match)))
+    // Forward-looking: Prowlarr has no editor endpoint yet.
+    const ahead = new Set(['DELETE */editor']);
+    for (const pattern of settings.rules.flatMap((r) => listOf(r.match)).filter((p) => !ahead.has(p)))
       expect(
         [...keys].some((k) => globRe(pattern).test(k)),
         pattern,
@@ -141,12 +159,18 @@ describe('Prowlarr catalog (pinned spec)', () => {
       expect(op(key)?.sensitiveResult, key).toEqual({ keys: ['downloadUrl', 'magnetUrl', 'url'], deep: true });
   });
 
-  it('locks a delete a newer spec adds', () => {
+  it('locks a bulk delete a newer spec adds, and leaves a new single delete a regular write', () => {
     const spec = specOf();
-    const newer = { ...spec, paths: { ...spec.paths, '/api/v1/history/{id}': { delete: { tags: ['History'] } } } };
-    expect(buildCatalog(newer).operations.find((o) => o.key === 'DELETE /api/v1/history/{id}')).toMatchObject({
-      locked: true,
-      typedConfirmation: true,
+    const paths = {
+      ...spec.paths,
+      '/api/v1/history/{id}': { delete: { tags: ['History'] } },
+      '/api/v1/history/bulk': { delete: { tags: ['History'] } },
+    };
+    const ops = buildCatalog({ ...spec, paths }).operations;
+    expect(ops.find((o) => o.key === 'DELETE /api/v1/history/bulk')).toMatchObject({ locked: true });
+    expect(ops.find((o) => o.key === 'DELETE /api/v1/history/{id}')).toMatchObject({
+      locked: false,
+      classification: 'write',
     });
   });
 
@@ -158,20 +182,21 @@ describe('Prowlarr catalog (pinned spec)', () => {
 
   it('refuses a spec that lost a locked operation, as after an upstream rename', () => {
     const spec = specOf();
-    const { post: _gone, ...rest } = spec.paths['/api/v1/applications']!;
-    const renamed = { ...spec, paths: { ...spec.paths, '/api/v1/applications': rest } };
-    expect(() => buildCatalog(renamed)).toThrow(/lacks locked operations \(POST \/api\/v1\/applications\)/);
+    const { post: _gone, ...rest } = spec.paths['/api/v1/applications/testall']!;
+    const renamed = { ...spec, paths: { ...spec.paths, '/api/v1/applications/testall': rest } };
+    expect(() => buildCatalog(renamed)).toThrow(/lacks locked operations \(POST \/api\/v1\/applications\/testall\)/);
   });
 });
 
 describe('split predicates and literals', () => {
   const call = (key: string, params: object) =>
     ({ key, method: key.split(' ')[0], template: key.split(' ')[1], params, request: {} }) as Parameters<
-      (typeof splitWhen)['heavy']
+      ReturnType<typeof splitWhen>['heavy']
     >[0];
+  const offline = splitWhen();
 
   it('takes #heavy for any command not listed as quick, compared case-insensitively', () => {
-    const heavy = (body: unknown) => splitWhen.heavy!(call('POST /api/v1/command', { body }));
+    const heavy = (body: unknown) => offline.heavy!(call('POST /api/v1/command', { body }));
     expect(heavy({ name: 'CheckHealth' })).toBe(false);
     expect(heavy({ name: 'indexerdefinitionupdate' })).toBe(false);
     for (const name of [
@@ -190,10 +215,73 @@ describe('split predicates and literals', () => {
     expect(heavy(undefined)).toBe(true);
   });
 
-  it('takes #stored when the body names a stored provider', () => {
-    const stored = (body: unknown) => splitWhen.stored!(call('POST /api/v1/applications/test', { body }));
-    expect([stored({}), stored({ id: 0 }), stored({ id: null })]).toEqual([false, false, false]);
-    expect([stored({ id: 4 }), stored({ id: '4' })]).toEqual([true, true]);
+  const qbit = {
+    id: 6,
+    name: 'qBit',
+    implementation: 'QBittorrent',
+    fields: [
+      { name: 'host', value: 'qbittorrent.lan' },
+      { name: 'port', value: 8080 },
+      { name: 'urlBase', value: '' },
+      { name: 'useSsl', value: false },
+      { name: 'password', value: '********', privacy: 'password' },
+    ],
+  };
+  const KEY = 'POST /api/v1/downloadclient/test';
+  const withField = (name: string, value: unknown) => ({
+    ...qbit,
+    fields: qbit.fields.map((f) => (f.name === name ? { ...f, value } : f)),
+  });
+
+  it('takes #stored only when a stored connection is sent to another destination', async () => {
+    const seen: string[] = [];
+    const stored = splitWhen(async (path) => {
+      seen.push(path);
+      if (path === '/api/v1/downloadclient/6') return qbit;
+      throw new Error('404');
+    }).stored!;
+    const take = (body: unknown) => stored(call(KEY, { body }));
+    expect([await take({}), await take({ id: 0 }), await take({ id: null })]).toEqual([false, false, false]);
+    expect(await take(qbit)).toBe(false);
+    expect(await take({ ...withField('host', 'QBITTORRENT.LAN'), name: 'renamed' })).toBe(false);
+    expect(seen).toContain('/api/v1/downloadclient/6');
+    for (const body of [
+      withField('host', 'collector.example'),
+      withField('port', 443),
+      withField('useSsl', true),
+      withField('urlBase', '/x'),
+      { ...qbit, implementation: 'Transmission' },
+      { ...qbit, fields: qbit.fields.filter((f) => f.name !== 'host') },
+      { ...qbit, fields: [...qbit.fields, { name: 'proxyUrl', value: 'https://collector.example' }] },
+      { ...qbit, id: 99 },
+      { ...qbit, id: '6', fields: 'nope' },
+    ])
+      expect(await take(body), JSON.stringify(body)).toBe(true);
+    expect(await offline.stored!(call(KEY, { body: qbit }))).toBe(true);
+  });
+
+  it('takes #script for a notification that runs a program, and testall while one is stored', async () => {
+    const script = (key: string, body: unknown, rows?: unknown) =>
+      splitWhen(async () => {
+        if (rows === undefined) throw new Error('down');
+        return rows;
+      }).script!(call(key, { body }));
+    const hook = { name: 'Hook', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example' }] };
+    expect(await script('POST /api/v1/notification', hook)).toBe(false);
+    for (const body of [
+      { name: 'Run', implementation: 'CustomScript', fields: [] },
+      { name: 'Run', implementation: 'customscript' },
+      { name: 'x', implementation: 'Other', fields: [{ name: 'Path', value: '/bin/sh' }] },
+      { name: 'x', implementation: 'Other', fields: [{ name: 'p', type: 'filePath', value: '/x' }] },
+      { id: 9, name: 'no implementation' },
+      undefined,
+    ])
+      expect(await script('PUT /api/v1/notification/{id}', body), JSON.stringify(body)).toBe(true);
+    const TESTALL = 'POST /api/v1/notification/testall';
+    expect(await script(TESTALL, undefined, [hook])).toBe(false);
+    expect(await script(TESTALL, undefined, [hook, { implementation: 'CustomScript' }])).toBe(true);
+    expect(await script(TESTALL, undefined, { not: 'a list' })).toBe(true);
+    expect(await script(TESTALL, undefined)).toBe(true);
   });
 
   it('counts the providers a bulk call changes', () => {

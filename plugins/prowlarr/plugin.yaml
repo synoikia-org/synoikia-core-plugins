@@ -3,7 +3,7 @@
 # own paths, `/api/v1` included (`GET /api/v1/indexer/{id}`); GET reads, other verbs write, anything unlisted is a write.
 
 defaults:
-  # A locked operation without its own literal (a DELETE a newer spec adds) confirms on its path id.
+  # A locked operation without its own literal confirms on its path id, else the instance name.
   confirm: [{ custom: path-id }, instance]
   timeouts: { request: 15000, lookup: 10000 }
 
@@ -28,45 +28,35 @@ exclude:
   - 'GET /api/v1/indexer/{id}/download'
 
 rules:
-  # Irreversible, bulk, instance-wide, or sends credentials or data to a destination: a human types a confirmation.
+  # Bulk, instance-wide, or runs a program: a human types a confirmation. Single-item writes and deletes are
+  # regular writes.
   - match:
+      - 'PUT /api/v1/indexer/bulk'
+      - 'PUT /api/v1/applications/bulk'
       - 'PUT /api/v1/config/host/{id}'
       # Logs indexer responses (with session cookies and keys) and SQL to the log files.
       - 'PUT /api/v1/config/development/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
       - 'POST /api/v1/system/backup/restore/{id}'
-      - 'DELETE /api/v1/system/backup/{id}'
-      - 'POST /api/v1/downloadclient'
-      - 'PUT /api/v1/downloadclient/{id}'
-      - 'POST /api/v1/indexer'
-      - 'PUT /api/v1/indexer/{id}'
-      - 'PUT /api/v1/indexer/bulk'
-      - 'POST /api/v1/indexerproxy'
-      - 'PUT /api/v1/indexerproxy/{id}'
-      - 'POST /api/v1/notification'
-      - 'PUT /api/v1/notification/{id}'
-      # An application gets every synced indexer with Prowlarr's API key, and Prowlarr keeps the app's API key.
-      - 'POST /api/v1/applications'
-      - 'PUT /api/v1/applications/{id}'
-      - 'PUT /api/v1/applications/bulk'
-      - 'POST /api/v1/applications/test'
-      - 'POST /api/v1/applications/action/{name}'
       # Posts a test indexer with Prowlarr's API key to every stored application.
       - 'POST /api/v1/applications/testall'
-      # Sends a notification to whatever recipient the body names, or to every configured one.
+    locked: true
+  # Every bulk or editor delete, including one a newer spec adds.
+  - match: ['DELETE */bulk', 'DELETE */editor']
+    locked: true
+
+  # Locked twins picked per call (src/catalog.ts): a command not in `plugin.quickCommands`, a notification that runs
+  # a program, and a test or action that sends the stored credentials to a destination other than the stored one.
+  - match: 'POST /api/v1/command'
+    split: heavy
+  - match:
+      - 'POST /api/v1/notification'
+      - 'PUT /api/v1/notification/{id}'
       - 'POST /api/v1/notification/test'
       - 'POST /api/v1/notification/testall'
       - 'POST /api/v1/notification/action/{name}'
-    locked: true
-  # A delete a newer spec adds is locked until reviewed.
-  - match: 'DELETE *'
-    locked: true
-
-  # Locked twins picked per call (src/plugin.ts): a command not in `plugin.quickCommands`, a provider test or action
-  # that reuses the stored credentials (`id` in the body).
-  - match: 'POST /api/v1/command'
-    split: heavy
+    split: script
   - match:
       - 'POST /api/v1/downloadclient/test'
       - 'POST /api/v1/downloadclient/action/{name}'
@@ -76,33 +66,76 @@ rules:
       - 'POST /api/v1/indexerproxy/action/{name}'
       - 'POST /api/v1/applications/test'
       - 'POST /api/v1/applications/action/{name}'
+      - 'POST /api/v1/notification/test'
+      - 'POST /api/v1/notification/action/{name}'
     split: stored
+
+  # What each locked, split or twin operation does, and why it matters.
   - match: '*#heavy'
     description: >-
       Starting a command that syncs indexers to the applications, clears data, updates, restarts or reconfigures
       Prowlarr, or one not reviewed: locked.
     summaryNote: '(syncs applications, clears data, or changes the application)'
+  - match: '*#script'
+    description: >-
+      {base} for a notification that runs a program (Custom Script, or a path or script field), or a test of every
+      notification while one does: Prowlarr runs the program on its host. Locked.
+    summaryNote: '(runs a program on the Prowlarr host)'
   - match: '*#stored'
     description: >-
-      {base} for a stored connection: Prowlarr fills in its saved password or API key and contacts the host in the
-      body. Locked.
-    summaryNote: '(sends the stored credentials to the host in the body)'
+      {base} for a stored connection whose host, port, URL, SSL or type changes: Prowlarr fills in the saved password
+      or API key and sends it to the new destination. Locked.
+    summaryNote: '(sends the stored credentials to a destination other than the stored one)'
+  - match: ['POST /api/v1/applications/test#stored', 'POST /api/v1/applications/action/{name}#stored']
+    summaryNote: "(the application gets Prowlarr's indexers and API key)"
+  - match: 'PUT /api/v1/indexer/bulk'
+    description: 'Changes many indexers at once: enable, priority, app profile, tags. Locked as a bulk edit.'
+  - match: 'PUT /api/v1/applications/bulk'
+    description: 'Changes many applications at once: sync level and tags. Locked as a bulk edit.'
+  - match: ['DELETE */bulk', 'DELETE */editor']
+    description: '{base}: deletes every item the body lists in one call. Locked as a bulk delete.'
+  - match: 'PUT /api/v1/config/host/{id}'
+    description: >-
+      Changes the host settings: sign-in, API key, bind address, port, URL base, SSL, proxy and update script.
+      Locked: it can lock users out or expose Prowlarr.
+    summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
+  - match: 'PUT /api/v1/config/development/{id}'
+    description: >-
+      Changes the development settings: logging of indexer responses (with cookies and keys) and SQL to the log
+      files. Locked as instance configuration.
+    summaryNote: '(logging of indexer responses and SQL to the log files)'
+  - match: 'POST /api/v1/system/shutdown'
+    description: 'Shuts Prowlarr down until someone starts it again. Locked.'
+  - match: 'POST /api/v1/system/restart'
+    description: 'Restarts Prowlarr, stopping running searches and syncs. Locked.'
+  - match: 'POST /api/v1/system/backup/restore/{id}'
+    description: 'Restores a stored backup over the database and settings, then restarts. Locked.'
+    summaryNote: '(replaces the database and settings, then restarts)'
+  - match: 'POST /api/v1/applications/testall'
+    description: 'Tests every stored application: Prowlarr posts a test indexer with its API key to each. Locked.'
+    summaryNote: "(sends Prowlarr's API key to every stored application)"
+  - match: 'POST /api/v1/command'
+    description: 'Runs a command (health check, backup, definition update). One not in the quick list takes the #heavy twin.'
+  - match: ['POST /api/v1/notification', 'PUT /api/v1/notification/{id}', 'POST /api/v1/notification/testall']
+    description: '{base}: a notification that runs a program takes the #script twin.'
+  - match: ['POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
+    description: >-
+      {base}: a notification that runs a program takes the #script twin, and a stored one sent to a new destination
+      the #stored twin.
   - match:
-      - 'POST /api/v1/applications'
-      - 'PUT /api/v1/applications/{id}'
+      - 'POST /api/v1/downloadclient/test'
+      - 'POST /api/v1/downloadclient/action/{name}'
+      - 'POST /api/v1/indexer/test'
+      - 'POST /api/v1/indexer/action/{name}'
+      - 'POST /api/v1/indexerproxy/test'
+      - 'POST /api/v1/indexerproxy/action/{name}'
       - 'POST /api/v1/applications/test'
       - 'POST /api/v1/applications/action/{name}'
+    description: '{base}: a stored connection (`id` in the body) sent to a new destination takes the #stored twin.'
+  - match: ['POST /api/v1/applications', 'PUT /api/v1/applications/{id}']
     summaryNote: "(the application gets Prowlarr's indexers and API key)"
   - match: ['POST /api/v1/indexerproxy', 'PUT /api/v1/indexerproxy/{id}']
     summaryNote: '(indexer traffic with its tags goes through this proxy)'
-  - match: 'POST /api/v1/applications/testall'
-    summaryNote: "(sends Prowlarr's API key to every stored application)"
-  - match: 'PUT /api/v1/config/host/{id}'
-    summaryNote: '(sign-in, bind address, port, URL base, proxy and update script)'
-  - match: 'PUT /api/v1/config/development/{id}'
-    summaryNote: '(logging of indexer responses and SQL to the log files)'
-  - match: 'POST /api/v1/system/backup/restore/{id}'
-    summaryNote: '(replaces the database and settings, then restarts)'
 
   # The literal an approver types: the stored item's name, never a body field the model writes except on create.
   - match: ['* /api/v1/indexer/bulk', '* /api/v1/applications/bulk', '* /api/v1/downloadclient/bulk']
@@ -115,35 +148,11 @@ rules:
       - 'PUT /api/v1/config/development/{id}'
       - 'POST /api/v1/system/shutdown'
       - 'POST /api/v1/system/restart'
-      - 'POST /api/v1/notification/testall'
       - 'POST /api/v1/applications/testall'
+      - 'POST /api/v1/notification/testall#script'
     confirm: instance
   - match: '*#heavy'
     confirm: [{ custom: command }, instance]
-  - match:
-      - 'POST /api/v1/downloadclient'
-      - 'POST /api/v1/indexer'
-      - 'POST /api/v1/indexerproxy'
-      - 'POST /api/v1/notification'
-      - 'POST /api/v1/applications'
-      - 'POST /api/v1/applications/test'
-      - 'POST /api/v1/applications/action/{name}'
-    confirm: [{ param: /body/name }, instance]
-  - match: '* /api/v1/downloadclient/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/indexer/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/indexer/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/indexerproxy/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/indexerproxy/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/notification/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: '* /api/v1/applications/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/applications/{id}', args: [{ id: { $param: /path/id } }], field: name }
   - match: 'POST /api/v1/downloadclient/*#stored'
     confirm:
       lookup: { op: 'GET /api/v1/downloadclient/{id}', args: [{ id: { $param: /body/id } }], field: name }
@@ -156,22 +165,15 @@ rules:
   - match: 'POST /api/v1/applications/*#stored'
     confirm:
       lookup: { op: 'GET /api/v1/applications/{id}', args: [{ id: { $param: /body/id } }], field: name }
-  - match: ['POST /api/v1/notification/test', 'POST /api/v1/notification/action/{name}']
+  - match: 'PUT /api/v1/notification/{id}#script'
+    confirm:
+      lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /path/id } }], field: name }
+  - match:
+      ['POST /api/v1/notification#script', 'POST /api/v1/notification/*#script', 'POST /api/v1/notification/*#stored']
     confirm:
       - lookup: { op: 'GET /api/v1/notification/{id}', args: [{ id: { $param: /body/id } }], field: name }
+      - param: /body/name
       - instance
-  - match: 'DELETE /api/v1/tag/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/tag/{id}', args: [{ id: { $param: /path/id } }], field: label }
-  - match: 'DELETE /api/v1/appprofile/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/appprofile/{id}', args: [{ id: { $param: /path/id } }], field: name }
-  - match: 'DELETE /api/v1/customfilter/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/customfilter/{id}', args: [{ id: { $param: /path/id } }], field: label }
-  - match: 'DELETE /api/v1/command/{id}'
-    confirm:
-      lookup: { op: 'GET /api/v1/command/{id}', args: [{ id: { $param: /path/id } }], field: name }
 
   # Provider settings carry passwords, API keys, cookies and webhook URLs with tokens in `fields[].value`; the
   # approver sees the destination host as a target instead (src/targets.ts).

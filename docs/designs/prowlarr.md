@@ -6,7 +6,7 @@ Prowlarr (https://github.com/Prowlarr/Prowlarr) manages indexers (Usenet and tor
 
 As Radarr: `Startup.cs` mounts Swagger only `if (BuildInfo.IsDebug)`, so the spec comes from `src/Prowlarr.Api.V1/openapi.json` at the tag `v<4-part version>` reported by `GET /api/v1/system/status`, else `develop`, from `specBaseUrl` (default `https://raw.githubusercontent.com/Prowlarr/Prowlarr`). Keys are the spec's paths, `/api/v1` included. A spec with fewer than 90 operations is refused. Tests pin tag `v2.6.5.5623` (the `master` head; `test/fixtures/prowlarr-openapi.json`, responses reduced to their descriptions, unreferenced schemas dropped): 128 spec operations, 118 in the catalog after exclusions and twins.
 
-`src/spec.ts`, `src/locks.ts`, `src/request.ts` and `src/auth.ts` are Radarr's, unchanged. `src/fields.ts` adds the Cardigann and guid rules below.
+`src/spec.ts`, `src/locks.ts`, `src/request.ts`, `src/auth.ts`, `src/stored.ts` and `src/describe.ts` are Radarr's, unchanged. `src/fields.ts` adds the Cardigann and guid rules below.
 
 ## Excluded
 
@@ -19,18 +19,14 @@ Radarr's web UI, sign-in, log file, filesystem and backup upload exclusions with
 
 ## Locks
 
-Radarr's locks for host settings, shutdown and restart, backups, download clients, notifications and their tests, `#stored` provider tests and actions, and `DELETE *`, with these Prowlarr ones:
+Radarr's locks for bulk deletes (`DELETE */bulk`, `DELETE */editor`), host settings, shutdown and restart, backup restore, `#script` notifications and `#stored` tests and actions, with these Prowlarr ones. Single-item creates, edits and deletes of indexers, applications, indexer proxies, download clients, notifications, app profiles and tags are regular writes. Prowlarr's spec has no `POST /reset-password*`.
 
 | Operation | Why | Literal |
 | --- | --- | --- |
-| `POST /api/v1/applications`, `PUT /api/v1/applications/{id}` | Prowlarr pushes every synced indexer to the app's `baseUrl`, with Prowlarr's API key and `prowlarrUrl`, and keeps the app's API key | body `name` on create, stored name on update |
-| `POST /api/v1/applications/test`, `/action/{name}` | Even without an `id`, a test posts a test indexer with Prowlarr's API key to the host in the body | body `name`, else instance name |
-| `POST /api/v1/applications/{test,action/{name}}#stored` | With an `id`, Prowlarr also fills in the stored app API key | stored name |
+| `POST /api/v1/applications/{test,action/{name}}#stored` | With an `id`, Prowlarr fills in the stored app API key and posts a test indexer with its own API key. The twin is taken when the body changes the app's destination (`baseUrl`, `prowlarrUrl` or the type) or the stored app can't be read | stored name |
 | `POST /api/v1/applications/testall` | Posts a test indexer with Prowlarr's API key to every stored application | instance name |
 | `PUT /api/v1/applications/bulk` | Sync level (`fullSync` removes indexers from the apps) and tags of many apps | `<n> applications` |
-| `POST /api/v1/indexer`, `PUT /api/v1/indexer/{id}` | Credentials and site URL; a new indexer is pushed to every synced app | body `name`, stored name |
 | `PUT /api/v1/indexer/bulk`, `DELETE /api/v1/indexer/bulk` | App profile, tags (which apps and proxies apply), enable and seed settings of many indexers | `<n> indexers` |
-| `POST /api/v1/indexerproxy`, `PUT /api/v1/indexerproxy/{id}` | All traffic of the indexers with its tags goes through the proxy (HTTP, SOCKS, FlareSolverr) | body `name`, stored name |
 | `POST /api/v1/indexerproxy/{test,action/{name}}#stored` | As for other providers | stored name |
 | `PUT /api/v1/config/development/{id}` | Turns on logging of indexer responses (session cookies, keys) and SQL to the log files | instance name |
 | `DELETE /api/v1/downloadclient/bulk` | Bulk delete | `<n> download clients` |

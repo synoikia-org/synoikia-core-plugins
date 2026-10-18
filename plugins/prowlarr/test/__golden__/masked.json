@@ -364,6 +364,25 @@
         "id": 14,
         "implementation": "Webhook",
         "name": "Hook"
+      },
+      {
+        "fields": [
+          {
+            "name": "path",
+            "privacy": "normal",
+            "type": "textbox",
+            "value": "/config/scripts/notify.sh"
+          },
+          {
+            "name": "arguments",
+            "privacy": "normal",
+            "type": "textbox",
+            "value": ""
+          }
+        ],
+        "id": 30,
+        "implementation": "CustomScript",
+        "name": "Post-import script"
       }
     ],
     "sensitiveParams": [

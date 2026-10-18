@@ -1,8 +1,11 @@
 import { buildOpenApiCatalog, compileRules, isPlainObject, parsePluginSettings, stringOr } from '@synoikia/plugin-sdk';
 import type { CompiledRules, ConfirmContext, RestCall, RuleHooks } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
+import { withDescriptions } from './describe.js';
 import { lockedKeys, requireLockedKeys } from './locks.js';
 import { parseSpecSource } from './spec.js';
+import { runsScript, sendsStoredElsewhere } from './stored.js';
+import type { Get } from './stored.js';
 
 /** Prowlarr's catalog: the SDK's OpenAPI catalog over the spec for the instance's release, with plugin.yaml's rules
  * on top; keys are the spec's paths, `/api/v1` included. */
@@ -36,18 +39,18 @@ export const settings = parsePluginSettings(raw, {
 
 const body = (params: unknown) => (isPlainObject(params) ? params.body : undefined);
 
-/** When a call takes its locked twin (plugin.yaml `split`); anything unexpected takes the twin. */
-export const splitWhen: Record<string, (call: RestCall) => boolean> = {
-  heavy: (call) => {
-    const name = isPlainObject(call.params.body) ? call.params.body.name : undefined;
-    return typeof name !== 'string' || !settings.plugin.quickCommands.has(name.toLowerCase());
-  },
-  // Servarr fills stored secrets into a test or action for any `id` > 0.
-  stored: (call) => {
-    const id = isPlainObject(call.params.body) ? call.params.body.id : undefined;
-    return !(id === undefined || id === null || (typeof id === 'number' && id <= 0));
-  },
-};
+/** When a call takes its locked twin (plugin.yaml `split`); anything unexpected takes the twin. `get` reads the
+ * stored provider or notifications; without it, the twins that need a lookup are taken. */
+export function splitWhen(get?: Get): Record<string, (call: RestCall) => boolean | Promise<boolean>> {
+  return {
+    heavy: (call) => {
+      const name = isPlainObject(call.params.body) ? call.params.body.name : undefined;
+      return typeof name !== 'string' || !settings.plugin.quickCommands.has(name.toLowerCase());
+    },
+    stored: (call) => sendsStoredElsewhere(get, call.key, call.params.body),
+    script: (call) => runsScript(get, call.key, call.params.body),
+  };
+}
 
 const BULK_NOUNS: Record<string, string> = {
   indexer: 'indexer',
@@ -57,7 +60,7 @@ const BULK_NOUNS: Record<string, string> = {
 
 /** Named confirmation sources plugin.yaml uses. */
 export const custom: NonNullable<RuleHooks['custom']> = {
-  // The first path id: the literal for a locked operation plugin.yaml gives none (a newer DELETE).
+  // The first path id: the literal for a locked operation plugin.yaml gives none.
   'path-id': ({ params }: ConfirmContext) => {
     const path = isPlainObject(params) && isPlainObject(params.path) ? params.path : {};
     return Object.values(path).map(stringOr).find(Boolean);
@@ -84,7 +87,11 @@ export const policy = compileRules(settings, { custom });
 const LOCKED_KEYS = lockedKeys(settings.rules);
 
 export function buildCatalog(spec: string | Record<string, unknown>, rules: CompiledRules<unknown> = policy) {
-  const catalog = buildOpenApiCatalog(spec, { service: SERVICE, rules, minOperations: settings.plugin.minOperations });
+  const catalog = buildOpenApiCatalog(withDescriptions(spec, SERVICE), {
+    service: SERVICE,
+    rules,
+    minOperations: settings.plugin.minOperations,
+  });
   requireLockedKeys(catalog.operations, LOCKED_KEYS, SERVICE);
   return catalog;
 }

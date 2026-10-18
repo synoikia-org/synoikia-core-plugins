@@ -66,7 +66,7 @@ describe('Prowlarr plugin', () => {
     expect({ upstreamVersion, sourceRef, count: operations.length }).toEqual({
       upstreamVersion: VERSION,
       sourceRef: TAG,
-      count: 118,
+      count: 125,
     });
     expect(fake.specFetches).toEqual([TAG]);
     expect(fake.requests.filter((r) => r.path.startsWith('/spec/')).every((r) => !r.headers['x-api-key'])).toBe(true);
@@ -126,6 +126,41 @@ describe('Prowlarr plugin', () => {
     );
     expect(await key({ method: 'POST', path: '/api/v1/applications/test', body: { Id: 4, Fields: [] } })).toBe(
       'POST /api/v1/applications/test#stored',
+    );
+  });
+
+  it('takes #stored for a download client test only when the destination changes', async () => {
+    const key = async (body: object) =>
+      (await resolve({ method: 'POST', path: '/api/v1/downloadclient/test', body })).key;
+    const stored = structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    const fields = stored.fields as { name: string; value: unknown }[];
+    expect(await key(stored)).toBe('POST /api/v1/downloadclient/test');
+    const moved = fields.map((f) => (f.name === 'host' ? { ...f, value: 'collector.example' } : f));
+    expect(await key({ ...stored, fields: moved })).toBe('POST /api/v1/downloadclient/test#stored');
+    expect(await key({ ...stored, id: 404 })).toBe('POST /api/v1/downloadclient/test#stored');
+  });
+
+  it('takes #stored for an application test only when the destination changes', async () => {
+    const key = async (body: object) =>
+      (await resolve({ method: 'POST', path: '/api/v1/applications/test', body })).key;
+    const app = structuredClone(fake.store.get('applications')!.get(4)!);
+    expect(await key(app)).toBe('POST /api/v1/applications/test');
+    const fields = app.fields as { name: string; value: unknown }[];
+    const moved = fields.map((f) => (f.name === 'baseUrl' ? { ...f, value: 'http://collector.example' } : f));
+    expect(await key({ ...app, fields: moved })).toBe('POST /api/v1/applications/test#stored');
+  });
+
+  it('takes #script for a notification that runs a program', async () => {
+    const key = async (request: object) => (await resolve(request)).key;
+    const webhook = { name: 'New', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example' }] };
+    expect(await key({ method: 'POST', path: '/api/v1/notification', body: webhook })).toBe(
+      'POST /api/v1/notification',
+    );
+    expect(
+      await key({ method: 'POST', path: '/api/v1/notification', body: { ...webhook, implementation: 'CustomScript' } }),
+    ).toBe('POST /api/v1/notification#script');
+    expect(await key({ method: 'POST', path: '/api/v1/notification/testall' })).toBe(
+      'POST /api/v1/notification/testall#script',
     );
   });
 
@@ -190,7 +225,8 @@ describe('Prowlarr plugin', () => {
     expect(text).toMatch(
       /^Prowlarr POST \/api\/v1\/applications on applications X \(Radarr\) → http:\/\/radarr\.lan:7878 \{/,
     );
-    expect(confirmLiteral).toBe('X');
+    // A new download client is a regular write: core approves it without a typed literal.
+    expect(confirmLiteral).toBeUndefined();
   });
 
   it('masks provider and Cardigann secrets in results, and link-shaped release guids', async () => {

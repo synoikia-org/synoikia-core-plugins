@@ -1,6 +1,7 @@
 import { isPlainObject, stringOr } from '@synoikia/plugin-sdk';
 import type { HttpJsonClient, ResolvedTarget } from '@synoikia/plugin-sdk';
 import { destinations, safe } from './fields.js';
+import { programsOf } from './stored.js';
 
 /** What a non-GET call acts on, for the approver: a provider connection (indexer, application, proxy, download
  * client, notification) by name with the hosts it sends to, the providers a bulk call changes, or the releases a grab
@@ -39,11 +40,13 @@ async function provider(get: Get, resource: string, body: unknown, id: string | 
       to = [];
     }
   }
+  // A notification that runs a program shows it: its path field is hidden with the other provider fields.
+  const runs = resource === 'notification' ? programsOf(source) : [];
   return [
     {
       kind: resource,
       id: id ?? 'new',
-      name: `${label(resource, source, id)}${to.length ? ` → ${to.join(', ')}` : ''}`,
+      name: `${label(resource, source, id)}${to.length ? ` → ${to.join(', ')}` : ''}${runs.length ? `, runs ${runs.join(', ')}` : ''}`,
     },
   ];
 }

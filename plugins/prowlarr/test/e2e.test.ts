@@ -36,7 +36,7 @@ const SECRET_VALUES = Object.values(SECRETS);
 
 describe('Prowlarr end to end (fake Prowlarr)', () => {
   it('syncs the spec for the instance release', () => {
-    expect(h.operations()).toHaveLength(118);
+    expect(h.operations()).toHaveLength(125);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches).toContain(TAG);
     expect(h.operation('POST /api/v1/applications/test#stored')).toMatchObject({
@@ -84,6 +84,54 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
     expect(shown[0]).toContain('Prowlarr POST /api/v1/command');
   });
 
+  describe('single-item writes are regular writes: approved at Ask, no literal typed', () => {
+    const stored = () => structuredClone(fake.store.get('downloadclient')!.get(6)!);
+    it.each([
+      ['DELETE /api/v1/indexer/{id}', { method: 'DELETE', path: '/api/v1/indexer/1' }],
+      ['POST /api/v1/downloadclient/test', { method: 'POST', path: '/api/v1/downloadclient/test', body: 'stored' }],
+      [
+        'POST /api/v1/notification',
+        {
+          method: 'POST',
+          path: '/api/v1/notification',
+          body: { name: 'New', implementation: 'Webhook', fields: [{ name: 'url', value: 'https://h.example/x' }] },
+        },
+      ],
+    ])('%s', async (key, request) => {
+      const req = 'body' in request && request.body === 'stored' ? { ...request, body: stored() } : request;
+      expect(h.operation(key)).toMatchObject({ locked: false, classification: 'write' });
+      h.setOperationLevel(key, 'ask');
+      let literal: unknown = 'unset';
+      const r = await h.execute(call(req), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          a.approve();
+        },
+      });
+      h.setOperationLevel(key, null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal ?? null).toBeNull();
+      expect(h.audit({ operationKey: key }).length).toBeGreaterThan(0);
+    });
+
+    it('takes the locked twin once the stored download client goes to another host', async () => {
+      const body = stored();
+      const fields = body.fields as { name: string; value: unknown }[];
+      body.fields = fields.map((f) => (f.name === 'host' ? { ...f, value: 'collector.example' } : f));
+      h.setOperationLevel('POST /api/v1/downloadclient/test#stored', 'ask');
+      let literal: unknown;
+      const r = await h.execute(call({ method: 'POST', path: '/api/v1/downloadclient/test', body }), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          a.approve(String(literal));
+        },
+      });
+      h.setOperationLevel('POST /api/v1/downloadclient/test#stored', null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal).toBe('qBit');
+    });
+  });
+
   describe('every locked operation needs its literal typed', () => {
     it.each(LOCK_CASES)('$key → "$confirm"', async ({ key, request, confirm }) => {
       h.setOperationLevel(key, 'ask');
@@ -110,7 +158,8 @@ describe('Prowlarr end to end (fake Prowlarr)', () => {
       const text = shown.join('\n');
       for (const secret of [...BODY_SECRETS, ...SECRET_VALUES]) expect(text).not.toContain(secret);
       // The approver sees where a provider call sends data.
-      if (
+      if (key.includes('#script') && !key.includes('testall')) expect(shown[0]).toContain('runs /tmp/evil.sh');
+      else if (
         /(downloadclient|indexer|indexerproxy|notification|applications)(\/(test|action)|\/\{id\}|$)/.test(key) &&
         !key.includes('testall')
       )
