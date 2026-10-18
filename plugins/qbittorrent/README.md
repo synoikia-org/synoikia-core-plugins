@@ -27,17 +27,12 @@ See the manifest's `connection.help`: the WebUI base URL, username and password.
 
 ## Locked operations
 
-| Operation                                                                                                                                                                                                    | Confirm                                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `torrents.delete`, `torrents.delete#with-files`, `torrents.setLocation`, `torrents.setSavePath`                                                                                                              | the torrent's name, `<n> torrents`, or `all <n> torrents` |
-| `#all` twins of stop, start, recheck, reannounce, setCategory, tags, limits, share limits                                                                                                                    | `all <n> torrents`                                        |
-| `torrents.setShareLimits#remove` (a share limit that removes torrents)                                                                                                                                       | the torrent's name or `<n> torrents`                      |
-| `torrents.addTrackers`, `torrents.editTracker`, `torrents.removeTrackers`                                                                                                                                    | the torrent's name                                        |
-| `torrents.editCategory`, `torrents.removeCategories`                                                                                                                                                         | the category names                                        |
-| `torrents.deleteTags`                                                                                                                                                                                        | the tag names                                             |
-| `rss.setFeedURL`, `rss.removeItem`                                                                                                                                                                           | the stored feed or folder path                            |
-| `rss.setRule`, `rss.removeRule`                                                                                                                                                                              | the stored rule name (a new rule: the host name)          |
-| `search.uninstallPlugin`, `search.enablePlugin`                                                                                                                                                              | the plugin names                                          |
-| `torrents.createCategory#paths` (a new category with its own save path), `torrents.add`, `app.setPreferences`, `app.shutdown`, `rss.addFeed`, `search.start`, `search.installPlugin`, `search.updatePlugins` | the base URL's host name                                  |
+| Operation                                                                                            | Confirm                                                   |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `torrents.delete#with-files` (`deleteFiles: true`, for one torrent, several or `all`)                | the torrent's name, `<n> torrents`, or `all <n> torrents` |
+| `search.uninstallPlugin`, `search.enablePlugin`                                                      | the plugin names                                          |
+| `app.setPreferences`, `app.shutdown`, `search.start`, `search.installPlugin`, `search.updatePlugins` | the base URL's host name                                  |
+
+Other torrent, category, tag, tracker and RSS writes are regular writes, with the same destination-first summaries.
 
 Sign-in, cookies, the API key, `torrents/export`, the directory browser, torrent creation and uploads from disk are not declared at all.

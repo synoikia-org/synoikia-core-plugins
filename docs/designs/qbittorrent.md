@@ -28,10 +28,10 @@ Every read is a GET and every write a POST; the plugin refuses to load otherwise
 | --- | --- | --- | --- |
 | `app` | `version`, `webapiVersion`, `buildInfo`, `preferences`, `defaultSavePath` | | `setPreferences`, `shutdown` |
 | `transfer` | `info`, `speedLimitsMode` | `setDownloadLimit`, `setUploadLimit`, `toggleSpeedLimitsMode` | |
-| `torrents` | `info`, `properties`, `trackers`, `webseeds`, `files`, `pieceStates`, `categories`, `tags` | `stop`, `start`, `recheck`, `reannounce`, `setCategory`, `addTags`, `removeTags`, `setDownloadLimit`, `setUploadLimit`, `setShareLimits`, `topPrio`, `bottomPrio`, `filePrio`, `rename`, `renameFile`, `renameFolder`, `createCategory`, `createTags` | `delete`, `add`, `setLocation`, `setSavePath`, `editCategory`, `removeCategories`, `deleteTags`, `addTrackers`, `editTracker`, `removeTrackers` |
+| `torrents` | `info`, `properties`, `trackers`, `webseeds`, `files`, `pieceStates`, `categories`, `tags` | `stop`, `start`, `recheck`, `reannounce`, `setCategory`, `addTags`, `removeTags`, `setDownloadLimit`, `setUploadLimit`, `setShareLimits`, `topPrio`, `bottomPrio`, `filePrio`, `rename`, `renameFile`, `renameFolder`, `createCategory`, `createTags`, `delete`, `add`, `setLocation`, `setSavePath`, `editCategory`, `removeCategories`, `deleteTags`, `addTrackers`, `editTracker`, `removeTrackers` | `delete#with-files` |
 | `sync` | `maindata` (`rid`) | | |
 | `log` | `main`, `peers` | | |
-| `rss` | `items`, `rules` | | `addFeed`, `setFeedURL`, `removeItem`, `setRule`, `removeRule` |
+| `rss` | `items`, `rules` | `addFeed`, `setFeedURL`, `removeItem`, `setRule`, `removeRule` | |
 | `search` | `plugins`, `status`, `results` | `stop`, `delete` | `start`, `installPlugin`, `uninstallPlugin`, `enablePlugin`, `updatePlugins` |
 
 Not declared: `auth/*` (the plugin's own sign-in only), `app/cookies` and `setCookies` (secrets), `app/rotateAPIKey` and `deleteAPIKey`, `app/getDirectoryContent` (browses the host's file system), `app/sendTestEmail`, `torrents/export` (binary), `torrents/setSSLParameters` and `SSLParameters` (a private key), `torrents/fetchMetadata`, `parseMetadata` and `saveMetadata`, `torrentcreator/*`, `clientdata/*`, `search/downloadTorrent`, `torrents/addPeers`, `transfer/banPeers`, web seed writes, and `pause`/`resume` (gone in 5.0).
@@ -60,30 +60,22 @@ qBittorrent splits `torrents/add` URLs and `addTrackers` URLs on LF, and `remove
 
 ## Locks
 
+A lock adds a typed confirmation to core's approval. Torrent, category, tag, tracker and RSS writes are regular writes, also with `hashes=all`. Only these are locked:
+
 | Operation | Why | Literal |
 | --- | --- | --- |
-| `torrents.delete`, `torrents.delete#with-files` | Removes torrents; the twin (`deleteFiles: true`) deletes their data | stored name, `<n> torrents`, or `all <n> torrents` |
-| `<op>#all` (stop, start, recheck, reannounce, setCategory, addTags, removeTags, setDownloadLimit, setUploadLimit, setShareLimits) | `hashes=all` acts on every torrent, also ones added during the approval wait | `all <n> torrents` |
-| `torrents.setShareLimits#remove` | `Remove` or `RemoveWithContent` deletes torrents (and data) once a limit is reached | stored name or `<n> torrents` |
-| `torrents.setLocation`, `torrents.setSavePath` | Moves data on disk to a path the model chose | stored name or `<n> torrents` |
-| `torrents.editCategory` | Its torrents in automatic management move to the new path | stored category name |
-| `torrents.createCategory#paths` | A new category with a save path the model chose; `setCategory` then moves data there | base URL host name |
-| `torrents.removeCategories`, `torrents.deleteTags` | Removes them from every torrent | stored names |
-| `torrents.addTrackers`, `editTracker`, `removeTrackers` | Changes where a torrent announces (and its passkey) | stored torrent name |
-| `torrents.add` | Fetches URLs and writes files | base URL host name |
+| `torrents.delete#with-files` | `deleteFiles: true` deletes the downloaded data of one torrent, several or `all` | stored name, `<n> torrents`, or `all <n> torrents` |
 | `app.setPreferences` | WebUI credentials and access, network binding, autorun programs and the Python path (code execution) | base URL host name |
 | `app.shutdown` | Stops the client | base URL host name |
-| `rss.addFeed`, `setFeedURL`, `removeItem` | Fetches URLs; removes feeds | host name; stored feed or folder path |
-| `rss.setRule`, `rss.removeRule` | A rule downloads matching articles with no further approval | stored rule name; host name for a new rule |
 | `search.start` | Runs the search plugins' Python code | host name |
 | `search.installPlugin`, `updatePlugins` | Installs code that later searches run | host name |
 | `search.uninstallPlugin`, `enablePlugin` | Changes which code runs | stored plugin names |
 
-Literals come from the targets, which the plugin reads back from qBittorrent (`torrents/info`, `categories`, `tags`, `rss/items`, `rss/rules`, `search/plugins`, `torrents/trackers`); never from the call. When a named torrent, category, tag, feed, rule, plugin or tracker does not exist, there is no literal and core refuses the call. qBittorrent has no instance name, so instance-wide locks confirm on the base URL's host name.
+Literals come from the targets, which the plugin reads back from qBittorrent (`torrents/info`, `search/plugins`); never from the call. When a named torrent or plugin does not exist, there is no literal and core refuses the call. qBittorrent has no instance name, so instance-wide locks confirm on the base URL's host name.
 
 `src/policy.ts` lists the locks that must exist. The plugin refuses to load when one is missing or not locked, or when a rule names an operation `plugin.yaml` does not declare.
 
-`torrents.setCategory`, `createCategory` without paths and the other writes are plain writes: an admin decides at the group level. Torrents in automatic management move when their category changes, so every `setCategory` summary names the path they move to, clearing included.
+Regular writes still go through core's approval: an admin decides at the group level. Their summaries keep the destination first: the path data moves to, the trackers and feeds by origin, and the torrents by name. Torrents in automatic management move when their category changes, so every `setCategory` summary names the path they move to, clearing included.
 
 Category names: 5.0 and 5.1 accept `../../root/.ssh` as a name (`Session::isValidCategoryName` refuses only `\`, a leading or trailing `/` and `//`), and the implicit save path keeps the `..`, which `Path`'s `QDir::cleanPath` then resolves out of the save root. So wherever a call names a category (`createCategory`, `editCategory`, `setCategory`, `add`, `removeCategories`, and `assignedCategory` or `torrentParams.category` in an `rss.setRule` definition) the plugin refuses a name with an empty, `.` or `..` segment (split on `/`, whatever the subcategory setting), a leading `/`, a backslash or a control character, and a segment that trims to `.` or `..` or ends in a space or dot (Win32 path normalization drops those, so `.. ` and `x.` act as `..` and `x`). An empty name still means no category.
 

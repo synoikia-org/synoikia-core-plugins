@@ -81,7 +81,9 @@ describe('catalog', () => {
       expect(byKey.get(key), key).toMatchObject({ locked: true, typedConfirmation: true });
     for (const op of settings.operations)
       expect(op.http?.method, op.key).toBe(op.classification === 'read' ? 'GET' : 'POST');
-    expect(operations.filter((o) => o.key.endsWith('#all'))).toHaveLength(10);
+    expect(operations.filter((o) => o.key.includes('#')).map((o) => o.key)).toEqual(['torrents.delete#with-files']);
+    for (const key of ['torrents.delete', 'torrents.add', 'torrents.setShareLimits', 'rss.addFeed', 'rss.setRule'])
+      expect(byKey.get(key), key).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
   });
 
   it('refuses plugin.yaml without a required lock, or with a rule naming no operation', () => {
@@ -100,7 +102,7 @@ describe('catalog', () => {
 
   it('keeps the agent instructions under the cap, naming only real keys', () => {
     const text = readFileSync(new URL('../instructions.md', import.meta.url), 'utf8');
-    expect(Buffer.byteLength(text)).toBeLessThanOrEqual(4096);
+    expect(Buffer.byteLength(text)).toBeLessThanOrEqual(1536);
     const keys = new Set(operations.map((o) => o.key));
     const named = [...text.matchAll(/`([a-z]+\.[a-zA-Z]+)`/g)].map((m) => m[1]!);
     expect(named.length).toBeGreaterThan(10);
@@ -194,22 +196,22 @@ describe('params', () => {
       key: 'torrents.stop',
       params: { hashes: HASH.ubuntu },
     });
-    expect((await resolve('torrents.stop', { hashes: 'all' })).key).toBe('torrents.stop#all');
-    expect((await resolve('torrents.createCategory', { category: 'a' })).key).toBe('torrents.createCategory');
+    expect((await resolve('torrents.stop', { hashes: 'all' })).key).toBe('torrents.stop');
     expect((await resolve('torrents.createCategory', { category: 'a', savePath: '/x' })).key).toBe(
-      'torrents.createCategory#paths',
+      'torrents.createCategory',
     );
-    expect((await resolve('torrents.delete', { hashes: HASH.ubuntu, deleteFiles: true })).key).toBe(
-      'torrents.delete#with-files',
-    );
-    expect((await resolve('torrents.delete', { hashes: 'all', deleteFiles: false })).key).toBe('torrents.delete');
+    for (const hashes of [HASH.ubuntu, 'all'])
+      expect((await resolve('torrents.delete', { hashes, deleteFiles: true })).key, hashes).toBe(
+        'torrents.delete#with-files',
+      );
+    for (const hashes of [HASH.ubuntu, 'all'])
+      expect((await resolve('torrents.delete', { hashes, deleteFiles: false })).key, hashes).toBe('torrents.delete');
     const all = { ...share, hashes: 'all' };
-    expect((await resolve('torrents.setShareLimits', { ...all, shareLimitAction: 'RemoveWithContent' })).key).toBe(
-      'torrents.setShareLimits#remove',
-    );
-    expect((await resolve('torrents.setShareLimits', { ...all, shareLimitAction: 'Stop' })).key).toBe(
-      'torrents.setShareLimits#all',
-    );
+    for (const shareLimitAction of ['RemoveWithContent', 'Stop'])
+      expect((await resolve('torrents.setShareLimits', { ...all, shareLimitAction })).key).toBe(
+        'torrents.setShareLimits',
+      );
+    expect((await resolve('rss.addFeed', { url: 'https://feed.example/rss', path: 'New' })).key).toBe('rss.addFeed');
   });
 
   it('refuses an invoke whose params no longer fit the key it was gated as', async () => {
@@ -316,31 +318,31 @@ describe('targets and literals', () => {
   };
 
   it('names one torrent, counts several, and counts all of them', async () => {
-    const one = await summarize('torrents.delete', { hashes: HASH.ubuntu, deleteFiles: false });
+    const one = await summarize('torrents.delete', { hashes: HASH.ubuntu, deleteFiles: true });
     expect(one.confirmLiteral).toBe(NAMES.ubuntu);
     const two = await summarize('torrents.setLocation', {
       hashes: `${HASH.ubuntu}|${HASH.bunny}`,
       location: '/archive',
     });
-    expect(two.confirmLiteral).toBe('2 torrents');
+    // A regular write: no literal, but the approval still names and counts the torrents.
+    expect(two.confirmLiteral).toBeUndefined();
     expect(two.text).toBe(
       `qBittorrent torrents.setLocation to "/archive" for 2 torrents: "${NAMES.ubuntu}", "${NAMES.bunny}": moves their data; turns off automatic management`,
     );
-    expect(await summarize('torrents.stop', { hashes: 'all' })).toMatchObject({
-      key: 'torrents.stop#all',
+    expect(await summarize('torrents.delete', { hashes: 'all', deleteFiles: true })).toMatchObject({
+      key: 'torrents.delete#with-files',
       confirmLiteral: 'all 3 torrents',
-      text: 'qBittorrent torrents.stop#all on all 3 torrents',
+    });
+    expect(await summarize('torrents.stop', { hashes: 'all' })).toMatchObject({
+      key: 'torrents.stop',
+      text: 'qBittorrent torrents.stop on all 3 torrents',
     });
   });
 
   it.each([
-    ['torrents.delete', { hashes: `${HASH.ubuntu}|${'ee'.repeat(20)}`, deleteFiles: false }],
-    ['torrents.removeCategories', { categories: 'linux\nnope' }],
-    ['torrents.deleteTags', { tags: 'nope' }],
-    ['rss.removeRule', { ruleName: 'Nope' }],
-    ['rss.removeItem', { path: 'Nope' }],
+    ['torrents.delete', { hashes: `${HASH.ubuntu}|${'ee'.repeat(20)}`, deleteFiles: true }],
     ['search.uninstallPlugin', { names: 'nope' }],
-    ['torrents.editTracker', { hash: HASH.ubuntu, url: 'https://unknown.example/a', tier: 1 }],
+    ['search.enablePlugin', { names: 'nope', enable: false }],
   ])('gives %s no literal when what it names is unknown', async (key, params) => {
     expect((await summarize(key, params)).confirmLiteral).toBeUndefined();
   });

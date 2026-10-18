@@ -208,10 +208,6 @@ export const literals = {
     const names = storedNames(targets, 'torrent');
     return names && (names.length === 1 ? names[0] : `${names.length} torrents`);
   },
-  categories: (targets: readonly ResolvedTarget[]) => storedNames(targets, 'category')?.join(', '),
-  tags: (targets: readonly ResolvedTarget[]) => storedNames(targets, 'tag')?.join(', '),
-  rssItem: (targets: readonly ResolvedTarget[]) => storedNames(targets, 'rss-item', 'id')?.[0],
-  rssRule: (targets: readonly ResolvedTarget[]) => storedNames(targets, 'rss-rule')?.[0],
   searchPlugins: (targets: readonly ResolvedTarget[]) => storedNames(targets, 'search-plugin')?.join(', '),
 };
 

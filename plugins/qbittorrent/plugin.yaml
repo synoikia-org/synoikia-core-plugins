@@ -279,8 +279,8 @@ operations:
     summary: Set the share limits of torrents.
     description: >-
       Limits are -2 for the global limit, -1 for none; the time limits are in minutes. `shareLimitAction` (5.1 and
-      later) is Default, Stop, Remove, RemoveWithContent or EnableSuperSeeding; Remove and RemoveWithContent are
-      locked.
+      later) is Default, Stop, Remove, RemoveWithContent or EnableSuperSeeding; RemoveWithContent deletes the data
+      when the limit is reached.
     http: { method: POST, path: /torrents/setShareLimits, body: form }
     paramsSchema:
       type: object
@@ -686,74 +686,25 @@ operations:
     http: { method: POST, path: /search/updatePlugins, body: form }
 
 rules:
-  # Destroys data, fetches or moves files, runs code (autorun programs, search plugins) or changes the
-  # instance itself: always a human with a typed confirmation.
+  # Changes the instance itself or runs code (autorun programs, search plugins): always a human with a typed
+  # confirmation. Torrent, category, tag, tracker and RSS writes are regular writes.
   - match:
-      - torrents.delete
-      - torrents.add
-      - torrents.setLocation
-      - torrents.setSavePath
-      - torrents.editCategory
-      - torrents.removeCategories
-      - torrents.deleteTags
-      - torrents.addTrackers
-      - torrents.editTracker
-      - torrents.removeTrackers
       - app.setPreferences
       - app.shutdown
-      - rss.addFeed
-      - rss.setFeedURL
-      - rss.removeItem
-      - rss.setRule
-      - rss.removeRule
       - search.start
       - search.installPlugin
       - search.uninstallPlugin
       - search.enablePlugin
       - search.updatePlugins
     locked: true
-  # Deleting the downloaded data as well is its own locked twin.
+  # Deleting the downloaded data as well is its own locked twin, for one torrent, several or `all`.
   - match: torrents.delete
     split: with-files
-  # A new category with its own save path decides where setCategory later moves data.
-  - match: torrents.createCategory
-    split: paths
-  # A share limit that removes torrents when it is reached is a delayed delete.
-  - match: torrents.setShareLimits
-    split: remove
-  # `hashes=all` acts on every torrent, including ones added during the approval wait.
-  - match:
-      - torrents.stop
-      - torrents.start
-      - torrents.recheck
-      - torrents.reannounce
-      - torrents.setCategory
-      - torrents.addTags
-      - torrents.removeTags
-      - torrents.setDownloadLimit
-      - torrents.setUploadLimit
-      - torrents.setShareLimits
-    split: all
-  # Literals are read back from qBittorrent: torrent names, category and tag names, RSS items and rules, plugins.
-  - match:
-      - torrents.delete
-      - torrents.delete#with-files
-      - torrents.setLocation
-      - torrents.setSavePath
-      - torrents.setShareLimits#remove
-      - torrents.addTrackers
-      - torrents.editTracker
-      - torrents.removeTrackers
-      - '*#all'
+  - match: 'torrents.delete#with-files'
+    description: 'Removes torrents and deletes their downloaded data from disk. Locked: the data is gone.'
+  # Literals are read back from qBittorrent: torrent names and search plugins.
+  - match: torrents.delete#with-files
     confirm: { custom: torrents }
-  - match: ['torrents.editCategory', 'torrents.removeCategories']
-    confirm: { custom: categories }
-  - match: torrents.deleteTags
-    confirm: { custom: tags }
-  - match: ['rss.setFeedURL', 'rss.removeItem']
-    confirm: { custom: rssItem }
-  - match: ['rss.setRule', 'rss.removeRule']
-    confirm: [{ custom: rssRule }, { custom: host }]
   - match: ['search.uninstallPlugin', 'search.enablePlugin']
     confirm: { custom: searchPlugins }
 

@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createQbittorrentPlugin } from '../src/plugin.js';
 import { CREDENTIALS, HASH, startFakeQbittorrent } from './fake-qbittorrent.js';
 import type { FakeQbittorrent } from './fake-qbittorrent.js';
-import { LOCK_CASES } from './locks.js';
+import { CASES } from './locks.js';
 
 /** Golden record of what the plugin tells core (descriptors, locked summaries, literals and targets, masked results):
  * review snapshot diffs as security changes. */
@@ -66,9 +66,9 @@ describe('qBittorrent golden record', () => {
     await expect(stable(operations)).toMatchFileSnapshot('__golden__/catalog.json');
   });
 
-  it('summaries, targets and confirm literals of locked operations', async () => {
+  it('summaries, targets and confirm literals of locked operations and of the reviewed writes', async () => {
     const out: Record<string, unknown> = {};
-    for (const c of LOCK_CASES) {
+    for (const c of CASES) {
       fake.reset();
       const { key, params } = await plugin.resolveOperation({ fn: 'call', args: [c.call.key, c.call.params] });
       const declared = operations.find((o) => o.key === key)?.sensitiveParams ?? [];

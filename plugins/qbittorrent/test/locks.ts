@@ -1,9 +1,13 @@
 import { expect } from 'vitest';
+import { REQUIRED_LOCKS } from '../src/policy.js';
 import { FEED, HASH, NAMES, TRACKER } from './fake-qbittorrent.js';
 import type { FakeQbittorrent } from './fake-qbittorrent.js';
 
-/** One call per locked key (every lock, every split twin, and several selections), the literal an approver must
- * type against the fake qBittorrent, text the approval must show, and the effect on the fake once approved. */
+const LOCKED = new Set<string>(REQUIRED_LOCKS);
+
+/** One call per write the plugin summarizes with care (every lock, every split twin, the writes the owner unlocked,
+ * and several selections), the literal an approver types for a locked one against the fake qBittorrent, text the
+ * approval must show, and the effect on the fake once approved. */
 export interface LockCase {
   /** Unique label; the resolved key unless one key has several cases. */
   name: string;
@@ -46,7 +50,7 @@ const lastCall = (fake: FakeQbittorrent, path: string) => fake.calls.filter((c) 
 
 const MAGNET = `magnet:?xt=urn:btih:${'dd'.repeat(20)}&dn=Fedora%2042&tr=${encodeURIComponent('https://private.example/EXAMPLEPASSKEY0004/announce')}`;
 
-export const LOCK_CASES: LockCase[] = [
+export const CASES: LockCase[] = [
   same(
     'torrents.delete',
     { hashes: HASH.ubuntu, deleteFiles: false },
@@ -64,6 +68,14 @@ export const LOCK_CASES: LockCase[] = [
     NAMES.debian,
     'remove, deleting the downloaded files',
     (f) => expect(f.state.deletedFiles).toEqual([NAMES.debian]),
+  ),
+  lock(
+    'torrents.delete#with-files (all)',
+    'torrents.delete#with-files',
+    { key: 'torrents.delete', params: { hashes: 'all', deleteFiles: true } },
+    'all 3 torrents',
+    'on all 3 torrents: remove, deleting the downloaded files',
+    (f) => expect(f.torrents.size).toBe(0),
   ),
   lock(
     'torrents.delete (two torrents)',
@@ -129,8 +141,8 @@ export const LOCK_CASES: LockCase[] = [
     (f) => expect(f.categories.get('linux')?.savePath).toBe('/srv/linux'),
   ),
   lock(
-    'torrents.createCategory#paths',
-    'torrents.createCategory#paths',
+    'torrents.createCategory (paths)',
+    'torrents.createCategory',
     { key: 'torrents.createCategory', params: { category: 'archive', savePath: '/srv/archive' } },
     HOST,
     'on category "archive": create with save path "/srv/archive"',
@@ -169,8 +181,8 @@ export const LOCK_CASES: LockCase[] = [
     (f) => expect(f.torrents.get(HASH.debian)?.trackers).toEqual([]),
   ),
   lock(
-    'torrents.setShareLimits#remove',
-    'torrents.setShareLimits#remove',
+    'torrents.setShareLimits (remove with content)',
+    'torrents.setShareLimits',
     {
       key: 'torrents.setShareLimits',
       params: {
@@ -186,24 +198,24 @@ export const LOCK_CASES: LockCase[] = [
     (f) => expect(lastCall(f, 'torrents/setShareLimits')?.fields.shareLimitAction).toBe('RemoveWithContent'),
   ),
   lock(
-    'torrents.stop#all',
-    'torrents.stop#all',
+    'torrents.stop (all)',
+    'torrents.stop',
     { key: 'torrents.stop', params: { hashes: 'all' } },
     'all 3 torrents',
     'on all 3 torrents',
     (f) => expect([...f.torrents.values()].every((t) => t.state === 'stoppedUP')).toBe(true),
   ),
   lock(
-    'torrents.setCategory#all',
-    'torrents.setCategory#all',
+    'torrents.setCategory (all)',
+    'torrents.setCategory',
     { key: 'torrents.setCategory', params: { hashes: 'all', category: 'movies' } },
     'all 3 torrents',
     'move to "/downloads/movies"',
     (f) => expect([...f.torrents.values()].every((t) => t.category === 'movies')).toBe(true),
   ),
   lock(
-    'torrents.setDownloadLimit#all',
-    'torrents.setDownloadLimit#all',
+    'torrents.setDownloadLimit (all)',
+    'torrents.setDownloadLimit',
     { key: 'torrents.setDownloadLimit', params: { hashes: 'all', limit: 1000 } },
     'all 3 torrents',
     'download limit 1000 B/s',
@@ -301,3 +313,8 @@ export const LOCK_CASES: LockCase[] = [
   ),
   same('search.updatePlugins', undefined, HOST, 'update every search plugin', (f) => expect(f.state.updated).toBe(1)),
 ];
+
+/** The cases that resolve to a locked key: a human types `confirm`. */
+export const LOCK_CASES = CASES.filter((c) => LOCKED.has(c.key));
+/** The cases that are regular writes: core approves them without a literal, so `confirm` is not used. */
+export const WRITE_CASES = CASES.filter((c) => !LOCKED.has(c.key));

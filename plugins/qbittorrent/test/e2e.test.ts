@@ -6,7 +6,7 @@ import type { PluginHarness } from '@synoikia/core/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CREDENTIALS, HASH, SECRETS, startFakeQbittorrent } from './fake-qbittorrent.js';
 import type { FakeQbittorrent } from './fake-qbittorrent.js';
-import { CALL_SECRETS, HOST, LOCK_CASES } from './locks.js';
+import { CALL_SECRETS, HOST, LOCK_CASES, WRITE_CASES } from './locks.js';
 
 /** The real core running this plugin's built bundle against the fake qBittorrent, via core's harness. */
 
@@ -71,6 +71,33 @@ describe('qBittorrent end to end (fake qBittorrent)', () => {
     expect(fake.torrents.get(HASH.debian)?.state).toBe('stoppedUP');
   });
 
+  describe('torrent, category, tag, tracker and RSS writes are regular writes: approved at Ask, no literal typed', () => {
+    it.each(WRITE_CASES)('$name', async ({ key, call: c, shows, effect }) => {
+      expect(h.operation(key)).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
+      h.setOperationLevel(key, 'ask');
+      let literal: unknown = 'unset';
+      const shown: string[] = [];
+      const r = await h.execute(call(c.key, c.params), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          shown.push(a.message, JSON.stringify(a.pending));
+          a.approve();
+        },
+      });
+      h.setOperationLevel(key, null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal ?? null).toBeNull();
+      expect(shown[0]).toContain(shows);
+      const text = shown.join('\n');
+      const audit = JSON.stringify(h.audit({ operationKey: key }));
+      for (const secret of SECRET_VALUES) {
+        expect(text).not.toContain(secret);
+        expect(audit).not.toContain(secret);
+      }
+      effect(fake);
+    });
+  });
+
   describe('every locked operation needs its literal typed', () => {
     it.each(LOCK_CASES)('$name → "$confirm"', async ({ key, call: c, confirm, shows, effect }) => {
       h.setOperationLevel(key, 'ask');
@@ -105,20 +132,20 @@ describe('qBittorrent end to end (fake qBittorrent)', () => {
     });
 
     it('refuses a locked call when the approver is not there to type', async () => {
-      h.setOperationLevel('torrents.delete', 'ask');
+      h.setOperationLevel('torrents.delete#with-files', 'ask');
       await expect(
-        h.execute(call('torrents.delete', { hashes: HASH.ubuntu, deleteFiles: false })),
+        h.execute(call('torrents.delete', { hashes: HASH.ubuntu, deleteFiles: true })),
       ).resolves.toMatchObject({ ok: false });
-      h.setOperationLevel('torrents.delete', null);
+      h.setOperationLevel('torrents.delete#with-files', null);
       expect(fake.torrents.has(HASH.ubuntu)).toBe(true);
     });
 
     it('refuses a delete of a torrent qBittorrent does not have: no literal', async () => {
-      h.setOperationLevel('torrents.delete', 'ask');
-      const r = await h.execute(call('torrents.delete', { hashes: 'ee'.repeat(20), deleteFiles: false }), {
+      h.setOperationLevel('torrents.delete#with-files', 'ask');
+      const r = await h.execute(call('torrents.delete', { hashes: 'ee'.repeat(20), deleteFiles: true }), {
         onApproval: (a) => a.approve(HOST),
       });
-      h.setOperationLevel('torrents.delete', null);
+      h.setOperationLevel('torrents.delete#with-files', null);
       expect(r).toMatchObject({ ok: false });
       expect(fake.calls.filter((x) => x.path === 'torrents/delete')).toEqual([]);
     });

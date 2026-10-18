@@ -24,7 +24,6 @@
     "text": "qBittorrent app.shutdown on qBittorrent at 127.0.0.1: shut qBittorrent down"
   },
   "rss.addFeed": {
-    "confirmLiteral": "127.0.0.1",
     "resolved": "rss.addFeed",
     "targets": [
       {
@@ -41,7 +40,6 @@
     "text": "qBittorrent rss.addFeed on qBittorrent at 127.0.0.1: subscribe \"New feed\" to https://new-feed.example"
   },
   "rss.removeItem": {
-    "confirmLiteral": "Linux ISOs",
     "resolved": "rss.removeItem",
     "targets": [
       {
@@ -58,7 +56,6 @@
     "text": "qBittorrent rss.removeItem on item \"Linux ISOs\": remove the folder and its 1 feed(s)"
   },
   "rss.removeRule": {
-    "confirmLiteral": "Ubuntu",
     "resolved": "rss.removeRule",
     "targets": [
       {
@@ -70,7 +67,6 @@
     "text": "qBittorrent rss.removeRule on rule \"Ubuntu\": delete"
   },
   "rss.setFeedURL": {
-    "confirmLiteral": "Public",
     "resolved": "rss.setFeedURL",
     "targets": [
       {
@@ -87,7 +83,6 @@
     "text": "qBittorrent rss.setFeedURL on feed \"Public\": URL to https://mirror.example"
   },
   "rss.setRule": {
-    "confirmLiteral": "Ubuntu",
     "resolved": "rss.setRule",
     "targets": [
       {
@@ -104,7 +99,6 @@
     "text": "qBittorrent rss.setRule on rule \"Ubuntu\" (replaced): saves to \"/downloads/linux\", category \"linux\", from feeds https://public.example, mustContain \"noble\"; matching articles download without another approval"
   },
   "rss.setRule (new rule)": {
-    "confirmLiteral": "127.0.0.1",
     "resolved": "rss.setRule",
     "targets": [
       {
@@ -213,7 +207,6 @@
     "text": "qBittorrent search.updatePlugins on qBittorrent at 127.0.0.1: update every search plugin from its source (runs the new code)"
   },
   "torrents.add": {
-    "confirmLiteral": "127.0.0.1",
     "resolved": "torrents.add",
     "targets": [
       {
@@ -235,7 +228,6 @@
     "text": "qBittorrent torrents.add into \"/downloads\" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Fedora 42\"; magnet trackers, sources, peers and DHT nodes: https://private.example; category \"linux\", tags \"iso\""
   },
   "torrents.add (automatic management)": {
-    "confirmLiteral": "127.0.0.1",
     "resolved": "torrents.add",
     "targets": [
       {
@@ -252,7 +244,6 @@
     "text": "qBittorrent torrents.add into \"/downloads/tv/shows\" (automatic management, category \"tv/shows\"; savepath \"/elsewhere\" is ignored) on qBittorrent at 127.0.0.1: 1 source(s): magnet \"Show\"; category \"tv/shows\""
   },
   "torrents.addTrackers": {
-    "confirmLiteral": "Ubuntu 24.04 Desktop",
     "resolved": "torrents.addTrackers",
     "targets": [
       {
@@ -268,9 +259,8 @@
     ],
     "text": "qBittorrent torrents.addTrackers on torrent \"Ubuntu 24.04 Desktop\": add trackers https://new.example"
   },
-  "torrents.createCategory#paths": {
-    "confirmLiteral": "127.0.0.1",
-    "resolved": "torrents.createCategory#paths",
+  "torrents.createCategory (paths)": {
+    "resolved": "torrents.createCategory",
     "targets": [
       {
         "id": "127.0.0.1",
@@ -278,10 +268,9 @@
         "name": "qBittorrent at 127.0.0.1"
       }
     ],
-    "text": "qBittorrent torrents.createCategory#paths on category \"archive\": create with save path \"/srv/archive\""
+    "text": "qBittorrent torrents.createCategory on category \"archive\": create with save path \"/srv/archive\""
   },
   "torrents.delete": {
-    "confirmLiteral": "Ubuntu 24.04 Desktop",
     "resolved": "torrents.delete",
     "targets": [
       {
@@ -293,7 +282,6 @@
     "text": "qBittorrent torrents.delete on torrent \"Ubuntu 24.04 Desktop\": remove, keep the downloaded files"
   },
   "torrents.delete (all)": {
-    "confirmLiteral": "all 3 torrents",
     "resolved": "torrents.delete",
     "targets": [
       {
@@ -305,7 +293,6 @@
     "text": "qBittorrent torrents.delete on all 3 torrents: remove, keep the downloaded files"
   },
   "torrents.delete (two torrents)": {
-    "confirmLiteral": "2 torrents",
     "resolved": "torrents.delete",
     "targets": [
       {
@@ -333,8 +320,19 @@
     ],
     "text": "qBittorrent torrents.delete#with-files on torrent \"Debian 12 Netinst\": remove, deleting the downloaded files"
   },
+  "torrents.delete#with-files (all)": {
+    "confirmLiteral": "all 3 torrents",
+    "resolved": "torrents.delete#with-files",
+    "targets": [
+      {
+        "id": "all:3:310e9e47a75d3513",
+        "kind": "all-torrents",
+        "name": "all 3 torrents"
+      }
+    ],
+    "text": "qBittorrent torrents.delete#with-files on all 3 torrents: remove, deleting the downloaded files"
+  },
   "torrents.deleteTags": {
-    "confirmLiteral": "iso",
     "resolved": "torrents.deleteTags",
     "targets": [
       {
@@ -346,7 +344,6 @@
     "text": "qBittorrent torrents.deleteTags on tag \"iso\": delete, removing them from every torrent"
   },
   "torrents.editCategory": {
-    "confirmLiteral": "linux",
     "resolved": "torrents.editCategory",
     "targets": [
       {
@@ -358,7 +355,6 @@
     "text": "qBittorrent torrents.editCategory on category \"linux\": save path \"/srv/linux\"; its torrents in automatic management move to \"/srv/linux\""
   },
   "torrents.editTracker": {
-    "confirmLiteral": "Ubuntu 24.04 Desktop",
     "resolved": "torrents.editTracker",
     "targets": [
       {
@@ -380,7 +376,6 @@
     "text": "qBittorrent torrents.editTracker on torrent \"Ubuntu 24.04 Desktop\": tracker udp://open.example:1337 to https://other.example"
   },
   "torrents.removeCategories": {
-    "confirmLiteral": "movies",
     "resolved": "torrents.removeCategories",
     "targets": [
       {
@@ -392,7 +387,6 @@
     "text": "qBittorrent torrents.removeCategories on category \"movies\": delete"
   },
   "torrents.removeTrackers": {
-    "confirmLiteral": "Debian 12 Netinst",
     "resolved": "torrents.removeTrackers",
     "targets": [
       {
@@ -408,9 +402,8 @@
     ],
     "text": "qBittorrent torrents.removeTrackers on torrent \"Debian 12 Netinst\": remove trackers https://private.example"
   },
-  "torrents.setCategory#all": {
-    "confirmLiteral": "all 3 torrents",
-    "resolved": "torrents.setCategory#all",
+  "torrents.setCategory (all)": {
+    "resolved": "torrents.setCategory",
     "targets": [
       {
         "id": "all:3:310e9e47a75d3513",
@@ -418,11 +411,10 @@
         "name": "all 3 torrents"
       }
     ],
-    "text": "qBittorrent torrents.setCategory#all on all 3 torrents: category \"movies\"; torrents in automatic management move to \"/downloads/movies\""
+    "text": "qBittorrent torrents.setCategory on all 3 torrents: category \"movies\"; torrents in automatic management move to \"/downloads/movies\""
   },
-  "torrents.setDownloadLimit#all": {
-    "confirmLiteral": "all 3 torrents",
-    "resolved": "torrents.setDownloadLimit#all",
+  "torrents.setDownloadLimit (all)": {
+    "resolved": "torrents.setDownloadLimit",
     "targets": [
       {
         "id": "all:3:310e9e47a75d3513",
@@ -430,10 +422,9 @@
         "name": "all 3 torrents"
       }
     ],
-    "text": "qBittorrent torrents.setDownloadLimit#all on all 3 torrents: download limit 1000 B/s"
+    "text": "qBittorrent torrents.setDownloadLimit on all 3 torrents: download limit 1000 B/s"
   },
   "torrents.setLocation": {
-    "confirmLiteral": "Ubuntu 24.04 Desktop",
     "resolved": "torrents.setLocation",
     "targets": [
       {
@@ -445,7 +436,6 @@
     "text": "qBittorrent torrents.setLocation to \"/archive\" for torrent \"Ubuntu 24.04 Desktop\": moves their data; turns off automatic management"
   },
   "torrents.setSavePath": {
-    "confirmLiteral": "Big Buck Bunny",
     "resolved": "torrents.setSavePath",
     "targets": [
       {
@@ -456,9 +446,8 @@
     ],
     "text": "qBittorrent torrents.setSavePath to \"/media/films\" for torrent \"Big Buck Bunny\": moves the data of those in manual management"
   },
-  "torrents.setShareLimits#remove": {
-    "confirmLiteral": "Ubuntu 24.04 Desktop",
-    "resolved": "torrents.setShareLimits#remove",
+  "torrents.setShareLimits (remove with content)": {
+    "resolved": "torrents.setShareLimits",
     "targets": [
       {
         "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -466,11 +455,10 @@
         "name": "Ubuntu 24.04 Desktop"
       }
     ],
-    "text": "qBittorrent torrents.setShareLimits#remove on torrent \"Ubuntu 24.04 Desktop\": ratio 2, seeding time -2 min, inactive seeding time -2 min, then RemoveWithContent"
+    "text": "qBittorrent torrents.setShareLimits on torrent \"Ubuntu 24.04 Desktop\": ratio 2, seeding time -2 min, inactive seeding time -2 min, then RemoveWithContent"
   },
-  "torrents.stop#all": {
-    "confirmLiteral": "all 3 torrents",
-    "resolved": "torrents.stop#all",
+  "torrents.stop (all)": {
+    "resolved": "torrents.stop",
     "targets": [
       {
         "id": "all:3:310e9e47a75d3513",
@@ -478,6 +466,6 @@
         "name": "all 3 torrents"
       }
     ],
-    "text": "qBittorrent torrents.stop#all on all 3 torrents"
+    "text": "qBittorrent torrents.stop on all 3 torrents"
   }
 }
