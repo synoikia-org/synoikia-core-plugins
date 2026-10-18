@@ -6,7 +6,7 @@ import type { PluginHarness } from '@synoikia/core/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CREDENTIALS, SECRETS, startFakeMealie } from './fake-mealie.js';
 import type { FakeMealie } from './fake-mealie.js';
-import { LOCK_CASES } from './locks.js';
+import { LOCK_CASES, WRITE_CASES } from './locks.js';
 
 /** The real core running this plugin's built bundle against the fake Mealie, via core's harness. */
 
@@ -71,6 +71,24 @@ describe('Mealie end to end (fake Mealie)', () => {
     );
     expect(r).toMatchObject({ ok: true, value: 'ramen' });
     expect(shown[0]).toContain('Mealie POST /api/recipes/create/url {"url":"https://x.example/ramen"}');
+  });
+
+  describe('single-item deletes are regular writes: approved at Ask, no literal typed', () => {
+    beforeEach(() => fake.recipes.set('pasta', { id: 'r-1', slug: 'pasta', name: 'Pasta Fagioli' }));
+
+    it.each(WRITE_CASES)('$key', async ({ key, request }) => {
+      h.setOperationLevel(key, 'ask');
+      let literal: unknown = 'unset';
+      const r = await h.execute(call(request), {
+        onApproval: (a) => {
+          literal = a.pending.confirmLiteral;
+          a.approve();
+        },
+      });
+      h.setOperationLevel(key, null);
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(literal ?? null).toBeNull();
+    });
   });
 
   describe('every locked operation needs its literal typed', () => {

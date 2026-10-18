@@ -9,6 +9,6 @@ The plugin is tested against a fake Mealie. This checklist confirms it against a
 3. **Reads.** With `recipe__crud` at Read, ask the client to find a recipe by name: expect `GET /api/recipes` with `search`, then `GET /api/recipes/{slug}`, no prompt.
 4. **A write.** With `recipe__crud` at Ask, import a recipe from a URL: expect a prompt showing `POST /api/recipes/create/url {"url":…}`; approve, and the recipe exists in Mealie.
 5. **Secrets.** `GET /api/admin/about` shows `dbUrl` as `[REDACTED]` (Postgres installs). Creating an API token (`POST /api/users/api-tokens`, locked) returns `token` as `[REDACTED]`; delete that token in Mealie afterwards.
-6. **Locks.** Delete the throwaway user with `DELETE /api/admin/users/{item_id}`: the approval asks to type its username, a wrong value is refused, the right one deletes it. Check `POST /api/admin/backups/{file_name}/restore` shows locked on the Access page (don't run it).
+6. **Locks.** Delete the throwaway user with `DELETE /api/admin/users/{item_id}`: the approval asks to type its username, a wrong value is refused, the right one deletes it. Delete a throwaway tag with `DELETE /api/organizers/tags/{item_id}`: an ordinary approval with no literal. Check `POST /api/admin/backups/{file_name}/restore` and `POST /api/recipes/bulk-actions/delete` show locked on the Access page (don't run them).
 7. **Denied.** With a non-admin user's token, an admin read such as `GET /api/admin/users` reports `UPSTREAM_DENIED`.
 8. **Audit.** The audit log lists each call; the password and token values from steps 5–6 appear nowhere.
