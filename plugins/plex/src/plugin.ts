@@ -14,7 +14,16 @@ import {
 } from '@synoikia/plugin-sdk';
 import type { PluginHandlers } from '@synoikia/plugin-sdk';
 import { authHeaders } from './auth.js';
-import { buildCatalog, customSources, SERVICE, settings, splitWhen } from './catalog.js';
+import {
+  buildCatalog,
+  customSources,
+  PLAY_QUEUE,
+  PLAY_QUEUE_OWN,
+  SERVICE,
+  settings,
+  splitWhen,
+  takesQueue,
+} from './catalog.js';
 import { maskTokens } from './mask.js';
 import { normalizeRequest } from './request.js';
 import { fetchPlexSpec } from './spec.js';
@@ -73,14 +82,23 @@ export function createPlexPlugin(): PluginHandlers {
           const { catalog, ref, version } = await current.reload();
           return { upstreamVersion: version, sourceRef: ref, operations: catalog.operations };
         },
-        resolveOperation: binding.resolveOperation,
+        async resolveOperation(call) {
+          const resolved = await binding.resolveOperation(call);
+          return resolved.key === PLAY_QUEUE && takesQueue(resolved.params)
+            ? { ...resolved, key: PLAY_QUEUE_OWN }
+            : resolved;
+        },
         async resolveTargets({ key, params }) {
           const op = (await current.get()).catalog.operations.find((o) => o.key === key);
           return op?.classification === 'read' ? [] : resolveTargets(get, key, params);
         },
         async summarize(params) {
-          const summary = await binding.summarize(params);
-          return { ...summary, text: withTargets(summary.text, params.targets) };
+          const { confirmLiteral, ...summary } = await binding.summarize(params);
+          const text = withTargets(summary.text, params.targets);
+          // The `#own` twin is unlocked: no literal to type, whatever the rules give a `#` key.
+          return params.key === PLAY_QUEUE_OWN || !confirmLiteral
+            ? { ...summary, text }
+            : { ...summary, text, confirmLiteral };
         },
         async invoke(params) {
           return maskTokens(await binding.invoke(params));

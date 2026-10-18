@@ -86,6 +86,12 @@ rules:
       - 'DELETE /media/grabbers/devices/{deviceId}'
     locked: true
 
+  # `own` takes the play queue over from the device playing it: the call takes the `#own` twin, a regular write that
+  # src/catalog.ts adds unlocked (owner decision), so it needs an approval but no typed confirmation.
+  - match: '*#own'
+    description: '{base} with own: takes the play queue over from the device playing it. A write; leave own out to read.'
+    summaryNote: '(takes the play queue over from the device playing it)'
+
   # `{ids}` takes a comma-separated list: a delete of more than one item takes the locked twin (src/catalog.ts).
   - match:
       - 'DELETE /library/metadata/{ids}'
@@ -133,8 +139,6 @@ rules:
       - 'GET /library/metadata/{ids}/subtitles'
       - 'GET /media/grabbers/devices/discover'
       - 'GET /system/updates'
-      # With `own`, this client takes the play queue over from the device playing it.
-      - 'GET /playQueues/{playQueueId}'
     classification: write
     reason: reviewed:get-changes-state
     needsReview: false
@@ -149,6 +153,7 @@ rules:
       - 'GET /library/sections/all'
       - 'GET /media/subscriptions'
       - 'GET /playlists/{playlistId}/items'
+      - 'GET /playQueues/{playQueueId}'
       - 'GET /status/sessions/history/all'
       - 'GET /sync'
       - 'GET /sync/*'

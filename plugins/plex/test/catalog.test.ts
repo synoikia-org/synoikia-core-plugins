@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { parseOpenApi } from '@synoikia/plugin-sdk';
 import { describe, expect, it } from 'vitest';
-import { buildCatalog, settings, splitWhen } from '../src/catalog.js';
+import { buildCatalog, PLAY_QUEUE_OWN, settings, splitWhen, takesQueue } from '../src/catalog.js';
 import { lockedKeys, requiredKeys } from '../src/locks.js';
 import { parseSpecSource, pmsOnly } from '../src/spec.js';
 import { SPEC_TEXT } from './fake-plex.js';
@@ -44,8 +44,8 @@ describe('Plex catalog (pinned spec)', () => {
     for (const key of ['GET /users/account.json', 'POST /shared_servers', 'GET /friends', 'POST /pins'])
       expect(cloud).toContain(key);
     const twins = catalog.operations.filter((o) => o.key.includes('#')).length;
-    expect(twins).toBe(5);
-    expect(catalog.operations).toHaveLength(308);
+    expect(twins).toBe(6);
+    expect(catalog.operations).toHaveLength(309);
     expect(all.length - cloud.length - (keys.size - twins)).toBe(50);
   });
 
@@ -67,7 +67,8 @@ describe('Plex catalog (pinned spec)', () => {
 
   it('locks every split twin and nothing the rules do not name; single-item deletes are regular writes', () => {
     const locked = catalog.operations.filter((o) => o.locked).map((o) => o.key);
-    for (const o of catalog.operations.filter((x) => x.key.includes('#'))) expect(o.locked, o.key).toBe(true);
+    for (const o of catalog.operations.filter((x) => x.key.includes('#') && x.key !== PLAY_QUEUE_OWN))
+      expect(o.locked, o.key).toBe(true);
     const named = new Set(lockedKeys(settings.rules));
     expect(locked.filter((k) => !k.includes('#') && !named.has(k))).toEqual([]);
     for (const key of [
@@ -81,9 +82,10 @@ describe('Plex catalog (pinned spec)', () => {
       'POST /butler/{butlerTask}',
       'PUT /library/sections/{sectionId}/analyze',
       'GET /library/sections/{sectionId}/unmatch',
-      'GET /playQueues/{playQueueId}',
+      PLAY_QUEUE_OWN,
     ])
       expect(op(key), key).toMatchObject({ locked: false, typedConfirmation: false, classification: 'write' });
+    expect(op('GET /playQueues/{playQueueId}')).toMatchObject({ locked: false, classification: 'read' });
     for (const key of ['DELETE /library/sections/{sectionId}', 'DELETE /livetv/dvrs/{dvrId}'])
       expect(op(key), key).toMatchObject({ locked: true });
     expect(locked).toHaveLength(LOCKED_TOTAL);
@@ -142,7 +144,7 @@ describe('Plex catalog (pinned spec)', () => {
       'GET /library/sections/{sectionId}/unmatch',
       'GET /media/grabbers/devices/discover',
       'GET /system/updates',
-      'GET /playQueues/{playQueueId}',
+      PLAY_QUEUE_OWN,
     ]);
     for (const o of catalog.operations) {
       const read = o.key.startsWith('GET ') && !o.locked && !writes.has(o.key);
@@ -191,12 +193,7 @@ describe('Plex catalog (pinned spec)', () => {
 
   it('refuses a spec that lost an operation a rule splits or makes a write', () => {
     const required = requiredKeys(settings.rules);
-    for (const key of [
-      'GET /:/progress',
-      'GET /system/updates',
-      'GET /playQueues/{playQueueId}',
-      'GET /library/metadata/{ids}',
-    ])
+    for (const key of ['GET /:/progress', 'GET /system/updates', 'GET /library/metadata/{ids}'])
       expect(required).toContain(key);
     const spec = specOf();
     const { get: _gone, ...rest } = spec.paths['/:/progress']!;
@@ -243,6 +240,35 @@ describe('split predicates', () => {
       params: { query },
       request: {},
     }) as Parameters<(typeof splitWhen)['refresh']>[0];
+
+  it('takes the unlocked #own twin for own that is not plainly off, or not a scalar', () => {
+    const own = (value?: unknown) =>
+      takesQueue({ path: { playQueueId: '55' }, query: value === undefined ? {} : { own: value } });
+    expect([own(undefined), own(0), own('0'), own(false), own('false'), own(null)]).toEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+    expect([own(1), own('1'), own(true), own('true'), own({}), own([0]), own('yes')]).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(op(PLAY_QUEUE_OWN)).toMatchObject({
+      classification: 'write',
+      classificationReason: 'reviewed:get-changes-state',
+      locked: false,
+      typedConfirmation: false,
+    });
+    expect(op(PLAY_QUEUE_OWN)?.docs?.description).toMatch(/takes the play queue over/);
+  });
 
   it('takes #many for anything but exactly one id', () => {
     const many = (ids?: string) =>

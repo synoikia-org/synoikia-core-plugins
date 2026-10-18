@@ -10,7 +10,7 @@ PMS serves no API spec, and Plex's own developer documentation is incomplete. Th
 2. `src/spec.ts` fetches `<specBaseUrl>/<ref>/plex-api-spec.yaml`. `ref` is a full commit SHA pinned in `plugin.yaml` (`a632c48…`, 2026-10-14), next to the file's `sha256`. `parseSpecSource` refuses a branch or tag name. `fetchPlexSpec` refuses a file whose SHA-256 differs, from GitHub or a mirror: a change in a third-party repository or a mirror must not change the catalog without a plugin release. The ref is the catalog's `sourceRef`.
 3. `specBaseUrl` defaults to `https://raw.githubusercontent.com/LukeHagar/plex-api-spec`; a mirror with the same `<ref>/<file>` layout works offline. No credentials go there. Both hosts are in `network.hosts`.
 
-**PMS only.** The spec also describes plex.tv (account, sign-in, PINs, friends, sharing, home users, webhooks) and the cloud metadata and discover providers. Those operations declare their own `servers`. `pmsOnly` drops every operation that declares `servers`, at operation or path level, before the catalog is built. No plex.tv host is in `network.hosts`. Of 405 operations in the pinned spec, 52 are plex.tv or cloud, and 50 PMS operations are excluded (below); the catalog has 308 operations: 303 PMS operations and 5 split twins.
+**PMS only.** The spec also describes plex.tv (account, sign-in, PINs, friends, sharing, home users, webhooks) and the cloud metadata and discover providers. Those operations declare their own `servers`. `pmsOnly` drops every operation that declares `servers`, at operation or path level, before the catalog is built. No plex.tv host is in `network.hosts`. Of 405 operations in the pinned spec, 52 are plex.tv or cloud, and 50 PMS operations are excluded (below); the catalog has 309 operations: 303 PMS operations, 5 split twins and the `#own` twin.
 
 **`:` paths.** Plex keeps actions under a `:` segment (`/:/scrobble`, `/:/prefs`). The SDK's OpenAPI adapter skips paths with `:`, so `src/catalog.ts` builds them under a placeholder segment and restores the keys, templates and segments afterwards. A spec that already uses the placeholder is refused. The SDK should accept `:` segments; this is a core follow-up.
 
@@ -34,11 +34,11 @@ GET reads, every other verb writes, and anything unsettled stays a write. Review
 | Operation | Classification |
 | --- | --- |
 | `GET /:/progress`, `/library/sections/{sectionId}/refresh`, `/match`, `/unmatch`, `/media/grabbers/devices/discover`, `/system/updates` | write: they set progress, start a scan, match or unmatch items, scan the network or check for updates |
-| `GET /playQueues/{playQueueId}` | write: with `own`, this client takes the play queue over from the device playing it |
+| `GET /playQueues/{playQueueId}` | read; with `own` set and not plainly off, the call takes `#own`: a regular write, with approval and no typed confirmation (owner decision), since this client takes the play queue over from the device playing it |
 | `GET /library/metadata/{ids}/subtitles` | locked: adds a subtitle that Plex downloads from `url` |
 | `GET /library/sections/{sectionId}/emptyTrash`, `/optimize`, `GET /library/optimize` | locked (below) |
 | `GET /library/metadata/{ids}`, `GET /library/sections/{sectionId}/all` | read; `#refresh` twin (below) |
-| 10 others the action-word heuristic flags (`/sync*`, `computePath`, `autocomplete`, history, playlist items, subscriptions) | read: the word is in the docs, not the behavior |
+| 11 others the action-word heuristic flags (`/sync*`, `computePath`, `autocomplete`, history, play queues, playlist items, subscriptions) | read: the word is in the docs, not the behavior |
 
 Excluded:
 
@@ -85,8 +85,8 @@ Admin-only writes (the spec's `admin` scope) and other writes left as regular wr
 | `PUT /library/collections/{collectionId}/items`, `…/items/{itemId}`, `…/move`, `POST`, `PUT /hubs/sections/{sectionId}/manage/*`, `PUT /media/subscriptions/{subscriptionId}/move` | Collection membership and order, home-screen hubs, recording order; reversible |
 | `PUT /actions/removeFromContinueWatching` | Hides one item from Continue Watching |
 | `PUT /updater/check`, `PUT /myplex/refreshReachability`, `POST /livetv/dvrs/{dvrId}/reloadGuide` | Checks for or downloads an update (`apply` is locked), rechecks remote access, reloads the guide |
-| `PUT /library/sections/{sectionId}/analyze`, `GET …/unmatch`, `POST /butler/{butlerTask}`, `POST /status/sessions/terminate` | Analyzes or unmatches one library, starts one maintenance task, stops one playback |
-| Single-item deletes: items, media, markers, collections, playlists and their items, play queue items, history, activities, butler tasks (one or all), caches, section indexes and intros, refreshes, hubs, subscriptions, providers, live TV sessions, grabs | One item or one cancel; the target names it |
+| `PUT /library/sections/{sectionId}/analyze`, `GET …/unmatch`, `POST /butler/{butlerTask}`, `POST /status/sessions/terminate`, `GET /playQueues/{playQueueId}#own` | Analyzes or unmatches one library, starts one maintenance task, stops one playback, takes one play queue over. The SDK locks every split twin, so `src/catalog.ts` adds `#own` itself, unlocked; `GET /playQueues/{playQueueId}` is a required key, so a rename can't turn `own` into a read |
+| Single-item deletes: items, media, markers, collections, playlists and their items, play queue items, history, activities, butler tasks (one or all), caches, section indexes and intros (owner decision), refreshes, hubs, subscriptions and media providers (owner decision), live TV sessions, grabs | One item or one cancel; the target names it |
 | `POST /livetv/dvrs` | Creates a DVR from a tuner already added (adding a tuner is locked) |
 
 **Targets** (`capabilities.targets`). Writes name what they act on, right after the method and path, ahead of the query: the library section, up to 10 items (`Show – Title (year) [type]`), the playlist, the session (`user playing title on player`), the settings a `PUT /:/prefs` changes, and the origin of a `url` Plex fetches. Model-written strings are escaped.

@@ -2314,10 +2314,23 @@
     "typedConfirmation": false
   },
   {
+    "classification": "read",
+    "classificationReason": "reviewed:read",
+    "group": "play_queue",
+    "key": "GET /playQueues/{playQueueId}",
+    "kind": "rest",
+    "locked": false,
+    "needsReview": false,
+    "sensitiveParams": [
+      "/query/url"
+    ],
+    "typedConfirmation": false
+  },
+  {
     "classification": "write",
     "classificationReason": "reviewed:get-changes-state",
     "group": "play_queue",
-    "key": "GET /playQueues/{playQueueId}",
+    "key": "GET /playQueues/{playQueueId}#own",
     "kind": "rest",
     "locked": false,
     "needsReview": false,

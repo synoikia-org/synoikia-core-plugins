@@ -6,7 +6,15 @@ import {
   SpecError,
   stringOr,
 } from '@synoikia/plugin-sdk';
-import type { CompiledRules, ConfirmContext, OpenApiCatalog, RestCall, RuleHooks } from '@synoikia/plugin-sdk';
+import type {
+  CompiledRules,
+  ConfirmContext,
+  OpenApiCatalog,
+  OperationDescriptor,
+  RestCall,
+  RestParams,
+  RuleHooks,
+} from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 import { requiredKeys, requireLockedKeys } from './locks.js';
 import { parseSpecSource, pmsOnly } from './spec.js';
@@ -52,6 +60,31 @@ export const splitWhen: Record<string, (call: RestCall) => boolean> = {
   // `{ids}` is a comma-separated list: anything but exactly one id takes the bulk twin.
   many: (call) => (stringOr(call.params.path?.ids) ?? '').split(',').filter((id) => id.trim()).length !== 1,
 };
+
+/** `GET /playQueues/{playQueueId}` with `own` takes the play queue over: it takes the unlocked `#own` twin. */
+export const PLAY_QUEUE = 'GET /playQueues/{playQueueId}';
+export const PLAY_QUEUE_OWN = `${PLAY_QUEUE}#own`;
+
+/** `own` set and not plainly off; a value that is not a scalar takes the twin too. */
+export function takesQueue(params: RestParams): boolean {
+  const own = params.query?.own;
+  if (own !== null && typeof own === 'object') return true;
+  return flagOn(own);
+}
+
+/** The `#own` twin: a reviewed write, with approval but no typed confirmation (owner decision); the SDK locks every
+ * split twin, so it is added here rather than with `split`. */
+function playQueueTwin(base: OperationDescriptor, rules: CompiledRules<unknown>): OperationDescriptor {
+  const { locked: _l, typedConfirmation: _t, ...draft } = base;
+  return {
+    ...rules.decorate({ ...draft, key: PLAY_QUEUE_OWN }),
+    classification: 'write',
+    classificationReason: 'reviewed:get-changes-state',
+    locked: false,
+    typedConfirmation: false,
+    needsReview: false,
+  };
+}
 
 export type Get = (path: string) => Promise<unknown>;
 
@@ -121,6 +154,14 @@ export function buildCatalog(
       op.template = restore(op.template);
       op.segments = op.segments.map((s) => (s === COLON ? ':' : s));
     }
-  requireLockedKeys(catalog.operations, REQUIRED_KEYS, SERVICE);
+  // The play queue GET is required too: a renamed one would read with `own`, which takes the queue over.
+  requireLockedKeys(catalog.operations, [...REQUIRED_KEYS, PLAY_QUEUE], SERVICE);
+  catalog.operations.push(
+    playQueueTwin(
+      catalog.operations.find((o) => o.key === PLAY_QUEUE)!,
+      rules,
+    ),
+  );
+  catalog.operations.sort((a, b) => a.key.localeCompare(b.key));
   return catalog;
 }

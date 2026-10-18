@@ -56,10 +56,22 @@ const URL_SECRETS = ['trailer-signature-888888', 'provider-key-999999', 'subtitl
 
 describe('Plex end to end (fake Plex)', () => {
   it('syncs the PMS operations of the pinned spec', () => {
-    expect(h.operations()).toHaveLength(308);
+    expect(h.operations()).toHaveLength(309);
     expect(h.instance()).toMatchObject({ upstreamVersion: VERSION, lastSyncStatus: 'ok' });
     expect(fake.specFetches.map((f) => f.ref)).toContain(SPEC_REF);
     expect(h.operation('PUT /:/prefs')).toMatchObject({ locked: true, typedConfirmation: true });
+  });
+
+  it('reads a play queue at Read, and asks before taking it over with own', async () => {
+    allow('GET /playQueues/{playQueueId}', 'read');
+    expect(h.operation('GET /playQueues/{playQueueId}')).toMatchObject({ classification: 'read', locked: false });
+    const read = await h.execute(call({ path: '/playQueues/55' }));
+    expect(read).toMatchObject({ ok: true });
+    expect(h.operation('GET /playQueues/{playQueueId}#own')).toMatchObject({
+      classification: 'write',
+      locked: false,
+      typedConfirmation: false,
+    });
   });
 
   it('lists libraries, recently added and searches at Read', async () => {
