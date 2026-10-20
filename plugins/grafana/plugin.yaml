@@ -228,6 +228,10 @@ rules:
   - match: 'POST /cloudmigration/migration/{uid}/snapshot/{snapshotUid}/upload'
     summaryNote: "(uploads this instance's dashboards, folders, data sources and alerting to the session's Cloud stack)"
 
+  # Grafana's spec gives this operation no summary or description.
+  - match: 'GET /search'
+    description: 'Search dashboards and folders by title query, tags, type, folder, starred state or uid.'
+
   # POSTs that only read. Not `POST /ds/query`: a SQL data source runs its rawSql, writes too, as the stored user.
   - match:
       - 'POST /access-control/assignments/search'
