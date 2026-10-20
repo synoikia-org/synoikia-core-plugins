@@ -5,7 +5,7 @@ description: Scaffold a new Synoikia plugin under plugins/<id> with `pnpm new`, 
 
 # Add a plugin
 
-Write the code as the `plugin-development` skill says. Background: Synoikia's plugin authoring guide (`https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md`). `plugins/seerr` is the OpenAPI example, `plugins/truenas` an introspection catalog over JSON-RPC, and `plugins/homeassistant` a WebSocket upstream with a registry, targets and declared commands.
+Run the change as the `change-workflow` skill and `docs/workflow.md` say. Write the code as the `plugin-development` skill says. Background: Synoikia's plugin authoring guide (`https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md`). `plugins/seerr` is the OpenAPI example, `plugins/truenas` an introspection catalog over JSON-RPC, and `plugins/homeassistant` a WebSocket upstream with a registry, targets and declared commands.
 
 ## 1. Settle the basics
 
@@ -23,7 +23,7 @@ If a design exists, put it in `docs/designs/<id>.md` and add it to the table in 
 pnpm new --id <id> --name "<Name>" --archetype <archetype> --auth <auth> --yes
 ```
 
-This writes `plugins/<id>/` (`manifest.json`, `plugin.yaml`, `src/`, a fake upstream, conformance and e2e contract tests, README and RUNBOOK) and runs `pnpm install`. The generated plugin passes its tests as is.
+This writes `plugins/<id>/` and runs `pnpm install`. The plugin holds `manifest.json`, `plugin.yaml`, `src/`, `test/compliance.yaml`, a fake upstream, a README and a RUNBOOK. For the `openapi-rest`, `static-rest` and `websocket-rpc` archetypes, the plugin passes the compliance suite as generated.
 
 ## 3. Describe the upstream
 
@@ -33,13 +33,16 @@ This writes `plugins/<id>/` (`manifest.json`, `plugin.yaml`, `src/`, a fake upst
 
 ## 4. Tests
 
-- Extend the fake upstream (`startFakeHttp` from `@synoikia/core/testing` for HTTP) to answer what the plugin calls, including responses that hold secrets.
-- Keep `checkPluginContract` in `test/e2e.test.ts` passing, and add e2e cases for each lock and each secret.
-- Add a `test/golden.test.ts` like the other plugins once the catalog settles, so later changes to what the plugin tells core show up as a reviewed diff.
+- Extend the fake upstream (`startFakeHttp` from `@synoikia/core/testing` for HTTP) to answer what the plugin calls. Include the responses that hold secrets.
+- Fill in `test/compliance.yaml`: reads, writes, rejects, the secrets, and a `locks` case for each locked operation and split twin.
+- Write plugin-specific behavior in `features/<id>.feature` with the suite's steps, on calls named in `calls`.
+- Put tests of pure logic in `test/unit/`.
 
 ```sh
 pnpm --filter ./plugins/<id> test
 pnpm typecheck && pnpm lint && pnpm format:check
 ```
 
-Add the plugin to the root `README.md`. Leave the version at `0.1.0`: merging to `main` releases it, so say in the PR that it will publish. Run the `security-reviewer` subagent on the diff before opening the PR.
+The plugin run must end with "<Name> 0.1.0 is fit for production." and no failed test.
+
+Add the plugin to the root `README.md`. Leave the version at `0.1.0`. Merging to `main` releases it, so say in the PR that it will publish. Run the `security-reviewer` subagent on the diff before you open the PR.

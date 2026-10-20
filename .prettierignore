@@ -6,3 +6,5 @@ docs/mockups
 **/__golden__/
 # Guide text is hashed into attestation keys; keep it byte-for-byte.
 plugins/*/guides
+# The pinned Plex spec is checked by its SHA-256; keep it byte-for-byte.
+plugins/plex/test/fixtures/plex-api-spec.pinned.yaml

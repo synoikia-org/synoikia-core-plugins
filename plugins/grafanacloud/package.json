@@ -1,6 +1,6 @@
 {
   "name": "@synoikia/plugin-grafanacloud",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -11,11 +11,13 @@
     "test": "synoikia-plugin check && synoikia-plugin build && vitest run"
   },
   "dependencies": {
-    "@synoikia/plugin-sdk": "^0.5.0"
+    "@synoikia/plugin-sdk": "^0.6.0"
   },
   "devDependencies": {
-    "@synoikia/core": "^0.14.0",
-    "@synoikia/create-plugin": "^0.3.0"
+    "@synoikia/core": "^0.17.2",
+    "@synoikia/create-plugin": "^0.6.1",
+    "quickpickle": "1.11.2",
+    "yaml": "^2.9.1"
   },
   "synoikia": {
     "minCoreVersion": "0.14.0"

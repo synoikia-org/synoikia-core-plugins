@@ -1,0 +1,233 @@
+# What core's compliance suite needs to certify Grafana Adaptive against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection:
+  {
+    prometheusUrl: '${fake.prometheusUrl}',
+    metricsInstanceId: '${fake.metricsInstanceId}',
+    lokiUrl: '${fake.lokiUrl}',
+    logsInstanceId: '${fake.logsInstanceId}',
+    tempoUrl: '${fake.tempoUrl}',
+    tracesInstanceId: '${fake.tracesInstanceId}',
+    token: '${fake.token}',
+  }
+reads:
+  - { fn: call, args: [metrics.rules.list], key: metrics.rules.list }
+  - { fn: call, args: [metrics.recommendations.list], key: metrics.recommendations.list }
+  - { fn: call, args: [logs.recommendations.list], key: logs.recommendations.list }
+  - { fn: call, args: [traces.policies.list], key: traces.policies.list }
+writes:
+  - { fn: call, args: [traces.recommendations.dismiss, { path: { id: rec-1 } }], key: traces.recommendations.dismiss }
+rejects:
+  - { fn: call, args: [traces.nope] }
+secrets:
+  - { fn: call, args: [logs.exemptions.list], key: logs.exemptions.list, values: ['${fake.token}'] }
+connectionTest: { wrong: { token: wrong } }
+calls:
+  apply the recommended rules:
+    {
+      fn: call,
+      args:
+        [
+          metrics.rules.replace,
+          {
+            ifMatch: '"v1"',
+            body:
+              [
+                { metric: http_requests_total, drop_labels: [pod, instance], aggregations: [sum, count] },
+                { metric: debug_events_total, drop: true },
+                { metric: container_cpu_usage_seconds_total, drop_labels: [id] },
+              ],
+          },
+        ],
+      key: metrics.rules.replace,
+    }
+  replace the rules with a stale etag:
+    { fn: call, args: [metrics.rules.replace, { ifMatch: '"v0"', body: [] }], key: metrics.rules.replace }
+  read a policy one level up:
+    { fn: call, args: [traces.policies.get, { path: { id: '..' } }], key: traces.policies.get }
+  read the recommendations as a policy:
+    { fn: call, args: [traces.policies.get, { path: { id: ../recommendations } }], key: traces.policies.get }
+  read a policy with a query in its id:
+    { fn: call, args: [traces.policies.get, { path: { id: a?b } }], key: traces.policies.get }
+locks:
+  metrics.rules.replace:
+    {
+      fn: call,
+      args:
+        [
+          metrics.rules.replace,
+          {
+            ifMatch: '"v1"',
+            body:
+              [
+                { metric: http_requests_total, drop_labels: [pod], aggregations: [sum] },
+                { metric: go_gc_duration_seconds, drop: true },
+              ],
+          },
+        ],
+      confirm: '100001',
+      target: 'on Adaptive Metrics instance 100001: drops entirely: "go_gc_duration_seconds"; aggregates: "http_requests_total" aggregated (drop labels "pod"; aggregations "sum"); removes the rules of "debug_events_total"',
+    }
+  metrics.rules.create:
+    {
+      fn: call,
+      args:
+        [
+          metrics.rules.create,
+          {
+            ifMatch: '"v1"',
+            path: { metric: kube_pod_info },
+            body: { metric: kube_pod_info, drop_labels: ["uid\u202e"] },
+          },
+        ],
+      confirm: kube_pod_info,
+      target: 'on Adaptive Metrics instance 100001: "kube_pod_info" aggregated (drop labels "uid\u202e")',
+    }
+  metrics.rules.update:
+    {
+      fn: call,
+      args:
+        [
+          metrics.rules.update,
+          { ifMatch: '"v1"', path: { metric: http_requests_total }, body: { metric: http_requests_total, drop: true } },
+        ],
+      confirm: http_requests_total,
+      target: 'on http_requests_total: "http_requests_total" dropped entirely',
+    }
+  metrics.rules.delete:
+    {
+      fn: call,
+      args: [metrics.rules.delete, { ifMatch: '"v1"', path: { metric: debug_events_total } }],
+      confirm: debug_events_total,
+      target: 'on debug_events_total: removes the rule of "debug_events_total" (now "debug_events_total" dropped entirely)',
+    }
+  metrics.recommendations.updateConfig:
+    {
+      fn: call,
+      args:
+        [
+          metrics.recommendations.updateConfig,
+          { body: { keep_labels: [], auto_apply: { enabled: true, gate: { policy: unbounded } } } },
+        ],
+      confirm: '100001',
+      target: 'on Adaptive Metrics instance 100001: auto-apply ON: recommendations change the rules without review (gate "unbounded")',
+    }
+  metrics.exemptions.create:
+    {
+      fn: call,
+      args: [metrics.exemptions.create, { body: { metric: payments_total, keep_labels: [customer], reason: billing } }],
+      confirm: payments_total,
+      target: 'on Adaptive Metrics instance 100001: exempts "payments_total", keeping labels "customer"',
+    }
+  metrics.exemptions.update:
+    {
+      fn: call,
+      args:
+        [metrics.exemptions.update, { path: { id: ex-1 }, body: { metric: slo_errors_total, keep_labels: [service] } }],
+      confirm: slo_errors_total,
+      target: 'on slo_errors_total: exempts "slo_errors_total", keeping labels "service" (was "slo_errors_total")',
+    }
+  metrics.exemptions.delete:
+    {
+      fn: call,
+      args: [metrics.exemptions.delete, { path: { id: ex-1 } }],
+      confirm: slo_errors_total,
+      target: 'on slo_errors_total: removes the exemption of "slo_errors_total"',
+    }
+  logs.dropRules.create:
+    {
+      fn: call,
+      args:
+        [
+          logs.dropRules.create,
+          {
+            body:
+              {
+                version: 1,
+                name: drop-healthz,
+                body: { drop_rate: 1, stream_selector: '{app="web"}', levels: [info], log_line_contains: [/healthz] },
+              },
+          },
+        ],
+      confirm: drop-healthz,
+      target: 'on Adaptive Logs instance 200002: drop_rate 1 on the lines of "{app=\"web\"}" at levels "info" containing "/healthz"',
+    }
+  logs.dropRules.update:
+    {
+      fn: call,
+      args:
+        [
+          logs.dropRules.update,
+          {
+            path: { id: dr-1 },
+            body: { version: 1, name: drop-debug, body: { drop_rate: 1, stream_selector: '{app="api"}' } },
+          },
+        ],
+      confirm: drop-debug,
+      target: 'on drop-debug: drop_rate 1 on the lines of "{app=\"api\"}" at every level (rule "drop-debug") (was drop_rate 0.9',
+    }
+  logs.dropRules.delete:
+    {
+      fn: call,
+      args: [logs.dropRules.delete, { path: { id: dr-1 } }],
+      confirm: drop-debug,
+      target: 'on drop-debug: removes drop rule drop_rate 0.9 on the lines of "{app=\"api\"}"',
+    }
+  logs.exemptions.create:
+    {
+      fn: call,
+      args: [logs.exemptions.create, { body: { stream_selector: '{app="audit"}', reason: compliance } }],
+      confirm: '{app="audit"}',
+      target: 'on Adaptive Logs instance 200002: never drops the lines of "{app=\"audit\"}"',
+    }
+  logs.exemptions.update:
+    {
+      fn: call,
+      args:
+        [logs.exemptions.update, { path: { id: lex-1 }, body: { stream_selector: '{app="payments", env="prod"}' } }],
+      confirm: '{app="payments"}',
+      target: 'on {app=\"payments\"}: never drops the lines of "{app=\"payments\", env=\"prod\"}"',
+    }
+  logs.exemptions.delete:
+    {
+      fn: call,
+      args: [logs.exemptions.delete, { path: { id: lex-1 } }],
+      confirm: '{app="payments"}',
+      target: 'on {app=\"payments\"}: removes the exemption of "{app=\"payments\"}"',
+    }
+  traces.policies.create:
+    {
+      fn: call,
+      args:
+        [traces.policies.create, { body: { type: probabilistic, name: sample-1, body: { sampling_percentage: 1 } } }],
+      confirm: sample-1,
+      target: 'on Adaptive Traces instance 300003: policy "sample-1" of type "probabilistic"',
+    }
+  traces.policies.update:
+    {
+      fn: call,
+      args:
+        [
+          traces.policies.update,
+          {
+            path: { id: pol-1 },
+            body: { type: probabilistic, name: keep-1-percent, body: { sampling_percentage: 1 } },
+          },
+        ],
+      confirm: keep-5-percent,
+      target: 'on keep-5-percent: policy "keep-1-percent" of type "probabilistic"',
+    }
+  traces.policies.delete:
+    {
+      fn: call,
+      args: [traces.policies.delete, { path: { id: pol-1 } }],
+      confirm: keep-5-percent,
+      target: 'on keep-5-percent: removes policy "keep-5-percent" of type "probabilistic"',
+    }
+  traces.recommendations.apply:
+    {
+      fn: call,
+      args: [traces.recommendations.apply, { path: { id: rec-1 } }],
+      confirm: '300003',
+      target: 'on Adaptive Traces instance 300003, recommendation rec-1: recommendation "rec-1": "Sample health checks at 1%"; actions: add policy "health-checks" of type "probabilistic"',
+    }

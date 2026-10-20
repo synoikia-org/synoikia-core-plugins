@@ -1,0 +1,413 @@
+# What core's compliance suite needs to certify Nginx Proxy Manager against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', email: '${fake.email}', password: '${fake.password}' }
+reads:
+  - { fn: request, args: [{ path: /nginx/proxy-hosts/1 }], key: 'GET /nginx/proxy-hosts/{hostID}' }
+  - { fn: request, args: [{ path: /nginx/proxy-hosts, query: { expand: certificate } }], key: GET /nginx/proxy-hosts }
+  - { fn: request, args: [{ path: /users }], key: GET /users }
+writes:
+  - {
+      fn: request,
+      args: [{ method: POST, path: /nginx/access-lists, body: { name: Guests, satisfy_any: false } }],
+      key: POST /nginx/access-lists,
+    }
+  - {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/certificates,
+            body:
+              {
+                provider: letsencrypt,
+                domain_names: ['*.home.example'],
+                meta: { dns_challenge: true, dns_provider: cloudflare, dns_provider_credentials: '${fake.dnsToken}' },
+              },
+          },
+        ],
+      key: POST /nginx/certificates,
+    }
+  - {
+      fn: request,
+      args: [{ method: POST, path: /nginx/certificates/1/renew }],
+      key: 'POST /nginx/certificates/{certID}/renew',
+    }
+  - {
+      fn: request,
+      args: [{ method: POST, path: /nginx/dead-hosts, body: { domain_names: [parked.home.example] } }],
+      key: POST /nginx/dead-hosts,
+    }
+rejects:
+  - { fn: request, args: [{ path: /proxy-hosts }] }
+secrets:
+  - {
+      fn: request,
+      args: [{ path: /nginx/certificates }],
+      key: GET /nginx/certificates,
+      values: ['${fake.dnsCredentials}', '${fake.privateKey}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /nginx/proxy-hosts, query: { expand: certificate } }],
+      key: GET /nginx/proxy-hosts,
+      values: ['${fake.dnsCredentials}', '${fake.privateKey}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /nginx/access-lists }],
+      key: GET /nginx/access-lists,
+      values: ['${fake.basicAuthPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /audit-log }],
+      key: GET /audit-log,
+      values:
+        [
+          '${fake.dnsCredentials}',
+          '${fake.privateKey}',
+          '${fake.totpSecret}',
+          '${fake.backupCode}',
+          '${fake.userPassword}',
+          '${fake.newPassword}',
+          '${fake.currentPassword}',
+          '${fake.totpCode}',
+          '${fake.dnsToken}',
+        ],
+    }
+connectionTest: { wrong: { password: wrong } }
+locks:
+  POST /nginx/proxy-hosts:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/proxy-hosts,
+            body:
+              {
+                domain_names: [media.home.example],
+                forward_scheme: http,
+                forward_host: 10.0.0.7,
+                forward_port: 8096,
+                certificate_id: new,
+                ssl_forced: true,
+              },
+          },
+        ],
+      confirm: media.home.example,
+      target: 'domains media.home.example; → http://10.0.0.7:8096',
+    }
+  PUT /nginx/proxy-hosts/{hostID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /nginx/proxy-hosts/1, body: { forward_host: 10.6.6.6, forward_port: 80 } }],
+      confirm: app.home.example,
+      target: '→ 10.6.6.6:80',
+    }
+  POST /nginx/proxy-hosts/{hostID}/disable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/proxy-hosts/1/disable }],
+      confirm: app.home.example,
+      target: /nginx/proxy-hosts/1/disable,
+    }
+  POST /nginx/proxy-hosts/{hostID}/enable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/proxy-hosts/1/enable }],
+      confirm: app.home.example,
+      target: /nginx/proxy-hosts/1/enable,
+    }
+  DELETE /nginx/proxy-hosts/{hostID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /nginx/proxy-hosts/1 }],
+      confirm: app.home.example,
+      target: /nginx/proxy-hosts/1,
+    }
+  POST /nginx/redirection-hosts:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/redirection-hosts,
+            body:
+              {
+                domain_names: [go.home.example],
+                forward_scheme: https,
+                forward_http_code: 302,
+                forward_domain_name: elsewhere.example,
+              },
+          },
+        ],
+      confirm: go.home.example,
+      target: 'domains go.home.example; redirects to https://elsewhere.example',
+    }
+  PUT /nginx/redirection-hosts/{hostID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /nginx/redirection-hosts/1, body: { forward_domain_name: evil.example } }],
+      confirm: old.home.example,
+      target: 'redirects to evil.example',
+    }
+  POST /nginx/redirection-hosts/{hostID}/disable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/redirection-hosts/1/disable }],
+      confirm: old.home.example,
+      target: /nginx/redirection-hosts/1/disable,
+    }
+  POST /nginx/redirection-hosts/{hostID}/enable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/redirection-hosts/1/enable }],
+      confirm: old.home.example,
+      target: /nginx/redirection-hosts/1/enable,
+    }
+  DELETE /nginx/redirection-hosts/{hostID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /nginx/redirection-hosts/1 }],
+      confirm: old.home.example,
+      target: /nginx/redirection-hosts/1,
+    }
+  POST /nginx/dead-hosts#advanced:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/dead-hosts,
+            body: { domain_names: [x.home.example], advanced_config: 'location / { proxy_pass http://10.9.9.9; }' },
+          },
+        ],
+      confirm: x.home.example,
+      target: 'domains x.home.example',
+    }
+  PUT /nginx/dead-hosts/{hostID}#advanced:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /nginx/dead-hosts/1, body: { advanced_config: return 302 https://x.example; } }],
+      confirm: gone.home.example,
+      target: '/nginx/dead-hosts/1',
+    }
+  POST /nginx/dead-hosts/{hostID}/disable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/dead-hosts/1/disable }],
+      confirm: gone.home.example,
+      target: /nginx/dead-hosts/1/disable,
+    }
+  DELETE /nginx/dead-hosts/{hostID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /nginx/dead-hosts/1 }],
+      confirm: gone.home.example,
+      target: /nginx/dead-hosts/1,
+    }
+  POST /nginx/streams:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/streams,
+            body: { incoming_port: 3333, forwarding_host: 10.0.0.10, forwarding_port: 3389, tcp_forwarding: true },
+          },
+        ],
+      confirm: '3333',
+      target: 'port 3333; → 10.0.0.10:3389',
+    }
+  PUT /nginx/streams/{streamID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /nginx/streams/1, body: { forwarding_host: 10.6.6.6, forwarding_port: 22 } }],
+      confirm: '2222',
+      target: '→ 10.6.6.6:22',
+    }
+  POST /nginx/streams/{streamID}/disable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/streams/1/disable }],
+      confirm: '2222',
+      target: /nginx/streams/1/disable,
+    }
+  POST /nginx/streams/{streamID}/enable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/streams/1/enable }],
+      confirm: '2222',
+      target: /nginx/streams/1/enable,
+    }
+  DELETE /nginx/streams/{streamID}:
+    { fn: request, args: [{ method: DELETE, path: /nginx/streams/1 }], confirm: '2222', target: /nginx/streams/1 }
+  DELETE /nginx/certificates/{certID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /nginx/certificates/1 }],
+      confirm: Home wildcard,
+      target: /nginx/certificates/1,
+    }
+  PUT /nginx/access-lists/{listID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /nginx/access-lists/1, body: { name: Family, satisfy_any: true, items: [] } }],
+      confirm: Family,
+      target: /nginx/access-lists/1,
+    }
+  DELETE /nginx/access-lists/{listID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /nginx/access-lists/1 }],
+      confirm: Family,
+      target: /nginx/access-lists/1,
+    }
+  POST /users:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /users,
+            body:
+              {
+                name: Sam,
+                nickname: sam,
+                email: sam@home.example,
+                roles: [admin],
+                auth: { type: password, secret: '${fake.userPassword}' },
+              },
+          },
+        ],
+      confirm: sam@home.example,
+      target: /users,
+    }
+  PUT /users/{userID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /users/2, body: { email: mallory@evil.example, roles: [admin] } }],
+      confirm: alex@home.example,
+      target: mallory@evil.example,
+    }
+  PUT /users/{userID}/auth:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /users/2/auth,
+            body: { type: password, current: '${fake.currentPassword}', secret: '${fake.newPassword}' },
+          },
+        ],
+      confirm: alex@home.example,
+      target: /users/2/auth,
+    }
+  PUT /users/{userID}/permissions:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /users/2/permissions, body: { visibility: all, proxy_hosts: manage } }],
+      confirm: alex@home.example,
+      target: /users/2/permissions,
+    }
+  POST /users/{userID}/2fa:
+    { fn: request, args: [{ method: POST, path: /users/2/2fa }], confirm: alex@home.example, target: /users/2/2fa }
+  POST /users/{userID}/2fa/enable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /users/2/2fa/enable, body: { code: '${fake.totpCode}' } }],
+      confirm: alex@home.example,
+      target: /users/2/2fa/enable,
+    }
+  POST /users/{userID}/2fa/backup-codes:
+    {
+      fn: request,
+      args: [{ method: POST, path: /users/2/2fa/backup-codes, body: { code: '${fake.totpCode}' } }],
+      confirm: alex@home.example,
+      target: /users/2/2fa/backup-codes,
+    }
+  DELETE /users/{userID}/2fa:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /users/2/2fa, query: { code: '${fake.totpCode}' } }],
+      confirm: alex@home.example,
+      target: /users/2/2fa,
+    }
+  DELETE /users/{userID}:
+    { fn: request, args: [{ method: DELETE, path: /users/2 }], confirm: alex@home.example, target: /users/2 }
+  PUT /settings/{settingID}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /settings/default-site,
+            body: { value: redirect, meta: { redirect: https://elsewhere.example } },
+          },
+        ],
+      confirm: default-site,
+      target: https://elsewhere.example,
+    }
+calls:
+  list the proxy hosts with their certificates:
+    { fn: request, args: [{ path: /nginx/proxy-hosts, query: { expand: certificate } }], key: GET /nginx/proxy-hosts }
+  renew certificate 1:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/certificates/1/renew }],
+      key: 'POST /nginx/certificates/{certID}/renew',
+    }
+  request a wildcard certificate:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/certificates,
+            body:
+              {
+                provider: letsencrypt,
+                domain_names: ['*.home.example'],
+                meta: { dns_challenge: true, dns_provider: cloudflare, dns_provider_credentials: cf-token-121212 },
+              },
+          },
+        ],
+      key: POST /nginx/certificates,
+    }
+  create a parked 404 host:
+    {
+      fn: request,
+      args: [{ method: POST, path: /nginx/dead-hosts, body: { domain_names: [parked.home.example] } }],
+      key: POST /nginx/dead-hosts,
+    }
+  create a parked 404 host with raw nginx config:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /nginx/dead-hosts,
+            body: { domain_names: [parked.home.example], advanced_config: 'return 302 https://x.example;' },
+          },
+        ],
+      key: 'POST /nginx/dead-hosts#advanced',
+    }
+  create the 2FA secret of alex:
+    { fn: request, args: [{ method: POST, path: /users/2/2fa }], key: 'POST /users/{userID}/2fa' }
+  enable 2FA for alex:
+    {
+      fn: request,
+      args: [{ method: POST, path: /users/2/2fa/enable, body: { code: '918273' } }],
+      key: 'POST /users/{userID}/2fa/enable',
+    }

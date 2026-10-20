@@ -3,11 +3,13 @@ import {
   buildOpenApiCatalog,
   classifyRest,
   compileRules,
+  ErrorCodes,
   fillTemplate,
   isPlainObject,
   matchPath as matchRestPath,
   parseOpenApi,
   parsePluginSettings,
+  PluginError,
   SpecError,
   toGroup,
 } from '@synoikia/plugin-sdk';
@@ -109,13 +111,19 @@ export function groupOf(tags: unknown): string {
 }
 
 export function buildCatalog(specText: string, rules = policy): Catalog {
-  return buildOpenApiCatalog(specText, {
-    service: 'Seerr',
-    rules,
-    minOperations: settings.plugin.minOperations,
-    actionWords: settings.plugin.actionWords,
-    pathActionWords: null,
-  });
+  try {
+    return buildOpenApiCatalog(specText, {
+      service: 'Seerr',
+      rules,
+      minOperations: settings.plugin.minOperations,
+      actionWords: settings.plugin.actionWords,
+      pathActionWords: null,
+    });
+  } catch (err) {
+    // The SDK wraps a bad spec in UPSTREAM_ERROR; a SpecError again lets the caller name the spec's ref.
+    if (err instanceof PluginError && err.code === ErrorCodes.UpstreamError) throw new SpecError(err.message);
+    throw err;
+  }
 }
 
 /** Matches a concrete path (with or without `/api/v1`) against the catalog. */

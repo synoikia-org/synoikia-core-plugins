@@ -4,9 +4,9 @@ The TrueNAS, Seerr and Home Assistant plugins for [Synoikia](https://github.com/
 
 **A plugin only describes its upstream API; core decides what is allowed.** Core's sandbox, permission gate, approvals, redaction and audit apply to every plugin. A plugin supplies the catalog, the classification (read, write, locked), targets, summaries, confirmation literals and `sensitiveKeys`. It never adds its own allow/deny switch, approval prompt or secret handling. If a plugin needs something core doesn't offer, that is a change in `via-justa/synoikia-core`, released first.
 
-Every task that changes the repo starts with the `change-workflow` skill (`.claude/skills/change-workflow/`): size the task, go through plan mode for logical or big changes, and propose a work pattern (one PR, or a chain of child PRs into an integration branch run unattended) for the user to approve.
+Every task that changes the repo starts with the `change-workflow` skill (`.claude/skills/change-workflow/`). Changes are built spec first and test first, one slice for each pull request. The `requirements-engineer`, `architect` and `developer` skills run the steps, and prose follows the `technical-writing` skill. The rules for commits, branches, feature files, tests and prose are in `docs/workflow.md`. The git hooks (`pnpm hooks:install`, once per clone) and the `Workflow` CI job check them.
 
-Plugin code, `plugin.yaml`, manifest and test work follows the `plugin-development` skill (`.claude/skills/plugin-development/`): policy in YAML, SDK helpers before new code, fail closed, golden diffs reviewed as security changes. Load it before writing or reviewing a plugin change.
+Plugin code, `plugin.yaml`, manifest and test work follows the `plugin-development` skill (`.claude/skills/plugin-development/`). Its rules: policy in YAML, SDK helpers before new code, fail closed, and `test/compliance.yaml` diffs reviewed as security changes. Load it before writing or reviewing a plugin change.
 
 ## Layout
 
@@ -16,7 +16,8 @@ Plugin code, `plugin.yaml`, manifest and test work follows the `plugin-developme
 | `plugins/<id>/plugin.yaml`      | Policy as data: locks, split twins, classification overrides, `sensitiveParams`/`sensitiveResult`, confirm literals, plugin-specific settings |
 | `plugins/<id>/src/`             | `index.ts` calls `runPlugin()`; `plugin.ts` uses `definePlugin` for discovery and the decisions that need logic                               |
 | `plugins/<id>/guides/`          | Markdown guides bundled at build time (Home Assistant); their hash versions attestation keys, so Prettier skips them                          |
-| `plugins/<id>/test/`            | Unit tests, a fake upstream, `golden.test.ts` and `e2e.test.ts` on core's harness                                                             |
+| `plugins/<id>/test/`            | `compliance.yaml` (the compliance profile), `fake.ts` that starts the fake upstream `fake-<id>.ts`, and unit tests in `unit/`                 |
+| `plugins/<id>/features/`        | `<id>.feature`: plugin-specific behavior, written with the compliance suite's steps on the profile's named calls                              |
 | `plugins/<id>/RUNBOOK.md`       | Manual checklist against a real instance                                                                                                      |
 | `docs/designs/<id>.md`          | The original per-server design. Where it disagrees with core's design, core wins                                                              |
 | `.github/workflows/release.yml` | Packs, signs, indexes, verifies and publishes releases with `synoikia-plugin repo` (CI only)                                                  |
@@ -28,15 +29,21 @@ Node 22.12+ (`.nvmrc` pins 22), pnpm 10.
 ```sh
 pnpm new                                                         # add a plugin (see the add-plugin skill)
 pnpm lint && pnpm format:check && pnpm typecheck && pnpm test   # what CI runs
-pnpm --filter ./plugins/<id> test                                # one plugin: check, build its bundle, then unit + e2e
+pnpm --filter ./plugins/<id> test                                # one plugin: check, build, unit tests, compliance suite, features
 pnpm check                                                       # manifests, plugin.yaml and versions
-pnpm --filter ./plugins/<id> exec vitest run test/catalog.test.ts   # one file (run `build` first for e2e)
+pnpm --filter ./plugins/<id> exec vitest run test/unit/catalog.test.ts   # one unit test file
 pnpm format                                                      # fix formatting
+pnpm hooks:install                                               # once per clone: the workflow git hooks
+pnpm workflow pre-push                                           # the workflow checks (branch, phases, features, prose)
 ```
 
-The e2e tests run the **built** `dist/index.js` on the real core (`startPluginHarness` from `@synoikia/core/testing`) as a permission-confined child against the fake upstream. A stale bundle means stale e2e results, so rebuild after changing `src/` or `plugin.yaml` (`synoikia-plugin build` validates and inlines it).
+Each plugin's `vitest.config.ts` uses `complianceConfig` from `@synoikia/core/testing/compliance`. Core's compliance suite and the plugin's features run the **built** `dist/index.js` on the real core. The bundle runs as a permission-confined child against the fake upstream. A stale bundle gives stale results, so rebuild after you change `src/` or `plugin.yaml`. The `test` script does this (`synoikia-plugin build` validates and inlines `plugin.yaml`).
 
-**Policy data goes in `plugin.yaml`, logic in `src/`.** Locks, splits, sensitive params and results, confirmation literals, guidance and upstream-specific lists are YAML that the SDK's `compileRules` applies; only decisions that need code (a TrueNAS path check, a Home Assistant target lookup) stay in TypeScript. Each plugin's `test/__golden__/` records what it tells core (descriptors, summaries, confirm literals, masking): a change there is a security change, so review the diff and update it only on purpose (`vitest run test/golden.test.ts -u`).
+A plugin is ready when its `test` run ends with "<Name> <version> is fit for production." and no test fails. A failing own feature does not change that verdict line, but it fails the run. The suite and its steps are in core's `docs/plugin-authoring.md` › The compliance suite.
+
+**Policy data goes in `plugin.yaml`, logic in `src/`.** Locks, splits, sensitive params and results, confirmation literals, guidance and upstream-specific lists are YAML that the SDK's `compileRules` applies. Only decisions that need code (a TrueNAS path check, a Home Assistant target lookup) stay in TypeScript.
+
+**`test/compliance.yaml` is policy too.** It gives the reads, writes, rejects, a lock case for each locked operation, the secrets and the connection test. A change to it is a security change, so review its diff like a `plugin.yaml` diff.
 
 ## Rules that break releases or installs
 
@@ -48,11 +55,13 @@ The e2e tests run the **built** `dist/index.js` on the real core (`startPluginHa
 
 ## Conventions
 
-Strict TypeScript with `noUncheckedIndexedAccess` and `verbatimModuleSyntax`: use `import type`, and `.js` extensions on relative imports. Unused variables are allowed only with a `_` prefix. Keep comments minimal: one or two lines, only for what the code can't say (a reason, a constraint, a design § reference), with no multi-line comment blocks in code, YAML or workflows. Prettier formats everything, and a hook runs it after each edit. New behavior gets a unit test and, when it crosses the plugin boundary, an e2e case with the fake upstream extended to match.
+Strict TypeScript with `noUncheckedIndexedAccess` and `verbatimModuleSyntax`: use `import type`, and `.js` extensions on relative imports. Unused variables are allowed only with a `_` prefix. Keep comments minimal: one or two lines, only for what the code can't say (a reason, a constraint, a design § reference). Do not write multi-line comment blocks in code, YAML or workflows. Prettier formats everything, and a hook runs it after each edit. Behavior that crosses the plugin boundary goes in `features/<id>.feature` or `test/compliance.yaml`, with the fake upstream extended to match. Pure logic gets a unit test in `test/unit/`.
 
 ## Security review
 
-Before opening a PR that touches a plugin's `manifest.json`, `plugin.yaml`, `src/` or dependencies, `test/__golden__/`, or `.github/workflows/`, run the `security-reviewer` subagent (`.claude/agents/security-reviewer.md`) on the diff and address its findings. It checks classification, request building, approval summaries, secrets, network hosts and the release flow, and runs `pnpm audit` to triage known CVEs by whether the dependency is bundled into a plugin.
+Before you open a PR that touches a security path, run the `security-reviewer` subagent (`.claude/agents/security-reviewer.md`) on the diff. Address its findings. The security paths are a plugin's `manifest.json`, `plugin.yaml`, `src/`, dependencies and `test/compliance.yaml`, and `.github/workflows/`. The full list is in `synoikia.workflow.securityPaths` in the root `package.json`.
+
+The reviewer checks classification, request building, approval summaries, secrets, network hosts and the release flow. It also runs `pnpm audit` and triages known CVEs by whether the dependency is bundled into a plugin. Put its `Security audit:` line in the PR description. The `Workflow` CI job checks for it.
 
 ## Protected files
 

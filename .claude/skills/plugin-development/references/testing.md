@@ -1,32 +1,59 @@
 # Testing
 
-Vitest, one `plugins/<id>/test/` directory per plugin. The plugin's `test` script runs `synoikia-plugin check`, rebuilds `dist/index.js`, then all tests. The e2e tests run the **built** bundle, so rebuild after any change to `src/` or `plugin.yaml` before running a single file. New or changed behavior ships with a test in the same change, including the failure path.
+Vitest, with quickpickle for feature files. The plugin's `vitest.config.ts` uses `complianceConfig` from `@synoikia/core/testing/compliance`. The `test` script runs these steps:
 
-## Pick the smallest level that proves the behavior
+1. `synoikia-plugin check`
+2. `synoikia-plugin build`, which rebuilds `dist/index.js`
+3. the unit tests in `test/unit/`
+4. core's compliance suite, from `test/compliance.yaml`
+5. the plugin's own `features/<id>.feature`
 
-| What                                                            | How                                                                                                                         |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| A pure function (catalog building, classification, a transform) | Import and call it directly (`catalog.test.ts`, `transform.test.ts`)                                                        |
-| The client against the upstream protocol                        | The client plus the fake upstream (`client.test.ts`)                                                                        |
-| Handlers: invoke, summaries, confirm literals, result masking   | `create<Name>Plugin()` + `init` against the fake upstream, with a `cleanup` stack drained in `afterEach` (`plugin.test.ts`) |
-| What the plugin tells core                                      | `golden.test.ts`: `toMatchFileSnapshot('__golden__/<name>.json')` on stable, key-sorted JSON                                |
-| The full path through core: gate, approvals, redaction, audit   | `startPluginHarness` + `checkPluginContract` from `@synoikia/core/testing` on the built bundle (`e2e.test.ts`)              |
+The suite and the features run the **built** bundle. Rebuild after any change to `src/` or `plugin.yaml` before you run one file.
+
+The run must end with "<Name> <version> is fit for production." and no failed test. A failing own feature does not change the verdict line, but it fails the run.
+
+## Pick the place that proves the behavior
+
+| What                                                                  | Where                                                         |
+| --------------------------------------------------------------------- | ------------------------------------------------------------- |
+| A pure function (catalog building, classification, a transform)       | A unit test in `test/unit/` that imports and calls it         |
+| Reads, writes, rejected calls, locks, secrets and the connection test | A case in `test/compliance.yaml`                              |
+| Plugin-specific behavior through core: approvals, summaries, levels   | A scenario in `features/<id>.feature`, with the suite's steps |
+
+`docs/workflow.md` › Tests has the rules for test files. A new `*.test.ts` file is a pure-function unit test in `test/unit/`.
+
+## The compliance profile
+
+`test/compliance.yaml` tells core's suite how to drive the plugin against its fake upstream. The format and the steps are in core's `docs/plugin-authoring.md` › The compliance suite.
+
+| Key              | What                                                                     |
+| ---------------- | ------------------------------------------------------------------------ |
+| `fake`           | `test/fake.ts`, the module that starts the fake upstream                 |
+| `connection`     | The connection values, with `${fake.<name>}` for the fake's values       |
+| `reads`          | Calls that must classify as reads                                        |
+| `writes`         | Calls that must classify as writes                                       |
+| `rejects`        | Calls that core or the plugin must refuse                                |
+| `locks`          | One case for each locked operation and each split twin, with its literal |
+| `secrets`        | Calls whose upstream values must never reach the agent                   |
+| `connectionTest` | Connection values that the connection test must reject                   |
+| `calls`          | Named calls that `features/<id>.feature` uses                            |
+
+- A lock with no case fails the suite. Add a case when you add a lock or a split twin.
+- A diff of `test/compliance.yaml` is a security change. Change a case only on purpose, and explain it in the PR.
 
 ## The fake upstream
 
-- Each plugin has one (`test/fake-<id>.ts`), built on `startFakeHttp` from `@synoikia/core/testing` for HTTP or a local server for WebSocket. Tests never reach the real network.
-- Extend it to answer every call the change makes, including the responses that carry secrets, the error statuses and the permission denials.
-- Export its credentials and fixed values (`FAKE_API_KEY`, …) for the tests to use; record calls so tests can assert what the plugin sent.
+- Each plugin has one (`test/fake-<id>.ts`), built on `startFakeHttp` from `@synoikia/core/testing` for HTTP, or a local server for WebSocket. Tests never reach the real network.
+- `test/fake.ts` exports `start()`. It starts the fake and returns its URL, `close()`, `reset()` and the values that the profile names.
+- Extend the fake to answer every call the change makes. Include the responses that hold secrets, the error statuses and the permission denials.
 
-## Golden files
+## Feature files
 
-- `test/__golden__/` records descriptors, summaries, confirm literals, classification and masking. Prettier skips it.
-- A diff there is a security change. Update only on purpose: `pnpm --filter ./plugins/<id> exec vitest run test/golden.test.ts -u`, then read the diff and explain it in the PR.
-- A new lock, sensitive field or summary shape gets a golden entry, not only an e2e case.
+- Write scenarios with the suite's steps on the profile's named calls. The step table is in core's `docs/plugin-authoring.md`.
+- Follow `docs/workflow.md` › Feature files: a `Rule:` for each scenario, outcomes and not solutions, five steps at most.
+- Assert on what the agent or the human sees: the result, the approval text, the literal to type, the error code.
 
-## Rules
+## Unit tests
 
-- Assert on what core or the model sees: the descriptor, the summary, the confirm literal, the masked result, the error code, the harness outcome (`ok`, awaiting approval, refused). Not on private fields.
-- A lock gets an e2e case that proves it needs the typed literal. A secret gets a case that proves it stays out of results, approvals and the audit log.
-- Every new error path gets a test that hits it and checks its `ErrorCodes` value.
-- Keep `checkPluginContract` passing in `e2e.test.ts`.
+- Assert on what core or the model sees: the descriptor, the summary, the confirm literal, the masked result, the error code. Not on private fields.
+- Give each new error path a test that hits it and checks its `ErrorCodes` value.

@@ -1,0 +1,150 @@
+# What core's compliance suite needs to certify Home Assistant against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', token: '${fake.token}' }
+reads:
+  - { fn: call, args: [get_states, { domain: light }], key: get_states }
+  - { fn: call, args: [get_config], key: get_config }
+  - { fn: call, args: [config/automation/config/get, { id: morning }], key: config/automation/config/get }
+writes:
+  - { fn: call, args: [light.turn_on, { area_id: kitchen }], key: light.turn_on }
+rejects:
+  - { fn: call, args: [light.explode, {}] }
+  - { fn: call, args: [ws_command, { type: auth/delete_all_refresh_tokens }] }
+secrets:
+  - { fn: call, args: [get_states, { domain: camera }], key: get_states, values: ['${fake.cameraToken}'] }
+connectionTest: { wrong: { token: wrong } }
+locks:
+  lock.unlock:
+    { fn: call, args: [lock.unlock, { entity_id: lock.front_door }], confirm: Front Door, target: Front Door }
+  lock.open: { fn: call, args: [lock.open, { entity_id: lock.front_door }], confirm: Front Door, target: Front Door }
+  hassio.host_reboot:
+    { fn: call, args: [hassio.host_reboot, {}], confirm: Home Sweet Home, target: (hassio.host_reboot) }
+  hassio.host_shutdown:
+    { fn: call, args: [hassio.host_shutdown, {}], confirm: Home Sweet Home, target: (hassio.host_shutdown) }
+  hassio.restore_full:
+    {
+      fn: call,
+      args: [hassio.restore_full, { slug: 9f3c2a1b }],
+      confirm: Home Sweet Home,
+      target: (hassio.restore_full),
+    }
+  hassio.restore_partial:
+    {
+      fn: call,
+      args: [hassio.restore_partial, { slug: 9f3c2a1b, homeassistant: true }],
+      confirm: Home Sweet Home,
+      target: (hassio.restore_partial),
+    }
+  backup.restore:
+    { fn: call, args: [backup.restore, { backup_id: 9f3c2a1b }], confirm: Home Sweet Home, target: (backup.restore) }
+  alarm_control_panel.alarm_disarm:
+    {
+      fn: call,
+      args: [alarm_control_panel.alarm_disarm, {}],
+      confirm: Home Sweet Home,
+      target: Disarm (alarm_control_panel.alarm_disarm),
+    }
+  homeassistant.restart:
+    { fn: call, args: [homeassistant.restart, {}], confirm: Home Sweet Home, target: Restart (homeassistant.restart) }
+  homeassistant.stop:
+    { fn: call, args: [homeassistant.stop, {}], confirm: Home Sweet Home, target: Stop (homeassistant.stop) }
+  cover.open_cover#garage:
+    { fn: call, args: [cover.open_cover, { area_id: garage }], confirm: Garage Door, target: Garage Door }
+  cover.toggle#garage:
+    { fn: call, args: [cover.toggle, { entity_id: cover.garage_door }], confirm: Garage Door, target: Garage Door }
+  cover.set_cover_position#garage:
+    {
+      fn: call,
+      args: [cover.set_cover_position, { entity_id: cover.garage_door, position: 50 }],
+      confirm: Garage Door,
+      target: Garage Door,
+    }
+  homeassistant.turn_on#protected:
+    { fn: call, args: [homeassistant.turn_on, { area_id: garage }], confirm: Garage Door, target: Garage Door }
+  homeassistant.turn_off#protected:
+    {
+      fn: call,
+      args: [homeassistant.turn_off, { entity_id: lock.front_door }],
+      confirm: Front Door,
+      target: Front Door,
+    }
+  homeassistant.toggle#protected:
+    { fn: call, args: [homeassistant.toggle, { entity_id: lock.front_door }], confirm: Front Door, target: Front Door }
+  scene.apply#protected:
+    {
+      fn: call,
+      args: [scene.apply, { entities: { lock.front_door: unlocked } }],
+      confirm: Front Door,
+      target: Apply (scene.apply),
+    }
+  scene.turn_on#protected:
+    { fn: call, args: [scene.turn_on, { entity_id: scene.leaving }], confirm: Leaving, target: Leaving }
+  config/automation/config/delete:
+    {
+      fn: call,
+      args: [config/automation/config/delete, { id: morning }],
+      confirm: Morning lights,
+      target: config/automation/config/delete,
+    }
+  config/script/config/delete:
+    {
+      fn: call,
+      args: [config/script/config/delete, { id: bedtime }],
+      confirm: Bedtime,
+      target: config/script/config/delete,
+    }
+  config/scene/config/delete:
+    {
+      fn: call,
+      args: [config/scene/config/delete, { id: reading }],
+      confirm: Reading,
+      target: config/scene/config/delete,
+    }
+  config/area_registry/delete:
+    {
+      fn: call,
+      args: [config/area_registry/delete, { area_id: attic }],
+      confirm: Attic,
+      target: config/area_registry/delete,
+    }
+  config/floor_registry/delete:
+    {
+      fn: call,
+      args: [config/floor_registry/delete, { floor_id: top }],
+      confirm: Top floor,
+      target: config/floor_registry/delete,
+    }
+  config/label_registry/delete:
+    {
+      fn: call,
+      args: [config/label_registry/delete, { label_id: outdoor }],
+      confirm: Outdoor,
+      target: config/label_registry/delete,
+    }
+  config/category_registry/delete:
+    {
+      fn: call,
+      args: [config/category_registry/delete, { category_id: chores }],
+      confirm: chores,
+      target: config/category_registry/delete,
+    }
+  config/entity_registry/remove:
+    {
+      fn: call,
+      args: [config/entity_registry/remove, { entity_id: light.kitchen }],
+      confirm: Kitchen Light,
+      target: config/entity_registry/remove,
+    }
+calls:
+  light the living room:
+    { fn: call, args: [light.turn_on, { area_id: living_room, brightness: 80 }], key: light.turn_on }
+  rename the morning automation without its guide:
+    {
+      fn: call,
+      args:
+        [
+          config/automation/config/update,
+          { id: morning, config_hash: unread, patch: [{ op: replace, path: /alias, value: Sunrise lights }] },
+        ],
+      key: config/automation/config/update,
+    }

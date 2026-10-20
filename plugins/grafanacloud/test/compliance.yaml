@@ -1,0 +1,357 @@
+# What core's compliance suite needs to certify Grafana Cloud against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection:
+  { org: '${fake.org}', apiUrl: '${fake.url}/api', specUrl: '${fake.url}/api/openapi.json', token: '${fake.token}' }
+reads:
+  - { fn: request, args: [{ path: /orgs/acme/instances }], key: 'GET /orgs/{orgSlug}/instances' }
+  - { fn: request, args: [{ path: /api/instances/acme-prod/plugins }], key: 'GET /instances/{instanceId}/plugins' }
+  - { fn: request, args: [{ path: /stack-regions }], key: GET /stack-regions }
+# Every write of Grafana Cloud is locked: the lock cases drive them, so there is no sample write.
+writes: []
+rejects:
+  - { fn: request, args: [{ path: /orgs/acme/check-visibility }] }
+secrets:
+  - {
+      fn: request,
+      args: [{ path: /instances }],
+      key: GET /instances,
+      values: ['${fake.mlLogsToken}', '${fake.configSecret}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /instances/acme-prod, query: { config: true } }],
+      key: 'GET /instances/{instanceId}',
+      values: ['${fake.mlLogsToken}', '${fake.configSecret}'],
+    }
+  # The new tokens come back from lock cases: none may reach the audit log.
+  - {
+      fn: request,
+      args: [{ path: /orgs/acme/instances }],
+      key: 'GET /orgs/{orgSlug}/instances',
+      values: ['${fake.mlLogsToken}', '${fake.configSecret}', '${fake.cloudToken}', '${fake.saToken}'],
+    }
+connectionTest: { wrong: { token: wrong } }
+calls:
+  add an org access policy:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/accesspolicies,
+            query: { region: prod-us-east-0 },
+            body:
+              {
+                name: org-writers,
+                scopes: ['metrics:write', 'stacks:write'],
+                realms: [{ type: org, identifier: '7' }],
+              },
+          },
+        ],
+      key: POST /v1/accesspolicies,
+    }
+  widen an access policy:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/accesspolicies/ap-1,
+            query: { region: prod-us-east-0 },
+            body: { scopes: ['metrics:read', 'accesspolicies:write'] },
+          },
+        ],
+      key: 'POST /v1/accesspolicies/{id}',
+    }
+  install a stack plugin:
+    {
+      fn: request,
+      args:
+        [{ method: POST, path: /instances/acme-prod/plugins, body: { plugin: grafana-clock-panel, version: 2.1.5 } }],
+      key: 'POST /instances/{instanceId}/plugins',
+    }
+  delete a stack by instance id:
+    { fn: request, args: [{ method: DELETE, path: /instances/acme-prod }], key: 'DELETE /instances/{instanceId}' }
+  delete a stack:
+    { fn: request, args: [{ method: DELETE, path: /v1/stacks/acme-prod }], key: 'DELETE /v1/stacks/{idOrSlug}' }
+  add a Cloud token:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/tokens,
+            query: { region: prod-us-east-0 },
+            body: { name: ci, accessPolicyId: ap-1 },
+          },
+        ],
+      key: POST /v1/tokens,
+    }
+  add a stack service account token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /instances/acme-prod/api/serviceaccounts/5/tokens, body: { name: ci } }],
+      key: 'POST /instances/{instanceId}/api/serviceaccounts/{serviceAccountId}/tokens',
+    }
+  add a token with an AccessPolicyId key:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/tokens,
+            query: { region: prod-us-east-0 },
+            body: { name: ci, accessPolicyId: ap-1, AccessPolicyId: admin-policy },
+          },
+        ],
+      key: POST /v1/tokens,
+    }
+  add a policy with a Scopes key:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/accesspolicies,
+            query: { region: prod-us-east-0 },
+            body: { name: r, scopes: ['metrics:read'], Scopes: ['accesspolicies:write'] },
+          },
+        ],
+      key: POST /v1/accesspolicies,
+    }
+  add a policy with a long-s scopes key:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/accesspolicies,
+            query: { region: prod-us-east-0 },
+            body: { name: r, scopes: ['metrics:read'], ſcopes: ['stacks:delete'] },
+          },
+        ],
+      key: POST /v1/accesspolicies,
+    }
+locks:
+  DELETE /instances/{instanceId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /instances/acme-prod }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  DELETE /instances/{instanceId}/api/serviceaccounts/{serviceAccountId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /instances/acme-prod/api/serviceaccounts/5 }],
+      confirm: synoikia-bot,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  DELETE /instances/{instanceId}/api/serviceaccounts/{serviceAccountId}/tokens/{tokenId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /instances/acme-prod/api/serviceaccounts/5/tokens/9 }],
+      confirm: synoikia-bot,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  DELETE /instances/{instanceId}/plugins/{pluginSlugOrId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /instances/acme-prod/plugins/grafana-clock-panel }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  DELETE /orgs/{slugOrId}/members/{usernameOrId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /orgs/acme/members/alex }],
+      confirm: alex,
+      target: /orgs/acme/members/alex,
+    }
+  DELETE /v1/accesspolicies/{id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/accesspolicies/ap-1, query: { region: prod-us-east-0 } }],
+      confirm: stack-readers,
+      target: 'stack-readers (scopes: metrics:read, logs:read; realms: stack 101 {env="prod"})',
+    }
+  DELETE /v1/stacks/{idOrSlug}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/stacks/acme-prod }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  DELETE /v1/tokens/{id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/tokens/tok-1, query: { region: prod-us-east-0 } }],
+      confirm: ci-token,
+      target: 'ci-token (access policy ap-1, expires 2027-01-01T00:00:00Z)',
+    }
+  POST /instances:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /instances,
+            body: { name: Acme Staging, slug: acme-staging, region: prod-us-east-0, org: acme },
+          },
+        ],
+      confirm: acme-staging,
+      target: /instances,
+    }
+  POST /instances/{instanceId}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /instances/101, body: { deleteProtection: false } }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  POST /instances/{instanceId}/api/serviceaccounts:
+    {
+      fn: request,
+      args: [{ method: POST, path: /instances/acme-prod/api/serviceaccounts, body: { name: ci, role: Admin } }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  POST /instances/{instanceId}/api/serviceaccounts/{serviceAccountId}/tokens:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /instances/acme-prod/api/serviceaccounts/5/tokens,
+            body: { name: ci, secondsToLive: 3600 },
+          },
+        ],
+      confirm: synoikia-bot,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  POST /instances/{instanceId}/plugins:
+    {
+      fn: request,
+      args:
+        [{ method: POST, path: /instances/acme-prod/plugins, body: { plugin: grafana-clock-panel, version: 2.1.5 } }],
+      confirm: acme-prod,
+      target: 'plugin="grafana-clock-panel"',
+    }
+  POST /instances/{instanceId}/plugins/{pluginSlugOrId}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /instances/acme-prod/plugins/grafana-clock-panel, body: { version: 2.2.0 } }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  POST /orgs/{slugOrId}/members:
+    {
+      fn: request,
+      args: [{ method: POST, path: /orgs/7/members, body: { username: sam, role: Admin } }],
+      confirm: acme,
+      target: /orgs/7/members,
+    }
+  POST /orgs/{slugOrId}/members/{usernameOrId}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /orgs/acme/members/alex, body: { role: Admin } }],
+      confirm: alex,
+      target: /orgs/acme/members/alex,
+    }
+  POST /orgs/{slugOrId}/settings:
+    {
+      fn: request,
+      args: [{ method: POST, path: /orgs/acme/settings, body: { mfaRequired: false } }],
+      confirm: acme,
+      target: mfaRequired=false,
+    }
+  POST /v1/accesspolicies:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/accesspolicies,
+            query: { region: prod-us-east-0 },
+            body:
+              { name: org-writers, scopes: [metrics:write, stacks:write], realms: [{ type: org, identifier: '7' }] },
+          },
+        ],
+      confirm: org-writers,
+      target: 'realms=[{"type":"org","identifier":"7"}]',
+    }
+  POST /v1/accesspolicies/{id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/accesspolicies/ap-1,
+            query: { region: prod-us-east-0 },
+            body: { scopes: [metrics:read, accesspolicies:write] },
+          },
+        ],
+      confirm: stack-readers,
+      target: 'stack-readers (scopes: metrics:read, logs:read; realms: stack 101 {env="prod"})',
+    }
+  POST /v1/stacks:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/stacks,
+            body: { slug: acme-dev, name: Acme Dev, region: prod-us-east-0, org: acme },
+          },
+        ],
+      confirm: acme-dev,
+      target: /v1/stacks,
+    }
+  POST /v1/stacks/{idOrSlug}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /v1/stacks/acme-prod, body: { deleteProtection: false } }],
+      confirm: acme-prod,
+      target: 'acme-prod (Acme Production, https://acme-prod.grafana.net, region prod-us-east-0)',
+    }
+  POST /v1/tokens:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/tokens,
+            query: { region: prod-us-east-0 },
+            body: { name: ci, accessPolicyId: ap-1 },
+          },
+        ],
+      confirm: stack-readers,
+      target: 'stack-readers (scopes: metrics:read, logs:read; realms: stack 101 {env="prod"})',
+    }
+  POST /v1/tokens/{id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/tokens/tok-1,
+            query: { region: prod-us-east-0 },
+            body: { expiresAt: 2030-01-01T00:00:00Z },
+          },
+        ],
+      confirm: ci-token,
+      target: 'ci-token (access policy ap-1, expires 2027-01-01T00:00:00Z)',
+    }

@@ -1,0 +1,1063 @@
+# What core's compliance suite needs to certify Grafana against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', token: '${fake.token}' }
+reads:
+  - { fn: request, args: [{ path: /search, query: { query: home, type: dash-db } }], key: GET /search }
+  - { fn: request, args: [{ path: /api/dashboards/uid/d-home }], key: 'GET /dashboards/uid/{uid}' }
+writes:
+  - {
+      fn: request,
+      args: [{ method: POST, path: /annotations, body: { text: deploy, tags: [ci] } }],
+      key: POST /annotations,
+    }
+  - {
+      fn: request,
+      args: [{ method: POST, path: /ds/query, body: { queries: [{ refId: A, datasource: { uid: prom }, expr: up }] } }],
+      key: POST /ds/query,
+    }
+rejects:
+  - { fn: request, args: [{ path: /datasources/proxy/uid/prom/api/v1/query }] }
+  - { fn: request, args: [{ path: /public/dashboards/abc }] }
+secrets:
+  - { fn: request, args: [{ path: /datasources }], key: GET /datasources, values: ['${fake.dsPassword}'] }
+  - {
+      fn: request,
+      args: [{ path: /datasources/uid/prom }],
+      key: 'GET /datasources/uid/{uid}',
+      values: ['${fake.dsPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /v1/provisioning/contact-points }],
+      key: GET /v1/provisioning/contact-points,
+      values: ['${fake.slackUrl}'],
+    }
+  # The new token and the snapshot delete key come back from lock cases; the sent values are in lock case bodies
+  # and named calls.
+  - {
+      fn: request,
+      args: [{ path: /org/invites }],
+      key: GET /org/invites,
+      values:
+        [
+          '${fake.inviteCode}',
+          '${fake.saToken}',
+          '${fake.deleteKey}',
+          gh-client-secret-777777,
+          new-user-password-555555,
+          cloud-migration-token-888888,
+          new-ds-password-666666,
+          license-jwt-999999,
+          webhook-password-171717,
+          T0KEN-121212,
+          T0KEN-181818,
+          reset-password-131313,
+          old-password-141414,
+          new-password-151515,
+          services/EXAMPLE,
+        ],
+    }
+connectionTest: { wrong: { token: wrong } }
+calls:
+  query two data sources:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /ds/query,
+            body:
+              {
+                queries:
+                  [
+                    { refId: A, datasource: { uid: prom }, expr: up },
+                    { refId: B, datasource: { uid: mysql-prod }, rawSql: DELETE FROM users },
+                  ],
+                from: now-1h,
+                to: now,
+              },
+          },
+        ],
+      key: POST /ds/query,
+    }
+  add an annotation:
+    {
+      fn: request,
+      args: [{ method: POST, path: /annotations, body: { text: deploy, tags: [ci] } }],
+      key: POST /annotations,
+    }
+  add a service account token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /serviceaccounts/4/tokens, body: { name: ci } }],
+      key: 'POST /serviceaccounts/{serviceAccountId}/tokens',
+    }
+  take a snapshot:
+    { fn: request, args: [{ method: POST, path: /snapshots, body: { dashboard: { title: x } } }], key: POST /snapshots }
+  move a data source by id:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /datasources/5,
+            body: { name: Prometheus, type: prometheus, url: 'http://elsewhere.example.net:9090' },
+          },
+        ],
+      key: 'PUT /datasources/{id}',
+    }
+  move a data source by uid:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /datasources/uid/prom,
+            body: { name: Prometheus, type: prometheus, url: 'http://elsewhere.example.net:9090' },
+          },
+        ],
+      key: 'PUT /datasources/uid/{uid}',
+    }
+  query with a Datasource key:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /ds/query,
+            body: { queries: [{ datasource: { uid: prom }, Datasource: { uid: mysql-prod } }] },
+          },
+        ],
+      key: POST /ds/query,
+    }
+  add a data source with an upper-case url key:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /datasources,
+            body: { name: loki, url: 'http://loki:3100', URL: 'http://evil.example.net' },
+          },
+        ],
+      key: POST /datasources,
+    }
+  add a contact point with a long-s settings key:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/provisioning/contact-points,
+            body: { settings: { url: 'https://a.example' }, ſettings: {} },
+          },
+        ],
+      key: POST /v1/provisioning/contact-points,
+    }
+  add a contact point with upper-case settings keys:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/provisioning/contact-points,
+            body: { name: S, type: slack, Settings: { URL: 'https://hooks.slack.com/services/EXAMPLE' } },
+          },
+        ],
+      key: POST /v1/provisioning/contact-points,
+    }
+  change the GitHub SSO settings:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /v1/sso-settings/github, body: { settings: { clientId: gh, enabled: true } } }],
+      key: 'PUT /v1/sso-settings/{key}',
+    }
+locks:
+  DELETE /access-control/roles/{roleUID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /access-control/roles/custom-ops }],
+      confirm: Ops Reader,
+      target: /access-control/roles/custom-ops,
+    }
+  DELETE /access-control/teams/{teamId}/roles/{roleUID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /access-control/teams/3/roles/custom-ops }],
+      confirm: SRE,
+      target: /access-control/teams/3/roles/custom-ops,
+    }
+  DELETE /access-control/users/{userId}/roles/{roleUID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /access-control/users/2/roles/custom-ops }],
+      confirm: alex,
+      target: /access-control/users/2/roles/custom-ops,
+    }
+  DELETE /admin/users/{user_id}:
+    { fn: request, args: [{ method: DELETE, path: /admin/users/2 }], confirm: alex, target: /admin/users/2 }
+  DELETE /annotations/{annotation_id}:
+    { fn: request, args: [{ method: DELETE, path: /annotations/9 }], confirm: Main Org., target: /annotations/9 }
+  DELETE /cloudmigration/migration/{uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /cloudmigration/migration/m-1 }],
+      confirm: Main Org.,
+      target: /cloudmigration/migration/m-1,
+    }
+  DELETE /cloudmigration/token/{uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /cloudmigration/token/t-1 }],
+      confirm: Main Org.,
+      target: /cloudmigration/token/t-1,
+    }
+  DELETE /convert/api/prom/rules/{NamespaceTitle}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /convert/api/prom/rules/Ops }],
+      confirm: Ops,
+      target: /convert/api/prom/rules/Ops,
+    }
+  DELETE /convert/api/prom/rules/{NamespaceTitle}/{Group}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /convert/api/prom/rules/Ops/cpu }],
+      confirm: cpu,
+      target: /convert/api/prom/rules/Ops/cpu,
+    }
+  DELETE /convert/prometheus/config/v1/rules/{NamespaceTitle}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /convert/prometheus/config/v1/rules/Ops }],
+      confirm: Ops,
+      target: /convert/prometheus/config/v1/rules/Ops,
+    }
+  DELETE /convert/prometheus/config/v1/rules/{NamespaceTitle}/{Group}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /convert/prometheus/config/v1/rules/Ops/cpu }],
+      confirm: cpu,
+      target: /convert/prometheus/config/v1/rules/Ops/cpu,
+    }
+  DELETE /dashboards/uid/{dashboardUid}/public-dashboards/{uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /dashboards/uid/d-home/public-dashboards/pd-1 }],
+      confirm: Home Lab,
+      target: /dashboards/uid/d-home/public-dashboards/pd-1,
+    }
+  DELETE /dashboards/uid/{uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /dashboards/uid/d-home }],
+      confirm: Home Lab,
+      target: /dashboards/uid/d-home,
+    }
+  DELETE /datasources/{id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /datasources/5 }],
+      confirm: Prometheus,
+      target: 'Prometheus (prometheus, http://prometheus:9090)',
+    }
+  DELETE /datasources/name/{name}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /datasources/name/Prometheus }],
+      confirm: Prometheus,
+      target: /datasources/name/Prometheus,
+    }
+  DELETE /datasources/uid/{uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /datasources/uid/prom }],
+      confirm: Prometheus,
+      target: 'Prometheus (prometheus, http://prometheus:9090)',
+    }
+  DELETE /datasources/uid/{uid}/correlations/{correlationUID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /datasources/uid/prom/correlations/c-1 }],
+      confirm: Main Org.,
+      target: 'Prometheus (prometheus, http://prometheus:9090)',
+    }
+  DELETE /folders/{folder_uid}:
+    { fn: request, args: [{ method: DELETE, path: /folders/f-ops }], confirm: Ops, target: /folders/f-ops }
+  DELETE /groupsync/groups/{group_id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /groupsync/groups/ldap-admins }],
+      confirm: ldap-admins,
+      target: /groupsync/groups/ldap-admins,
+    }
+  DELETE /library-elements/{library_element_uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /library-elements/le-1 }],
+      confirm: CPU panel,
+      target: /library-elements/le-1,
+    }
+  DELETE /licensing/token:
+    { fn: request, args: [{ method: DELETE, path: /licensing/token }], confirm: Main Org., target: /licensing/token }
+  DELETE /org/invites/{invitation_code}/revoke:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /org/invites/abc/revoke }],
+      confirm: Main Org.,
+      target: /org/invites/abc/revoke,
+    }
+  DELETE /org/users/{user_id}:
+    { fn: request, args: [{ method: DELETE, path: /org/users/2 }], confirm: alex, target: /org/users/2 }
+  DELETE /orgs/{org_id}: { fn: request, args: [{ method: DELETE, path: /orgs/2 }], confirm: Lab, target: /orgs/2 }
+  DELETE /orgs/{org_id}/users/{user_id}:
+    { fn: request, args: [{ method: DELETE, path: /orgs/2/users/2 }], confirm: alex, target: /orgs/2/users/2 }
+  DELETE /playlists/{uid}:
+    { fn: request, args: [{ method: DELETE, path: /playlists/pl-1 }], confirm: Wall, target: /playlists/pl-1 }
+  DELETE /query-history/{query_history_uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /query-history/q-1 }],
+      confirm: Main Org.,
+      target: /query-history/q-1,
+    }
+  DELETE /query-history/star/{query_history_uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /query-history/star/q-1 }],
+      confirm: Main Org.,
+      target: /query-history/star/q-1,
+    }
+  DELETE /recording-rules/{recordingRuleID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /recording-rules/rr-1 }],
+      confirm: Main Org.,
+      target: /recording-rules/rr-1,
+    }
+  DELETE /recording-rules/writer:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /recording-rules/writer }],
+      confirm: Main Org.,
+      target: /recording-rules/writer,
+    }
+  DELETE /reports/{id}:
+    { fn: request, args: [{ method: DELETE, path: /reports/7 }], confirm: Weekly, target: /reports/7 }
+  DELETE /serviceaccounts/{serviceAccountId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /serviceaccounts/4 }],
+      confirm: synoikia-bot,
+      target: /serviceaccounts/4,
+    }
+  DELETE /serviceaccounts/{serviceAccountId}/tokens/{tokenId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /serviceaccounts/4/tokens/11 }],
+      confirm: synoikia-bot,
+      target: /serviceaccounts/4/tokens/,
+    }
+  DELETE /snapshots/{key}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /snapshots/snapshot-view-key }],
+      confirm: Main Org.,
+      target: DELETE /snapshots/,
+    }
+  DELETE /teams/{team_id}: { fn: request, args: [{ method: DELETE, path: /teams/3 }], confirm: SRE, target: /teams/3 }
+  DELETE /teams/{team_id}/members/{user_id}:
+    { fn: request, args: [{ method: DELETE, path: /teams/3/members/2 }], confirm: SRE, target: /teams/3/members/2 }
+  DELETE /teams/{teamId}/groups:
+    { fn: request, args: [{ method: DELETE, path: /teams/3/groups }], confirm: SRE, target: /teams/3/groups }
+  DELETE /user/stars/dashboard/uid/{dashboard_uid}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /user/stars/dashboard/uid/d-home }],
+      confirm: Main Org.,
+      target: /user/stars/dashboard/uid/d-home,
+    }
+  DELETE /v1/provisioning/alert-rules/{UID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/provisioning/alert-rules/r-1 }],
+      confirm: High CPU,
+      target: /v1/provisioning/alert-rules/r-1,
+    }
+  DELETE /v1/provisioning/contact-points/{UID}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/provisioning/contact-points/cp-1 }],
+      confirm: Ops Slack,
+      target: /v1/provisioning/contact-points/cp-1,
+    }
+  DELETE /v1/provisioning/folder/{FolderUID}/rule-groups/{Group}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/provisioning/folder/f-ops/rule-groups/cpu }],
+      confirm: cpu,
+      target: /v1/provisioning/folder/f-ops/rule-groups/cpu,
+    }
+  DELETE /v1/provisioning/mute-timings/{name}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/provisioning/mute-timings/weekends }],
+      confirm: weekends,
+      target: /v1/provisioning/mute-timings/weekends,
+    }
+  DELETE /v1/provisioning/policies:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/provisioning/policies }],
+      confirm: Main Org.,
+      target: /v1/provisioning/policies,
+    }
+  DELETE /v1/provisioning/templates/{name}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /v1/provisioning/templates/slack-msg }],
+      confirm: slack-msg,
+      target: /v1/provisioning/templates/slack-msg,
+    }
+  DELETE /v1/sso-settings/{key}:
+    { fn: request, args: [{ method: DELETE, path: /v1/sso-settings/github }], confirm: Main Org., target: github }
+  GET /admin/settings:
+    { fn: request, args: [{ method: GET, path: /admin/settings }], confirm: Main Org., target: /admin/settings }
+  GET /snapshots-delete/{deleteKey}:
+    {
+      fn: request,
+      args: [{ method: GET, path: /snapshots-delete/snapshot-delete-key }],
+      confirm: Main Org.,
+      target: /snapshots-delete/,
+    }
+  PATCH /dashboards/uid/{dashboardUid}/public-dashboards/{uid}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PATCH,
+            path: /dashboards/uid/d-home/public-dashboards/pd-1,
+            body: { isEnabled: true, share: public },
+          },
+        ],
+      confirm: Home Lab,
+      target: /dashboards/uid/d-home/public-dashboards/pd-1,
+    }
+  PATCH /org/users/{user_id}:
+    {
+      fn: request,
+      args: [{ method: PATCH, path: /org/users/2, body: { role: Admin } }],
+      confirm: alex,
+      target: /org/users/2,
+    }
+  PATCH /orgs/{org_id}/users/{user_id}:
+    {
+      fn: request,
+      args: [{ method: PATCH, path: /orgs/2/users/2, body: { role: Admin } }],
+      confirm: alex,
+      target: /orgs/2/users/2,
+    }
+  PATCH /serviceaccounts/{serviceAccountId}:
+    {
+      fn: request,
+      args: [{ method: PATCH, path: /serviceaccounts/4, body: { role: Admin } }],
+      confirm: synoikia-bot,
+      target: /serviceaccounts/4,
+    }
+  PATCH /v1/sso-settings/{key}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PATCH,
+            path: /v1/sso-settings/github,
+            body: { settings: { clientId: gh, clientSecret: gh-client-secret-777777 } },
+          },
+        ],
+      confirm: Main Org.,
+      target: github,
+    }
+  POST /access-control/{resource}/{resourceID}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /access-control/dashboards/d-home,
+            body: { permissions: [{ userId: 2, permission: Admin }] },
+          },
+        ],
+      confirm: d-home,
+      target: /access-control/dashboards/d-home,
+    }
+  POST /access-control/{resource}/{resourceID}/builtInRoles/{builtInRole}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /access-control/dashboards/d-home/builtInRoles/Viewer, body: { permission: Edit } }],
+      confirm: d-home,
+      target: /access-control/dashboards/d-home/builtInRoles/Viewer,
+    }
+  POST /access-control/{resource}/{resourceID}/teams/{teamID}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /access-control/dashboards/d-home/teams/3, body: { permission: Edit } }],
+      confirm: d-home,
+      target: /access-control/dashboards/d-home/teams/3,
+    }
+  POST /access-control/{resource}/{resourceID}/users/{userID}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /access-control/dashboards/d-home/users/2, body: { permission: Admin } }],
+      confirm: d-home,
+      target: /access-control/dashboards/d-home/users/2,
+    }
+  POST /access-control/roles:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /access-control/roles,
+            body: { name: custom:writers, permissions: [{ action: dashboards:write }] },
+          },
+        ],
+      confirm: Main Org.,
+      target: /access-control/roles,
+    }
+  POST /access-control/teams/{teamId}/roles:
+    {
+      fn: request,
+      args: [{ method: POST, path: /access-control/teams/3/roles, body: { roleUid: custom-ops } }],
+      confirm: SRE,
+      target: /access-control/teams/3/roles,
+    }
+  POST /access-control/users/{userId}/roles:
+    {
+      fn: request,
+      args: [{ method: POST, path: /access-control/users/2/roles, body: { roleUid: custom-ops } }],
+      confirm: alex,
+      target: /access-control/users/2/roles,
+    }
+  POST /admin/provisioning/access-control/reload:
+    {
+      fn: request,
+      args: [{ method: POST, path: /admin/provisioning/access-control/reload }],
+      confirm: Main Org.,
+      target: /admin/provisioning/access-control/reload,
+    }
+  POST /admin/provisioning/dashboards/reload:
+    {
+      fn: request,
+      args: [{ method: POST, path: /admin/provisioning/dashboards/reload }],
+      confirm: Main Org.,
+      target: /admin/provisioning/dashboards/reload,
+    }
+  POST /admin/provisioning/datasources/reload:
+    {
+      fn: request,
+      args: [{ method: POST, path: /admin/provisioning/datasources/reload }],
+      confirm: Main Org.,
+      target: /admin/provisioning/datasources/reload,
+    }
+  POST /admin/provisioning/plugins/reload:
+    {
+      fn: request,
+      args: [{ method: POST, path: /admin/provisioning/plugins/reload }],
+      confirm: Main Org.,
+      target: /admin/provisioning/plugins/reload,
+    }
+  POST /admin/users:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /admin/users,
+            body: { login: sam, email: sam@example.com, password: new-user-password-555555 },
+          },
+        ],
+      confirm: Main Org.,
+      target: /admin/users,
+    }
+  POST /admin/users/{user_id}/disable:
+    {
+      fn: request,
+      args: [{ method: POST, path: /admin/users/2/disable }],
+      confirm: alex,
+      target: /admin/users/2/disable,
+    }
+  POST /admin/users/{user_id}/enable:
+    { fn: request, args: [{ method: POST, path: /admin/users/2/enable }], confirm: alex, target: /admin/users/2/enable }
+  POST /admin/users/{user_id}/logout:
+    { fn: request, args: [{ method: POST, path: /admin/users/2/logout }], confirm: alex, target: /admin/users/2/logout }
+  POST /admin/users/{user_id}/revoke-auth-token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /admin/users/2/revoke-auth-token, body: { authTokenId: 1 } }],
+      confirm: alex,
+      target: /admin/users/2/revoke-auth-token,
+    }
+  POST /annotations/mass-delete:
+    {
+      fn: request,
+      args: [{ method: POST, path: /annotations/mass-delete, body: { dashboardUID: d-home } }],
+      confirm: Main Org.,
+      target: /annotations/mass-delete,
+    }
+  POST /cloudmigration/migration:
+    {
+      fn: request,
+      args: [{ method: POST, path: /cloudmigration/migration, body: { authToken: cloud-migration-token-888888 } }],
+      confirm: Main Org.,
+      target: /cloudmigration/migration,
+    }
+  POST /cloudmigration/migration/{uid}/snapshot/{snapshotUid}/upload:
+    {
+      fn: request,
+      args: [{ method: POST, path: /cloudmigration/migration/m-1/snapshot/s-1/upload }],
+      confirm: Main Org.,
+      target: /cloudmigration/migration/m-1/snapshot/s-1/upload,
+    }
+  POST /cloudmigration/token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /cloudmigration/token }],
+      confirm: Main Org.,
+      target: /cloudmigration/token,
+    }
+  POST /convert/api/prom/rules:
+    {
+      fn: request,
+      args: [{ method: POST, path: /convert/api/prom/rules, body: { Ops: [{ name: cpu, rules: [] }] } }],
+      confirm: Main Org.,
+      target: /convert/api/prom/rules,
+    }
+  POST /convert/api/prom/rules/{NamespaceTitle}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /convert/api/prom/rules/Ops, body: { name: cpu, rules: [] } }],
+      confirm: Ops,
+      target: /convert/api/prom/rules/Ops,
+    }
+  POST /convert/prometheus/config/v1/rules:
+    {
+      fn: request,
+      args: [{ method: POST, path: /convert/prometheus/config/v1/rules, body: { Ops: [{ name: cpu, rules: [] }] } }],
+      confirm: Main Org.,
+      target: /convert/prometheus/config/v1/rules,
+    }
+  POST /convert/prometheus/config/v1/rules/{NamespaceTitle}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /convert/prometheus/config/v1/rules/Ops, body: { name: cpu, rules: [] } }],
+      confirm: Ops,
+      target: /convert/prometheus/config/v1/rules/Ops,
+    }
+  POST /dashboards/uid/{dashboardUid}/public-dashboards:
+    {
+      fn: request,
+      args: [{ method: POST, path: /dashboards/uid/d-home/public-dashboards, body: { isEnabled: true } }],
+      confirm: Home Lab,
+      target: /dashboards/uid/d-home/public-dashboards,
+    }
+  POST /dashboards/uid/{uid}/permissions:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /dashboards/uid/d-home/permissions,
+            body: { items: [{ role: Viewer, permission: 2 }] },
+          },
+        ],
+      confirm: Home Lab,
+      target: /dashboards/uid/d-home/permissions,
+    }
+  POST /datasources:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /datasources,
+            body:
+              {
+                name: Loki,
+                type: loki,
+                url: http://loki.example.net:3100,
+                basicAuth: true,
+                basicAuthPassword: new-ds-password-666666,
+              },
+          },
+        ],
+      confirm: Main Org.,
+      target: 'http://loki.example.net:3100',
+    }
+  POST /folders/{folder_uid}/move:
+    {
+      fn: request,
+      args: [{ method: POST, path: /folders/f-ops/move, body: { parentUid: f-public } }],
+      confirm: Ops,
+      target: /folders/f-ops/move,
+    }
+  POST /folders/{folder_uid}/permissions:
+    {
+      fn: request,
+      args: [{ method: POST, path: /folders/f-ops/permissions, body: { items: [{ role: Viewer, permission: 2 }] } }],
+      confirm: Ops,
+      target: /folders/f-ops/permissions,
+    }
+  POST /groupsync/groups/{group_id}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /groupsync/groups/ldap-admins, body: { roles: [custom-ops] } }],
+      confirm: ldap-admins,
+      target: /groupsync/groups/ldap-admins,
+    }
+  POST /licensing/token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /licensing/token, body: { token: license-jwt-999999 } }],
+      confirm: Main Org.,
+      target: /licensing/token,
+    }
+  POST /org/invites:
+    {
+      fn: request,
+      args: [{ method: POST, path: /org/invites, body: { loginOrEmail: pat@example.com, role: Editor } }],
+      confirm: Main Org.,
+      target: /org/invites,
+    }
+  POST /org/users:
+    {
+      fn: request,
+      args: [{ method: POST, path: /org/users, body: { loginOrEmail: alex, role: Admin } }],
+      confirm: Main Org.,
+      target: /org/users,
+    }
+  POST /orgs:
+    { fn: request, args: [{ method: POST, path: /orgs, body: { name: Guests } }], confirm: Main Org., target: /orgs }
+  POST /orgs/{org_id}/users:
+    {
+      fn: request,
+      args: [{ method: POST, path: /orgs/2/users, body: { loginOrEmail: alex, role: Admin } }],
+      confirm: Lab,
+      target: /orgs/2/users,
+    }
+  POST /recording-rules:
+    {
+      fn: request,
+      args: [{ method: POST, path: /recording-rules, body: { name: cpu:rate5m, prom_name: cpu_rate5m } }],
+      confirm: Main Org.,
+      target: /recording-rules,
+    }
+  POST /recording-rules/writer:
+    {
+      fn: request,
+      args: [{ method: POST, path: /recording-rules/writer, body: { data_source_uid: prom } }],
+      confirm: Main Org.,
+      target: /recording-rules/writer,
+    }
+  POST /reports:
+    {
+      fn: request,
+      args: [{ method: POST, path: /reports, body: { name: Daily, recipients: boss@example.com } }],
+      confirm: Main Org.,
+      target: /reports,
+    }
+  POST /reports/test-email:
+    {
+      fn: request,
+      args: [{ method: POST, path: /reports/test-email, body: { name: Weekly, recipients: test@example.org } }],
+      confirm: Main Org.,
+      target: test@example.org,
+    }
+  POST /reports/email:
+    {
+      fn: request,
+      args: [{ method: POST, path: /reports/email, body: { id: '7', emails: someone@example.com } }],
+      confirm: Main Org.,
+      target: someone@example.com,
+    }
+  POST /serviceaccounts:
+    {
+      fn: request,
+      args: [{ method: POST, path: /serviceaccounts, body: { name: ci, role: Admin } }],
+      confirm: Main Org.,
+      target: /serviceaccounts,
+    }
+  POST /serviceaccounts/{serviceAccountId}/tokens:
+    {
+      fn: request,
+      args: [{ method: POST, path: /serviceaccounts/4/tokens, body: { name: ci } }],
+      confirm: synoikia-bot,
+      target: /serviceaccounts/4/tokens,
+    }
+  POST /snapshots:
+    {
+      fn: request,
+      args: [{ method: POST, path: /snapshots, body: { dashboard: { title: Home Lab }, external: true } }],
+      confirm: Main Org.,
+      target: /snapshots,
+    }
+  POST /teams/{team_id}/members:
+    {
+      fn: request,
+      args: [{ method: POST, path: /teams/3/members, body: { userId: 2 } }],
+      confirm: SRE,
+      target: /teams/3/members,
+    }
+  POST /teams/{teamId}/groups:
+    {
+      fn: request,
+      args: [{ method: POST, path: /teams/3/groups, body: { groupId: cn=sre } }],
+      confirm: SRE,
+      target: /teams/3/groups,
+    }
+  POST /v1/provisioning/alert-rules:
+    {
+      fn: request,
+      args: [{ method: POST, path: /v1/provisioning/alert-rules, body: { title: Disk full, folderUID: f-ops } }],
+      confirm: Main Org.,
+      target: /v1/provisioning/alert-rules,
+    }
+  POST /v1/provisioning/contact-points:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /v1/provisioning/contact-points,
+            body:
+              {
+                name: Pager,
+                type: webhook,
+                settings:
+                  {
+                    url: https://hooks.example.net/grafana/T0KEN-121212,
+                    username: grafana,
+                    password: webhook-password-171717,
+                  },
+              },
+          },
+        ],
+      confirm: Main Org.,
+      target: hooks.example.net (contact point URL),
+    }
+  POST /v1/provisioning/mute-timings:
+    {
+      fn: request,
+      args: [{ method: POST, path: /v1/provisioning/mute-timings, body: { name: always, time_intervals: [] } }],
+      confirm: Main Org.,
+      target: /v1/provisioning/mute-timings,
+    }
+  PUT /access-control/roles/{roleUID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /access-control/roles/custom-ops, body: { version: 2, permissions: [] } }],
+      confirm: Ops Reader,
+      target: /access-control/roles/custom-ops,
+    }
+  PUT /access-control/roles/{roleUID}/assignments:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /access-control/roles/custom-ops/assignments, body: { users: [{ id: 2 }] } }],
+      confirm: Ops Reader,
+      target: /access-control/roles/custom-ops/assignments,
+    }
+  PUT /access-control/teams/{teamId}/roles:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /access-control/teams/3/roles, body: { roleUids: [custom-ops] } }],
+      confirm: SRE,
+      target: /access-control/teams/3/roles,
+    }
+  PUT /access-control/users/{userId}/roles:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /access-control/users/2/roles, body: { roleUids: [custom-ops] } }],
+      confirm: alex,
+      target: /access-control/users/2/roles,
+    }
+  PUT /admin/users/{user_id}/password:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /admin/users/2/password, body: { password: reset-password-131313 } }],
+      confirm: alex,
+      target: /admin/users/2/password,
+    }
+  PUT /admin/users/{user_id}/permissions:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /admin/users/2/permissions, body: { isGrafanaAdmin: true } }],
+      confirm: alex,
+      target: /admin/users/2/permissions,
+    }
+  PUT /datasources/{id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /datasources/5,
+            body: { name: Prometheus, type: prometheus, url: http://elsewhere.example.net:9090 },
+          },
+        ],
+      confirm: Prometheus,
+      target: 'Prometheus (prometheus, http://prometheus:9090)',
+    }
+  PUT /datasources/uid/{uid}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /datasources/uid/prom,
+            body: { name: Prometheus, type: prometheus, url: http://elsewhere.example.net:9090 },
+          },
+        ],
+      confirm: Prometheus,
+      target: 'Prometheus (prometheus, http://prometheus:9090)',
+    }
+  PUT /datasources/uid/{uid}/lbac/teams:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /datasources/uid/prom/lbac/teams, body: { rules: [] } }],
+      confirm: Prometheus,
+      target: 'Prometheus (prometheus, http://prometheus:9090)',
+    }
+  PUT /groupsync/groups/{group_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /groupsync/groups/ldap-admins, body: { roles: [custom-ops] } }],
+      confirm: ldap-admins,
+      target: /groupsync/groups/ldap-admins,
+    }
+  PUT /recording-rules:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /recording-rules, body: { id: rr-1, active: true } }],
+      confirm: Main Org.,
+      target: /recording-rules,
+    }
+  PUT /reports/{id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /reports/7, body: { name: Weekly, recipients: outside@example.net } }],
+      confirm: Weekly,
+      target: outside@example.net,
+    }
+  PUT /teams/{team_id}/members:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /teams/3/members, body: { members: [alex] } }],
+      confirm: SRE,
+      target: /teams/3/members,
+    }
+  PUT /teams/{team_id}/members/{user_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /teams/3/members/2, body: { permission: 4 } }],
+      confirm: SRE,
+      target: /teams/3/members/2,
+    }
+  PUT /user/password:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /user/password,
+            body: { oldPassword: old-password-141414, newPassword: new-password-151515 },
+          },
+        ],
+      confirm: Main Org.,
+      target: /user/password,
+    }
+  PUT /users/{user_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /users/2, body: { email: attacker@example.net } }],
+      confirm: alex,
+      target: /users/2,
+    }
+  PUT /v1/provisioning/alert-rules/{UID}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /v1/provisioning/alert-rules/r-1, body: { title: High CPU, folderUID: f-ops } }],
+      confirm: High CPU,
+      target: /v1/provisioning/alert-rules/r-1,
+    }
+  PUT /v1/provisioning/contact-points/{UID}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /v1/provisioning/contact-points/cp-1,
+            body:
+              {
+                name: Ops Slack,
+                type: webhook,
+                settings: { url: https://elsewhere.example.net/hook/T0KEN-181818, addresses: oncall@example.net },
+              },
+          },
+        ],
+      confirm: Ops Slack,
+      target: elsewhere.example.net (contact point URL),
+    }
+  PUT /v1/provisioning/folder/{FolderUID}/rule-groups/{Group}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /v1/provisioning/folder/f-ops/rule-groups/cpu, body: { interval: 60, rules: [] } }],
+      confirm: cpu,
+      target: /v1/provisioning/folder/f-ops/rule-groups/cpu,
+    }
+  PUT /v1/provisioning/mute-timings/{name}:
+    {
+      fn: request,
+      args:
+        [{ method: PUT, path: /v1/provisioning/mute-timings/weekends, body: { name: weekends, time_intervals: [] } }],
+      confirm: weekends,
+      target: /v1/provisioning/mute-timings/weekends,
+    }
+  PUT /v1/provisioning/policies:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /v1/provisioning/policies, body: { receiver: Pager } }],
+      confirm: Main Org.,
+      target: /v1/provisioning/policies,
+    }
+  PUT /v1/sso-settings/{key}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /v1/sso-settings/github,
+            body: { settings: { clientId: gh, clientSecret: gh-client-secret-777777 } },
+          },
+        ],
+      confirm: Main Org.,
+      target: github,
+    }

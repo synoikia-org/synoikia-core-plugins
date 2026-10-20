@@ -1,0 +1,357 @@
+# What core's compliance suite needs to certify Plex against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', specBaseUrl: '${fake.specUrl}', token: '${fake.token}' }
+reads:
+  - { fn: request, args: [{ path: /library/sections/all }], key: GET /library/sections/all }
+  - {
+      fn: request,
+      args: [{ path: /library/sections/1/recentlyAdded, query: { X-Plex-Container-Size: 5 } }],
+      key: 'GET /library/sections/{sectionId}/recentlyAdded',
+    }
+  - { fn: request, args: [{ path: /hubs/search, query: { query: incep } }], key: GET /hubs/search }
+  - { fn: request, args: [{ path: /playQueues/55 }], key: 'GET /playQueues/{playQueueId}' }
+  - { fn: request, args: [{ path: /playlists }], key: GET /playlists }
+writes:
+  - {
+      fn: request,
+      args: [{ method: PUT, path: '/:/scrobble', query: { key: 101, identifier: com.plexapp.plugins.library } }],
+      key: 'PUT /:/scrobble',
+    }
+  - {
+      fn: request,
+      args: [{ method: PUT, path: '/:/unscrobble', query: { key: 101, identifier: com.plexapp.plugins.library } }],
+      key: 'PUT /:/unscrobble',
+    }
+rejects:
+  - { fn: request, args: [{ path: /users/account.json }] }
+  - { fn: request, args: [{ path: /services/browse }] }
+  - { fn: request, args: [{ path: /diagnostics/logs }] }
+secrets:
+  - {
+      fn: request,
+      args: [{ path: '/:/prefs' }],
+      key: 'GET /:/prefs',
+      values: ['${fake.onlineToken}', '${fake.certKey}'],
+    }
+  - { fn: request, args: [{ path: /status/sessions }], key: GET /status/sessions, values: ['${fake.thumbToken}'] }
+  - { fn: request, args: [{ path: /media/providers }], key: GET /media/providers, values: ['${fake.providerUrlToken}'] }
+  - { fn: request, args: [{ path: /myplex/account }], key: GET /myplex/account, values: ['${fake.accountToken}'] }
+  - { fn: request, args: [{ path: /servers }], key: GET /servers, values: ['${fake.serverToken}'] }
+  # The URL keys that lock cases send: none may reach an approval or the audit log.
+  - {
+      fn: request,
+      args: [{ path: /devices }],
+      key: GET /devices,
+      values:
+        ['${fake.deviceToken}', trailer-signature-888888, provider-key-999999, subtitle-key-131313, tuner-key-141414],
+    }
+connectionTest: { wrong: { token: wrong } }
+calls:
+  mark Inception watched:
+    {
+      fn: request,
+      args: [{ method: PUT, path: '/:/scrobble', query: { key: 101, identifier: com.plexapp.plugins.library } }],
+      key: 'PUT /:/scrobble',
+    }
+  delete Inception:
+    { fn: request, args: [{ method: DELETE, path: /library/metadata/101 }], key: 'DELETE /library/metadata/{ids}' }
+  delete the Road Trip playlist:
+    { fn: request, args: [{ method: DELETE, path: /playlists/401 }], key: 'DELETE /playlists/{playlistId}' }
+  clear the library caches:
+    { fn: request, args: [{ method: DELETE, path: /library/caches }], key: DELETE /library/caches }
+  stop a session:
+    {
+      fn: request,
+      args: [{ method: POST, path: /status/sessions/terminate, query: { sessionId: sess-1 } }],
+      key: POST /status/sessions/terminate,
+    }
+  analyze Inception again:
+    {
+      fn: request,
+      args: [{ method: GET, path: /library/metadata/101, query: { asyncRefreshAnalysis: 1 } }],
+      key: 'GET /library/metadata/{ids}#refresh',
+    }
+  refresh the metadata of the Movies library:
+    {
+      fn: request,
+      args: [{ method: GET, path: /library/sections/1/all, query: { asyncAugmentMetadata: true } }],
+      key: 'GET /library/sections/{sectionId}/all#refresh',
+    }
+  write back a masked token:
+    {
+      fn: request,
+      args: [{ method: PUT, path: '/:/prefs', query: { PlexOnlineToken: '[REDACTED]' } }],
+      key: 'PUT /:/prefs',
+    }
+locks:
+  DELETE /library/sections/{sectionId}:
+    { fn: request, args: [{ method: DELETE, path: /library/sections/1 }], confirm: Movies, target: library Movies }
+  GET /library/sections/{sectionId}/emptyTrash:
+    {
+      fn: request,
+      args: [{ method: GET, path: /library/sections/1/emptyTrash }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  POST /library/sections/{sectionId}/emptyTrash:
+    {
+      fn: request,
+      args: [{ method: POST, path: /library/sections/1/emptyTrash }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  PUT /library/sections/{sectionId}/emptyTrash:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/sections/1/emptyTrash }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  GET /library/sections/{sectionId}/optimize:
+    {
+      fn: request,
+      args: [{ method: GET, path: /library/sections/1/optimize }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  POST /library/sections/{sectionId}/optimize:
+    {
+      fn: request,
+      args: [{ method: POST, path: /library/sections/1/optimize }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  GET /library/optimize:
+    { fn: request, args: [{ method: GET, path: /library/optimize }], confirm: Home Plex, target: /library/optimize }
+  POST /library/optimize:
+    { fn: request, args: [{ method: POST, path: /library/optimize }], confirm: Home Plex, target: /library/optimize }
+  PUT /library/optimize:
+    { fn: request, args: [{ method: PUT, path: /library/optimize }], confirm: Home Plex, target: /library/optimize }
+  PUT /library/clean/bundles:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/clean/bundles }],
+      confirm: Home Plex,
+      target: /library/clean/bundles,
+    }
+  POST /library/sections/all:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /library/sections/all,
+            query: { name: Kids, type: movie, agent: tv.plex.agents.movie, language: en-US, location: /media/kids },
+          },
+        ],
+      confirm: Kids,
+      target: /library/sections/all,
+    }
+  PUT /library/sections/{sectionId}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/sections/1, query: { agent: tv.plex.agents.movie, location: /elsewhere } }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  PUT /library/sections/{sectionId}/all:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/sections/1/all, query: { type: 1, contentRating.value: G } }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  DELETE /library/metadata/{ids}#many:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: '/library/metadata/101,102' }],
+      confirm: 2 items,
+      target: 'Inception (2010) [movie]',
+    }
+  DELETE /library/metadata/{ids}/media/{mediaItem}#many:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: '/library/metadata/101,102/media/5' }],
+      confirm: 2 items,
+      target: 'Inception (2010) [movie]',
+    }
+  DELETE /library/metadata/{ids}/marker/{marker}#many:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: '/library/metadata/101,102/marker/9' }],
+      confirm: 2 items,
+      target: 'Inception (2010) [movie]',
+    }
+  POST /library/metadata/{ids}/extras:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /library/metadata/101/extras,
+            query: { url: https://trailers.example/t.mp4?sig=trailer-signature-888888, extraType: 1 },
+          },
+        ],
+      confirm: Inception,
+      target: fetches https://trailers.example,
+    }
+  POST /library/metadata/{ids}/{element}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /library/metadata/101/poster, query: { url: https://images.example/p.jpg } }],
+      confirm: Inception,
+      target: fetches https://images.example,
+    }
+  PUT /library/metadata/{ids}/{element}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/metadata/301/thumb, query: { url: upload://posters/abc } }],
+      confirm: Good News About Hell,
+      target: 'Severance – Good News About Hell [episode]',
+    }
+  PUT /:/prefs:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /:/prefs, query: { FriendlyName: Renamed, allowedNetworks: 0.0.0.0/0 } }],
+      confirm: Home Plex,
+      target: 'settings FriendlyName, allowedNetworks',
+    }
+  PUT /updater/apply:
+    { fn: request, args: [{ method: PUT, path: /updater/apply }], confirm: Home Plex, target: /updater/apply }
+  POST /butler: { fn: request, args: [{ method: POST, path: /butler }], confirm: Home Plex, target: /butler }
+  POST /media/providers:
+    {
+      fn: request,
+      args:
+        [{ method: POST, path: /media/providers, query: { url: https://provider.example/p?key=provider-key-999999 } }],
+      confirm: Home Plex,
+      target: fetches https://provider.example,
+    }
+  POST /media/grabbers/devices:
+    {
+      fn: request,
+      args:
+        [{ method: POST, path: /media/grabbers/devices, query: { uri: http://10.0.0.5/tuner?key=tuner-key-141414 } }],
+      confirm: Home Plex,
+      target: connects to http://10.0.0.5,
+    }
+  GET /library/metadata/{ids}#refresh:
+    {
+      fn: request,
+      args: [{ method: GET, path: /library/metadata/101, query: { checkFiles: 1 } }],
+      confirm: Inception,
+      target: 'Inception (2010) [movie]',
+    }
+  GET /library/sections/{sectionId}/all#refresh:
+    {
+      fn: request,
+      args: [{ method: GET, path: /library/sections/1/all, query: { refreshAnalysis: 'true' } }],
+      confirm: Movies,
+      target: library Movies,
+    }
+  GET /library/metadata/{ids}/subtitles:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: GET,
+            path: /library/metadata/101/subtitles,
+            query: { url: https://subs.example/inception.srt?key=subtitle-key-131313, language: en },
+          },
+        ],
+      confirm: Inception,
+      target: fetches https://subs.example,
+    }
+  PUT /library/sections/{sectionId}/move:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/sections/2/move, query: { location: /new } }],
+      confirm: TV Shows,
+      target: library TV Shows,
+    }
+  PUT /library/sections/{sectionId}/edit:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/sections/2/edit, query: {} }],
+      confirm: TV Shows,
+      target: library TV Shows,
+    }
+  PUT /library/sections/{sectionId}/prefs:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /library/sections/2/prefs, query: {} }],
+      confirm: TV Shows,
+      target: library TV Shows,
+    }
+  PUT /livetv/dvrs/{dvrId}:
+    { fn: request, args: [{ method: PUT, path: /livetv/dvrs/7 }], confirm: '7', target: /livetv/dvrs/7 }
+  PATCH /livetv/dvrs/{dvrId}:
+    { fn: request, args: [{ method: PATCH, path: /livetv/dvrs/7 }], confirm: '7', target: /livetv/dvrs/7 }
+  PUT /livetv/dvrs/{dvrId}/lineups:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /livetv/dvrs/7/lineups, query: { lineup: x } }],
+      confirm: '7',
+      target: /livetv/dvrs/7/lineups,
+    }
+  PUT /livetv/dvrs/{dvrId}/prefs:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /livetv/dvrs/7/prefs, query: { name: a, value: b } }],
+      confirm: '7',
+      target: /livetv/dvrs/7/prefs,
+    }
+  PUT /livetv/dvrs/{dvrId}/devices/{deviceId}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /livetv/dvrs/7/devices/dev-1 }],
+      confirm: '7',
+      target: /livetv/dvrs/7/devices/dev-1,
+    }
+  PUT /media/grabbers/devices/{deviceId}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /media/grabbers/devices/dev-1, query: { enabled: 0 } }],
+      confirm: dev-1,
+      target: /media/grabbers/devices/dev-1,
+    }
+  PUT /media/grabbers/devices/{deviceId}/prefs:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /media/grabbers/devices/dev-1/prefs }],
+      confirm: dev-1,
+      target: /media/grabbers/devices/dev-1/prefs,
+    }
+  PUT /media/grabbers/devices/{deviceId}/channelmap:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /media/grabbers/devices/dev-1/channelmap }],
+      confirm: dev-1,
+      target: /media/grabbers/devices/dev-1/channelmap,
+    }
+  DELETE /livetv/dvrs/{dvrId}:
+    { fn: request, args: [{ method: DELETE, path: /livetv/dvrs/7 }], confirm: '7', target: /livetv/dvrs/7 }
+  DELETE /livetv/dvrs/{dvrId}/lineups:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /livetv/dvrs/7/lineups, query: { lineup: x } }],
+      confirm: '7',
+      target: /livetv/dvrs/7/lineups,
+    }
+  DELETE /livetv/dvrs/{dvrId}/devices/{deviceId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /livetv/dvrs/7/devices/dev-1 }],
+      confirm: '7',
+      target: /livetv/dvrs/7/devices/dev-1,
+    }
+  DELETE /media/grabbers/devices/{deviceId}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /media/grabbers/devices/dev-1 }],
+      confirm: dev-1,
+      target: /media/grabbers/devices/dev-1,
+    }

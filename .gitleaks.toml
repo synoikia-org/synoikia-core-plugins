@@ -1,0 +1,8 @@
+# The default rules, plus the fake credentials of the fake upstreams.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake credentials of the fake upstreams in plugins/*/test"
+regexTarget = "match"
+regexes = ['''seerr-main-api-key-123''', '''b2-application-key-secret''', '''4-fresh-api-key-secret''']

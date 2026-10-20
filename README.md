@@ -37,18 +37,18 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 
 ## Layout
 
-| Path                 | What                                                                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `instructions.md`, `src/`, `test/`, bundled to `dist/index.js` |
-| `docs/`              | The original per-plugin designs                                                                                        |
-| `tsconfig.base.json` | Shared compiler options; each plugin's `tsconfig.json` extends it                                                      |
-| `vitest.shared.ts`   | Shared Vitest config; each plugin's `vitest.config.ts` re-exports it                                                   |
+| Path                 | What                                                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `instructions.md`, `src/`, `test/`, `features/`, bundled to `dist/index.js` |
+| `docs/`              | The original per-plugin designs, and `docs/workflow.md` (the rules for every change)                                                |
+| `tsconfig.base.json` | Shared compiler options. Each plugin's `tsconfig.json` extends it                                                                   |
+| `vitest.shared.ts`   | Shared Vitest config. Each plugin's `vitest.config.ts` re-exports it                                                                |
 
 Plugins build against Synoikia's published npm packages, the same way a community plugin would:
 
 - `@synoikia/plugin-sdk`: the manifest schema, RPC contract and `runPlugin()` runtime. The bundle includes it.
 - `@synoikia/create-plugin` (dev only): `synoikia-plugin new`, `build`, `check` and the `repo` release steps.
-- `@synoikia/core` (dev only): its `@synoikia/core/testing` export is the plugin harness. It boots the real core on the built bundle, running as a permission-confined child as in production, so each plugin's end-to-end tests run against its own fake upstream.
+- `@synoikia/core` (dev only): `@synoikia/core/testing/compliance` is core's compliance suite. It boots the real core on the built bundle as a permission-confined child, as in production. Then it drives the plugin against its own fake upstream.
 
 ## Development
 
@@ -56,14 +56,16 @@ Requires Node ≥ 22.12 and pnpm 10 (`corepack enable`).
 
 ```sh
 pnpm install
-pnpm test        # builds each plugin's bundle, then runs its unit and e2e tests
+pnpm test        # each plugin: check, build, unit tests, compliance suite and its features
 pnpm typecheck
 pnpm lint
 pnpm format:check
 pnpm build       # every plugin bundle
 ```
 
-Work on one plugin with `pnpm --filter ./plugins/<id> test`.
+Work on one plugin with `pnpm --filter ./plugins/<id> test`. The run must end with "<Name> <version> is fit for production." and no failed test.
+
+Every change follows `docs/workflow.md`: spec first, test first, one slice for each pull request. Install the git hooks once per clone with `pnpm hooks:install`. Run `pnpm workflow pre-push` for the same checks by hand. The `Workflow` CI job runs them on each pull request.
 
 ## Adding a plugin
 
@@ -71,15 +73,16 @@ Work on one plugin with `pnpm --filter ./plugins/<id> test`.
 pnpm new          # asks for an id, a name, an archetype (openapi-rest, static-rest, websocket-rpc, blank) and auth
 ```
 
-`pnpm new` (`synoikia-plugin new`, also non-interactive with `--id --name --archetype --auth --yes`) writes `plugins/<id>/` with a manifest that already follows the secret rules, a `plugin.yaml`, `src/`, a fake upstream, and conformance and e2e contract tests that pass as generated. Then:
+`pnpm new` (`synoikia-plugin new`, also non-interactive with `--id --name --archetype --auth --yes`) writes `plugins/<id>/`. It holds a manifest that follows the secret rules, a `plugin.yaml`, `src/`, `test/compliance.yaml` and a fake upstream. For the OpenAPI, REST and WebSocket kinds, the new plugin passes the compliance suite as generated. Then:
 
-- describe the upstream's operations in `plugin.yaml`: locks, split twins, classification overrides, `sensitiveParams`, `sensitiveResult`, confirmation literals (reference: [Synoikia's plugin authoring guide](https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md));
-- keep code in `src/` for what needs logic: discovery, a split predicate, a custom confirmation source;
-- extend the fake upstream and tests.
+- Describe the upstream's operations in `plugin.yaml`: locks, split twins, classification overrides, `sensitiveParams`, `sensitiveResult`, confirmation literals (reference: [Synoikia's plugin authoring guide](https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md)).
+- Keep code in `src/` for what needs logic: discovery, a split predicate, a custom confirmation source.
+- Extend the fake upstream and `test/compliance.yaml`. Add a lock case for each locked operation.
+- Write plugin-specific behavior in `features/<id>.feature`, and pure logic tests in `test/unit/`.
 
-Each plugin's `test` script runs `synoikia-plugin check` (manifest, `plugin.yaml`, versions), `synoikia-plugin build` (the self-contained bundle, `plugin.yaml` validated and inlined), then its unit and e2e tests. Under the permission model the child can read nothing outside its own package directory, so everything it needs is in `dist/index.js`. A release ships only `manifest.json`, `package.json` and `dist/`.
+Each plugin's `test` script runs `synoikia-plugin check` (manifest, `plugin.yaml`, versions) and `synoikia-plugin build` (the self-contained bundle, `plugin.yaml` validated and inlined). Then it runs the unit tests, core's compliance suite and the plugin's features. Under the permission model the child can read nothing outside its own package directory, so everything it needs is in `dist/index.js`. A release ships only `manifest.json`, `package.json` and `dist/`.
 
-`test/golden.test.ts` records what each plugin tells core: every catalog descriptor, and the approval summary and confirmation literal of every locked operation. A change there changes classification, locks, redaction or approvals; review the diff and update it on purpose (`vitest run test/golden.test.ts -u`).
+`test/compliance.yaml` is the profile that core's compliance suite certifies the plugin against. It names the reads, writes, rejects, a lock case for each locked operation, the secrets and the connection test. A change there is a security change. Review its diff like a `plugin.yaml` diff. The format is in [Synoikia's plugin authoring guide](https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md) › The compliance suite.
 
 ## Updating Synoikia
 
@@ -103,3 +106,5 @@ A version that is already released is skipped, so re-running the workflow is saf
 ## CI
 
 `.github/workflows/ci.yml` runs lint, format check, typecheck and every plugin's tests. It needs no secrets.
+
+`.github/workflows/workflow.yml` (the `Workflow` job) checks each pull request against `docs/workflow.md`: branch, features, prose, commit phases and the `Security audit:` line.

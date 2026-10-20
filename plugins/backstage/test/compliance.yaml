@@ -1,0 +1,250 @@
+# What core's compliance suite needs to certify Backstage against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', token: '${fake.token}' }
+reads:
+  - { fn: request, args: [{ path: /api/catalog/locations }], key: GET /api/catalog/locations }
+  - { fn: request, args: [{ path: /api/catalog/entities }], key: GET /api/catalog/entities }
+  - {
+      fn: request,
+      args: [{ path: /api/catalog/entities/by-query, query: { filter: kind=component, limit: 1 } }],
+      key: GET /api/catalog/entities/by-query,
+    }
+  - {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/catalog/validate-entity,
+            body:
+              {
+                location: 'url:https://example.com/template.yaml',
+                entity:
+                  {
+                    apiVersion: scaffolder.backstage.io/v1beta3,
+                    kind: Template,
+                    metadata: { name: checkout },
+                    spec: { steps: [] },
+                  },
+              },
+          },
+        ],
+      key: POST /api/catalog/validate-entity,
+    }
+writes:
+  - {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/catalog/refresh,
+            body: { entityRef: 'component:default/petstore', authorizationToken: '${fake.refreshSecret}' },
+          },
+        ],
+      key: POST /api/catalog/refresh,
+    }
+  - {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/scaffolder/v2/dry-run,
+            body:
+              {
+                template:
+                  {
+                    apiVersion: scaffolder.backstage.io/v1beta3,
+                    kind: Template,
+                    metadata: { name: checkout },
+                    spec: { steps: [] },
+                  },
+                values: { name: checkout },
+                secrets: { USER_OAUTH_TOKEN: '${fake.dryRunSecret}' },
+                directoryContents: [],
+              },
+          },
+        ],
+      key: POST /api/scaffolder/v2/dry-run,
+    }
+rejects:
+  - { fn: request, args: [{ path: /api/catalog/openapi.json }] }
+  - { fn: request, args: [{ path: /api/notifications/abc }] }
+secrets:
+  - {
+      fn: request,
+      args: [{ path: '/api/scaffolder/v2/tasks/${fake.taskId}' }],
+      key: 'GET /api/scaffolder/v2/tasks/{taskId}',
+      values:
+        [
+          '${fake.taskSecret}',
+          '${fake.scaffoldSecret}',
+          '${fake.retrySecret}',
+          '${fake.dryRunSecret}',
+          '${fake.refreshSecret}',
+        ],
+    }
+connectionTest: { wrong: { token: wrong } }
+locks:
+  'DELETE /api/catalog/entities/by-uid/{uid}':
+    {
+      fn: request,
+      args: [{ method: DELETE, path: '/api/catalog/entities/by-uid/${fake.petstoreUid}' }],
+      confirm: petstore,
+      target: 'component:default/petstore',
+    }
+  POST /api/catalog/locations:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/catalog/locations,
+            body: { type: url, target: https://github.com/someone/else/blob/main/all.yaml },
+          },
+        ],
+      confirm: https://github.com/someone/else/blob/main/all.yaml,
+      target: 'POST /api/catalog/locations from url:https://github.com/someone/else/blob/main/all.yaml:',
+    }
+  'PUT /api/catalog/locations/{id}':
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: '/api/catalog/locations/${fake.locationId}',
+            body: { type: url, target: https://github.com/someone/else/blob/main/moved.yaml },
+          },
+        ],
+      confirm: https://github.com/acme/catalog/blob/main/catalog-info.yaml,
+      target: https://github.com/someone/else/blob/main/moved.yaml,
+    }
+  'DELETE /api/catalog/locations/{id}':
+    {
+      fn: request,
+      args: [{ method: DELETE, path: '/api/catalog/locations/${fake.locationId}' }],
+      confirm: https://github.com/acme/catalog/blob/main/catalog-info.yaml,
+      target: 'url:https://github.com/acme/catalog/blob/main/catalog-info.yaml',
+    }
+  POST /api/scaffolder/v2/tasks:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/scaffolder/v2/tasks,
+            body:
+              {
+                templateRef: 'template:default/react-app',
+                values: { name: checkout, repoUrl: github.com?owner=acme&repo=checkout },
+                secrets: { USER_OAUTH_TOKEN: '${fake.scaffoldSecret}' },
+              },
+          },
+        ],
+      confirm: 'template:default/react-app',
+      target: 'template:default/react-app (React app)',
+    }
+  'POST /api/scaffolder/v2/tasks/{taskId}/cancel':
+    {
+      fn: request,
+      args: [{ method: POST, path: '/api/scaffolder/v2/tasks/${fake.taskId}/cancel' }],
+      confirm: react-app,
+      target: 'template:default/react-app (task processing)',
+    }
+  'POST /api/scaffolder/v2/tasks/{taskId}/retry':
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: '/api/scaffolder/v2/tasks/${fake.taskId}/retry',
+            body: { secrets: { USER_OAUTH_TOKEN: '${fake.retrySecret}' } },
+          },
+        ],
+      confirm: react-app,
+      target: 'template:default/react-app (task processing)',
+    }
+  POST /api/notifications/notifications:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/notifications/notifications,
+            body: { recipients: { type: broadcast }, payload: { title: Maintenance tonight } },
+          },
+        ],
+      confirm: Backstage,
+      target: broadcast,
+    }
+  POST /api/events/bus/v1/events:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/events/bus/v1/events,
+            body: { event: { topic: github.push, payload: { ref: refs/heads/main } } },
+          },
+        ],
+      confirm: Backstage,
+      target: github.push,
+    }
+calls:
+  validate an entity with no name:
+    {
+      fn: request,
+      args:
+        [{ method: POST, path: /api/catalog/validate-entity, body: { location: 'url:x', entity: { kind: Template } } }],
+      key: POST /api/catalog/validate-entity,
+    }
+  refresh petstore:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/catalog/refresh, body: { entityRef: 'component:default/petstore' } }],
+      key: POST /api/catalog/refresh,
+    }
+  dry-run the checkout template:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/scaffolder/v2/dry-run,
+            body:
+              {
+                template:
+                  {
+                    apiVersion: scaffolder.backstage.io/v1beta3,
+                    kind: Template,
+                    metadata: { name: checkout },
+                    spec: { steps: [] },
+                  },
+                values: { name: checkout },
+                secrets: { USER_OAUTH_TOKEN: '${fake.dryRunSecret}' },
+                directoryContents: [],
+              },
+          },
+        ],
+      key: POST /api/scaffolder/v2/dry-run,
+    }
+  read the first component:
+    {
+      fn: request,
+      args: [{ path: /api/catalog/entities/by-query, query: { filter: kind=component, limit: 1 } }],
+      key: GET /api/catalog/entities/by-query,
+    }
+  read the next component:
+    {
+      fn: request,
+      args: [{ path: /api/catalog/entities/by-query, query: { filter: kind=component, limit: 1, cursor: '1' } }],
+      key: GET /api/catalog/entities/by-query,
+    }

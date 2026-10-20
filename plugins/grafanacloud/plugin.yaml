@@ -106,6 +106,52 @@ rules:
   - match: 'POST /orgs/{slugOrId}/settings'
     summaryNote: '(security settings for the whole organization)'
 
+  # Operations the grafana.com spec gives no summary or description.
+  - match: 'GET /stack-regions'
+    description: 'List the regions a stack can be created in, with their provider and slug.'
+  - match: 'GET /stack-regions/closest'
+    description: 'Get the stack region closest to the caller, optionally for one organization or cloud provider.'
+  - match: 'GET /org-stack-regions'
+    description: 'List the stack regions an organization can use.'
+  - match: 'GET /v1/stacks'
+    description: "List the organization's stacks."
+  - match: 'POST /v1/stacks'
+    description: 'Create a stack.'
+  - match: 'POST /v1/stacks/checkUrl'
+    description: 'Check whether a stack slug, and so its URL, is free to use.'
+  - match: 'GET /v1/stacks/{idOrSlug}'
+    description: 'Get a stack by id or slug.'
+  - match: 'POST /v1/stacks/{idOrSlug}'
+    description: 'Update a stack: its name, slug, description, labels or delete protection.'
+  - match: 'DELETE /v1/stacks/{idOrSlug}'
+    description: 'Delete a stack and all its data.'
+  - match: 'GET /v1/stacks/{idOrSlug}/connections'
+    description: "Get a stack's connection details: the endpoints of its services and its private connectivity."
+  - match: 'GET /v1/stacks/{idOrSlug}/readiness'
+    description: 'Check whether a stack is ready to use.'
+  - match: 'GET /instances/{instanceId}/plugins'
+    description: "List the plugins installed in a stack's Grafana."
+  - match: 'POST /instances/{instanceId}/plugins'
+    description: "Install a plugin in a stack's Grafana."
+  - match: 'GET /instances/{instanceId}/plugins/{pluginSlugOrId}'
+    description: "Get a plugin installed in a stack's Grafana."
+  - match: 'POST /instances/{instanceId}/plugins/{pluginSlugOrId}'
+    description: "Update the version of a plugin installed in a stack's Grafana."
+  - match: 'DELETE /instances/{instanceId}/plugins/{pluginSlugOrId}'
+    description: "Uninstall a plugin from a stack's Grafana."
+  - match: 'GET /orgs/{slugOrId}'
+    description: 'Get an organization by slug or id.'
+  - match: 'GET /orgs/{slugOrId}/members'
+    description: "List an organization's members and their roles."
+  - match: 'POST /orgs/{slugOrId}/members'
+    description: 'Add a user to an organization with a role.'
+  - match: 'GET /orgs/{slugOrId}/members/{usernameOrId}'
+    description: 'Get a member of an organization by username or id.'
+  - match: 'POST /orgs/{slugOrId}/members/{usernameOrId}'
+    description: 'Update a member of an organization: their role and billing, privacy and security settings.'
+  - match: 'DELETE /orgs/{slugOrId}/members/{usernameOrId}'
+    description: 'Remove a member from an organization.'
+
   # Checks whether a stack URL is free; changes nothing.
   - match: 'POST /v1/stacks/checkUrl'
     classification: read

@@ -7,6 +7,8 @@ import type WebSocket from 'ws';
 /** A fake Home Assistant: the WebSocket API and the REST config endpoints, on one port. */
 
 export const FAKE_TOKEN = 'fake-ha-long-lived-token-abcdef';
+/** The camera token in the states: it must never reach the agent. */
+export const CAMERA_TOKEN = 'cam-secret-token-123';
 
 type Json = Record<string, unknown>;
 
@@ -30,6 +32,19 @@ export const SERVICES: Json = {
   lock: {
     unlock: { name: 'Unlock', target: { entity: { domain: 'lock' } }, fields: { code: { selector: { text: {} } } } },
     lock: { name: 'Lock', target: { entity: { domain: 'lock' } }, fields: {} },
+    open: { name: 'Open', target: { entity: { domain: 'lock' } }, fields: { code: { selector: { text: {} } } } },
+  },
+  hassio: {
+    host_reboot: { name: 'Reboot the host system', fields: {} },
+    host_shutdown: { name: 'Power off the host system', fields: {} },
+    restore_full: { name: 'Restore from full backup', fields: { slug: { required: true, selector: { text: {} } } } },
+    restore_partial: {
+      name: 'Restore from partial backup',
+      fields: { slug: { required: true, selector: { text: {} } }, homeassistant: { selector: { boolean: {} } } },
+    },
+  },
+  backup: {
+    restore: { name: 'Restore a backup', fields: { backup_id: { required: true, selector: { text: {} } } } },
   },
   cover: {
     open_cover: { name: 'Open', target: { entity: { domain: 'cover' } }, fields: {} },
@@ -136,8 +151,8 @@ const STATES = [
     'idle',
     {
       friendly_name: 'Driveway',
-      access_token: 'cam-secret-token-123',
-      entity_picture: '/api/camera_proxy/camera.driveway?token=cam-secret-token-123',
+      access_token: CAMERA_TOKEN,
+      entity_picture: `/api/camera_proxy/camera.driveway?token=${CAMERA_TOKEN}`,
     },
   ],
   ['sensor.untracked', '21', { friendly_name: 'Untracked Sensor' }],
@@ -158,6 +173,8 @@ export interface FakeHa {
   /** Moves an entity to another area (as a registry edit in the HA UI would). */
   moveEntity(entityId: string, areaId: string | null): void;
   drop(): void;
+  /** Restores the seeded entities, config objects and dashboard. */
+  reset(): void;
   close(): Promise<void>;
 }
 
@@ -166,21 +183,27 @@ export async function startFakeHa(): Promise<FakeHa> {
   const restCalls: FakeHa['restCalls'] = [];
   const denied = new Set<string>();
   const entities = ENTITIES.map((e) => ({ ...e }));
-  const automations = new Map<string, Json>([
-    [
-      'morning',
-      {
-        id: 'morning',
-        alias: 'Morning lights',
-        triggers: [{ trigger: 'sun', event: 'sunrise' }],
-        actions: [{ action: 'light.turn_on', target: { area_id: 'kitchen' } }],
-        mode: 'single',
-      },
-    ],
-  ]);
-  const scripts = new Map<string, Json>([['bedtime', { alias: 'Bedtime', sequence: [] }]]);
+  const automations = new Map<string, Json>();
+  const scripts = new Map<string, Json>();
   const scenes = new Map<string, Json>();
-  const dashboard = { config: { title: 'Home', views: [{ title: 'Main', cards: [] }] } as Json };
+  const dashboard = { config: {} as Json };
+  const seed = () => {
+    entities.splice(0, entities.length, ...ENTITIES.map((e) => ({ ...e })));
+    automations.clear();
+    automations.set('morning', {
+      id: 'morning',
+      alias: 'Morning lights',
+      triggers: [{ trigger: 'sun', event: 'sunrise' }],
+      actions: [{ action: 'light.turn_on', target: { area_id: 'kitchen' } }],
+      mode: 'single',
+    });
+    scripts.clear();
+    scripts.set('bedtime', { alias: 'Bedtime', sequence: [] });
+    scenes.clear();
+    scenes.set('reading', { id: 'reading', alias: 'Reading', entities: { 'light.reading_lamp': 'on' } });
+    dashboard.config = { title: 'Home', views: [{ title: 'Main', cards: [] }] };
+  };
+  seed();
   const subscribers = new Map<WebSocket, Map<number, string>>();
 
   const command = (msg: Json): unknown => {
@@ -221,6 +244,10 @@ export async function startFakeHa(): Promise<FakeHa> {
         dashboard.config = payload.config as Json;
         return null;
       case 'config/area_registry/delete':
+      case 'config/floor_registry/delete':
+      case 'config/label_registry/delete':
+      case 'config/category_registry/delete':
+      case 'config/entity_registry/remove':
         return 'success';
       case 'history/history_during_period':
         return { 'light.kitchen': [{ s: 'off', lu: 1 }] };
@@ -331,6 +358,7 @@ export async function startFakeHa(): Promise<FakeHa> {
     drop() {
       for (const s of sockets) s.terminate();
     },
+    reset: seed,
     close: () =>
       new Promise<void>((resolve) => {
         for (const s of sockets) s.terminate();

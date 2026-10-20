@@ -6,8 +6,8 @@ description: >-
   request names only an operation, an upstream endpoint, a lock, a secret or a bug and never says
   "TypeScript" or "plugin.yaml". Examples: add or lock an operation; split an operation into twins; mark a
   param or result field sensitive; change a summary or confirmation literal; fix a client, a transport or
-  discovery; add a connection field; extend a fake upstream; write or fix unit, golden or e2e tests; review a
-  plugin diff. Not for scaffolding a new plugin (add-plugin, then this skill for the code) or version bumps
+  discovery; add a connection field; extend a fake upstream; write or fix unit tests, the compliance profile
+  or a plugin feature; review a plugin diff. Not for scaffolding a new plugin (add-plugin, then this skill for the code) or version bumps
   (release-plugin).
 ---
 
@@ -17,10 +17,10 @@ A plugin is a Node 22 ESM process that describes one upstream API to core: its c
 
 `CLAUDE.md` holds the repo rules (bundle, network hosts, secrets, versions, security review). This skill is how to write the change. Load a reference only when the task touches its area:
 
-| Task touches                                                                 | Read                       |
-| ---------------------------------------------------------------------------- | -------------------------- |
-| Types, narrowing upstream data, errors, imports, module layout               | `references/typescript.md` |
-| Writing or reviewing tests, the fake upstream, golden files, the e2e harness | `references/testing.md`    |
+| Task touches                                                                | Read                       |
+| --------------------------------------------------------------------------- | -------------------------- |
+| Types, narrowing upstream data, errors, imports, module layout              | `references/typescript.md` |
+| Tests, the fake upstream, `test/compliance.yaml`, the plugin's feature file | `references/testing.md`    |
 
 ## Rules for every change
 
@@ -31,22 +31,34 @@ A plugin is a Node 22 ESM process that describes one upstream API to core: its c
 5. **Narrow upstream data at the edge.** Responses, events and specs are `unknown` until checked with `isPlainObject`, `requireString` and friends; past that point, trust the narrowed type.
 6. **Secrets never leave masked.** Credential fields are `writeOnly`, use the `secret` widget and are in `sensitiveKeys`. Secret fields the upstream returns go in `sensitiveKeys` and `sensitiveResult`. Summaries, errors and logs never carry a secret or a raw upstream body.
 7. **Every host is declared.** A new upstream URL goes in `manifest.json` `network.hosts`, and every runtime dependency and data file is bundled into `dist/index.js`.
-8. **Golden diffs are security diffs.** A change in `test/__golden__/` changes what core sees. Update it only on purpose, and say in the PR what changed and why.
+8. **Profile diffs are security diffs.** A change to `test/compliance.yaml` changes what core certifies. Change it only on purpose, and say in the PR what changed and why.
 9. **Small and direct.** No speculative options, wrappers or config for one caller. Comments are one or two lines, for a reason or a design `§` reference only.
-10. **Tests ship with the change**: a unit test for the logic, and an e2e case with the fake upstream extended when it crosses the plugin boundary.
+10. **Tests ship with the change.** Specify the behavior first, as `docs/workflow.md` says. Logic gets a unit test in `test/unit/`. Behavior at the plugin boundary gets a profile case or a scenario in `features/<id>.feature`. Extend the fake upstream to match.
 
 ## Checks
 
 Run from the repo root before finishing:
 
 ```sh
-pnpm --filter ./plugins/<id> test                   # check, rebuild the bundle, then unit + golden + e2e
+pnpm --filter ./plugins/<id> test                   # check, build, unit tests, compliance suite, features
 pnpm lint && pnpm format:check && pnpm typecheck
 pnpm check                                           # manifests, plugin.yaml and versions
+pnpm workflow pre-push                               # branch, phases, features and prose
 ```
+
+The plugin run must end with "<Name> <version> is fit for production." and no failed test.
 
 Then run the `security-reviewer` subagent when `CLAUDE.md` › Security review lists a path you touched. Don't bump the version unless the user asked (`release-plugin`).
 
 ## Reviewing
 
-Lead with what tools can't catch: a lock or sensitive rule dropped or narrowed, a classification that turns a write into a read, a secret that reaches a summary, error or golden file, a host missing from `network.hosts`, logic in `src/` that belongs in `plugin.yaml`, a plugin-side check that duplicates core, an `as` cast hiding an upstream shape, a golden update with no reason given, a missing e2e case for a new lock or secret. Say why each matters.
+Lead with what tools can't catch. Say why each one matters:
+
+- A lock or sensitive rule dropped or narrowed.
+- A classification that turns a write into a read.
+- A secret that reaches a summary or an error.
+- A host missing from `network.hosts`.
+- Logic in `src/` that belongs in `plugin.yaml`, or a plugin-side check that duplicates core.
+- An `as` cast that hides an upstream shape.
+- A `test/compliance.yaml` change with no reason given, or a case removed or weakened.
+- A new upstream secret with no `secrets` entry, or no fake response that holds it.

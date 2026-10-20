@@ -1,0 +1,89 @@
+# What core's compliance suite needs to certify Profilarr against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', apiKey: '${fake.apiKey}' }
+reads:
+  - { fn: request, args: [{ path: /status }], key: GET /status }
+  - { fn: request, args: [{ path: /api/v1/arr }], key: GET /arr }
+  - { fn: request, args: [{ path: /backups }], key: GET /backups }
+writes:
+  - { fn: request, args: [{ method: POST, path: /backups }], key: POST /backups }
+rejects:
+  - { fn: request, args: [{ path: /openapi.json }] }
+secrets:
+  - { fn: request, args: [{ path: /arr }], key: GET /arr, values: ['${fake.arrApiKey}'] }
+  - {
+      fn: request,
+      args: [{ path: /databases }],
+      key: GET /databases,
+      values: ['${fake.pat}', '${fake.linkPat}', '${fake.newPat}'],
+    }
+  - { fn: request, args: [{ path: /databases/1 }], key: 'GET /databases/{id}', values: ['${fake.pat}'] }
+connectionTest: { wrong: { apiKey: wrong } }
+locks:
+  POST /databases:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /databases,
+            body:
+              {
+                name: Elsewhere,
+                repository_url: https://github.com/someone/profiles,
+                personal_access_token: '${fake.linkPat}',
+                auto_pull: true,
+                sync_strategy: 1,
+              },
+          },
+        ],
+      confirm: Profilarr,
+      target: https://github.com/someone/profiles,
+    }
+  PATCH /databases/{id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PATCH,
+            path: /databases/1,
+            body: { name: Renamed, auto_pull: true, personal_access_token: '${fake.newPat}' },
+          },
+        ],
+      confirm: Dictionarry,
+      target: Dictionarry (https://github.com/Dictionarry-Hub/database),
+    }
+  POST /databases/{id}/sync:
+    {
+      fn: request,
+      args: [{ method: POST, path: /databases/1/sync }],
+      confirm: Dictionarry,
+      target: Dictionarry (https://github.com/Dictionarry-Hub/database),
+    }
+  DELETE /databases/{id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /databases/1 }],
+      confirm: Dictionarry,
+      target: Dictionarry (https://github.com/Dictionarry-Hub/database),
+    }
+  DELETE /backups/{filename}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /backups/backup-2026-10-14-100005.tar.gz }],
+      confirm: backup-2026-10-14-100005.tar.gz,
+      target: /backups/backup-2026-10-14-100005.tar.gz,
+    }
+  PATCH /backups/settings:
+    {
+      fn: request,
+      args: [{ method: PATCH, path: /backups/settings, body: { retentionDays: 1 } }],
+      confirm: Profilarr,
+      target: /backups/settings,
+    }
+calls:
+  read the status: { fn: request, args: [{ path: /status }], key: GET /status }
+  list the arr instances: { fn: request, args: [{ path: /api/v1/arr }], key: GET /arr }
+  create a backup: { fn: request, args: [{ method: POST, path: /backups }], key: POST /backups }

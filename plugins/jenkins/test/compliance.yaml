@@ -1,0 +1,123 @@
+# What core's compliance suite needs to certify Jenkins against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.baseUrl}', username: '${fake.username}', token: '${fake.token}' }
+reads:
+  - { fn: call, args: [jobs.list], key: jobs.list }
+  - { fn: call, args: [jobs.get, { path: { job: '${fake.deploy}' } }], key: jobs.get }
+  - { fn: call, args: [builds.get, { path: { job: '${fake.deploy}', number: lastFailedBuild } }], key: builds.get }
+  - {
+      fn: call,
+      args: [builds.log, { path: { job: '${fake.deploy}', number: 41 }, query: { lines: 1 } }],
+      key: builds.log,
+    }
+  - { fn: call, args: [builds.testReport, { path: { job: '${fake.deploy}', number: 41 } }], key: builds.testReport }
+  - { fn: call, args: [nodes.list], key: nodes.list }
+writes:
+  - { fn: call, args: [builds.stop, { path: { job: '${fake.deploy}', number: 42 } }], key: builds.stop }
+  - { fn: call, args: [builds.trigger, { path: { job: '${fake.hello}' } }], key: builds.trigger }
+rejects:
+  - { fn: call, args: [jobs.nope] }
+  - { fn: call, args: [system.restart] }
+secrets:
+  - {
+      fn: call,
+      args: [builds.get, { path: { job: '${fake.deploy}', number: 41 } }],
+      key: builds.get,
+      values: ['${fake.buildSecret}'],
+    }
+  - {
+      fn: call,
+      args: [builds.get, { path: { job: '${fake.deploy}', number: 41 }, query: { depth: 1 } }],
+      key: builds.get,
+      values: ['${fake.buildSecret}', '${fake.gitSecret}', '${fake.envSecret}'],
+    }
+  - {
+      fn: call,
+      args: [jobs.get, { path: { job: '${fake.deploy}' } }],
+      key: jobs.get,
+      values: ['${fake.buildSecret}', '${fake.defaultSecret}'],
+    }
+connectionTest: { wrong: { token: wrong } }
+locks:
+  builds.trigger#params:
+    {
+      fn: call,
+      args: [builds.trigger, { path: { job: '${fake.deploy}' }, query: { BRANCH: "feature/x\"\u202e" } }],
+      confirm: infra/deploy app,
+      target: 'on infra/deploy app: POST /job/infra/job/deploy%20app/buildWithParameters with BRANCH="feature/x\"\u202e"',
+    }
+  builds.delete:
+    {
+      fn: call,
+      args: [builds.delete, { path: { job: '${fake.deploy}', number: 41 } }],
+      confirm: 'infra/deploy app#41',
+      target: 'on infra/deploy app #41: POST /job/infra/job/deploy%20app/41/doDelete',
+    }
+  jobs.delete:
+    {
+      fn: call,
+      args: [jobs.delete, { path: { job: '${fake.hello}' } }],
+      confirm: hello,
+      target: 'on hello: POST /job/hello/doDelete',
+    }
+  jobs.disable:
+    {
+      fn: call,
+      args: [jobs.disable, { path: { job: '${fake.deploy}' } }],
+      confirm: infra/deploy app,
+      target: 'on infra/deploy app: POST /job/infra/job/deploy%20app/disable',
+    }
+  jobs.enable:
+    {
+      fn: call,
+      args: [jobs.enable, { path: { job: '${fake.deploy}' } }],
+      confirm: infra/deploy app,
+      target: 'on infra/deploy app: POST /job/infra/job/deploy%20app/enable',
+    }
+  system.safeRestart:
+    { fn: call, args: [system.safeRestart, {}], confirm: 127.0.0.1, target: 'on 127.0.0.1: POST /safeRestart' }
+  system.quietDown:
+    {
+      fn: call,
+      args: [system.quietDown, { query: { reason: "upgrade\u202e tonight" } }],
+      confirm: 127.0.0.1,
+      target: 'on 127.0.0.1: POST /quietDown (reason "upgrade\u202e tonight")',
+    }
+  system.cancelQuietDown:
+    { fn: call, args: [system.cancelQuietDown, {}], confirm: 127.0.0.1, target: 'on 127.0.0.1: POST /cancelQuietDown' }
+calls:
+  read the last failed build:
+    { fn: call, args: [builds.get, { path: { job: infra/deploy app, number: lastFailedBuild } }], key: builds.get }
+  read the last log line of build 41:
+    {
+      fn: call,
+      args: [builds.log, { path: { job: infra/deploy app, number: 41 }, query: { lines: 1 } }],
+      key: builds.log,
+    }
+  read build 41 with the git remote addresses:
+    {
+      fn: call,
+      args: [builds.get, { path: { job: infra/deploy app, number: 41 }, query: { tree: 'actions[remoteUrls]' } }],
+      key: builds.get,
+    }
+  read build 41 at depth 3:
+    {
+      fn: call,
+      args: [builds.get, { path: { job: infra/deploy app, number: 41 }, query: { depth: 3 } }],
+      key: builds.get,
+    }
+  read a job outside the job tree: { fn: call, args: [jobs.get, { path: { job: ../../script } }], key: jobs.get }
+  read a job with an empty folder name: { fn: call, args: [jobs.get, { path: { job: a//b } }], key: jobs.get }
+  read a job with a dot folder name: { fn: call, args: [jobs.get, { path: { job: a/./b } }], key: jobs.get }
+  trigger deploy on the release branch:
+    {
+      fn: call,
+      args: [builds.trigger, { path: { job: infra/deploy app }, query: { BRANCH: release } }],
+      key: builds.trigger#params,
+    }
+  trigger deploy with a password parameter:
+    {
+      fn: call,
+      args: [builds.trigger, { path: { job: infra/deploy app }, query: { DEPLOY_KEY: fake-build-secret-5f4e3d } }],
+      key: builds.trigger#params,
+    }

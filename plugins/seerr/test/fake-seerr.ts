@@ -8,6 +8,14 @@ import type { FakeRequest, FakeResponse } from '@synoikia/core/testing';
 export const FAKE_EMAIL = 'mcp@seerr.local';
 export const FAKE_PASSWORD = 'fake-seerr-password-123';
 export const FAKE_API_KEY = 'fake-seerr-api-key-abcdef';
+/** Secrets the settings answers hold: they must never reach the agent. */
+export const SECRETS = {
+  mainApiKey: 'seerr-main-api-key-123',
+  telegramBot: 'tg-bot-secret-456',
+  webhookPath: 'hooks.example/secret-789',
+  webhookAuth: 'hook-secret-000',
+  radarrApiKey: 'radarr-key-111',
+} as const;
 /** The local user the plugin signs in as. */
 export const MCP_USER_ID = 2;
 
@@ -48,6 +56,8 @@ export interface FakeSeerr {
   denied: Set<string>;
   /** Invalidates every session cookie (the plugin must sign in again). */
   expireSessions(): void;
+  /** Restores the seeded users and requests. */
+  reset(): void;
   close(): Promise<void>;
 }
 
@@ -58,18 +68,36 @@ const USERS = [
 ];
 
 export async function startFakeSeerr(opts: { version?: string } = {}): Promise<FakeSeerr> {
-  const users = new Map(USERS.map((u) => [u.id, { ...u }]));
-  const requests = new Map<number, MediaRequest>([
-    [7, { id: 7, status: 1, is4k: false, media: { mediaType: 'movie', tmdbId: 603 }, requestedBy: { ...USERS[2]! } }],
-    [8, { id: 8, status: 1, is4k: false, media: { mediaType: 'tv', tmdbId: 1399 }, requestedBy: { ...USERS[1]! } }],
-  ]);
+  const users = new Map<number, { id: number; email: string; displayName: string }>();
+  const requests = new Map<number, MediaRequest>();
   let nextRequest = 100;
+  const seed = () => {
+    users.clear();
+    for (const u of USERS) users.set(u.id, { ...u });
+    requests.clear();
+    requests.set(7, {
+      id: 7,
+      status: 1,
+      is4k: false,
+      media: { mediaType: 'movie', tmdbId: 603 },
+      requestedBy: { ...USERS[2]! },
+    });
+    requests.set(8, {
+      id: 8,
+      status: 1,
+      is4k: false,
+      media: { mediaType: 'tv', tmdbId: 1399 },
+      requestedBy: { ...USERS[1]! },
+    });
+    nextRequest = 100;
+  };
+  seed();
   const sessions = new Set<string>();
   let nextSession = 1;
   const calls: Call[] = [];
   const denied = new Set<string>();
 
-  const state: Omit<FakeSeerr, 'url' | 'specUrl' | 'expireSessions' | 'close'> = {
+  const state: Omit<FakeSeerr, 'url' | 'specUrl' | 'expireSessions' | 'reset' | 'close'> = {
     specRefs: new Set(['develop', `v${opts.version ?? '3.4.1'}`]),
     specFetches: [],
     version: opts.version ?? '3.4.1',
@@ -139,17 +167,29 @@ export async function startFakeSeerr(opts: { version?: string } = {}): Promise<F
       },
       'GET /api/v1/auth/me': (req) => json(200, users.get(userOf(req)!)),
       'GET /api/v1/settings/main': () =>
-        json(200, { applicationTitle: 'Home Seerr', apiKey: 'seerr-main-api-key-123', hideAvailable: false }),
+        json(200, { applicationTitle: 'Home Seerr', apiKey: SECRETS.mainApiKey, hideAvailable: false }),
       'GET /api/v1/settings/notifications/telegram': () =>
-        json(200, { enabled: true, types: 2, options: { botAPI: 'tg-bot-secret-456', chatId: '42' } }),
+        json(200, { enabled: true, types: 2, options: { botAPI: SECRETS.telegramBot, chatId: '42' } }),
       'GET /api/v1/settings/notifications/webhook': () =>
         json(200, {
           enabled: true,
-          options: { webhookUrl: 'https://hooks.example/secret-789', authHeader: 'Bearer hook-secret-000' },
+          options: { webhookUrl: `https://${SECRETS.webhookPath}`, authHeader: `Bearer ${SECRETS.webhookAuth}` },
         }),
       'GET /api/v1/settings/radarr': () =>
-        json(200, [{ id: 0, name: 'Radarr 4K', apiKey: 'radarr-key-111', hostname: 'radarr' }]),
+        json(200, [{ id: 0, name: 'Radarr 4K', apiKey: SECRETS.radarrApiKey, hostname: 'radarr' }]),
+      'GET /api/v1/settings/sonarr': () => json(200, [{ id: 0, name: 'Sonarr', hostname: 'sonarr' }]),
+      'DELETE /api/v1/settings/radarr/{id}': ({ params }) => json(200, { id: Number(params.id) }),
+      'DELETE /api/v1/settings/sonarr/{id}': ({ params }) => json(200, { id: Number(params.id) }),
       'GET /api/v1/settings/discover': () => json(200, [{ id: 3, title: 'Trending' }]),
+      'DELETE /api/v1/settings/discover/{id}': ({ params }) => json(200, { id: Number(params.id) }),
+      'GET /api/v1/settings/discover/reset': () => json(204),
+      'GET /api/v1/settings/plex/library': () => json(200, [{ id: '1', name: 'Movies', enabled: false }]),
+      'GET /api/v1/settings/jellyfin/library': () => json(200, [{ id: '1', name: 'Movies', enabled: false }]),
+      'POST /api/v1/settings/initialize': () => json(200, { initialized: true }),
+      'POST /api/v1/settings/main/regenerate': () => json(200, { applicationTitle: 'Home Seerr' }),
+      'POST /api/v1/settings/jellyfin/sync': () => json(200, { running: true, progress: 0 }),
+      'POST /api/v1/settings/jobs/{id}/run': ({ params }) => json(200, { id: params.id, running: true }),
+      'PUT /api/v1/user': () => json(200, [...users.values()]),
       'GET /api/v1/request': () => json(200, { pageInfo: { results: requests.size }, results: [...requests.values()] }),
       'POST /api/v1/request': (req) => {
         const b = (req.body ?? {}) as { mediaType?: string; mediaId?: number; is4k?: boolean };
@@ -196,6 +236,7 @@ export async function startFakeSeerr(opts: { version?: string } = {}): Promise<F
     url: fake.url,
     specUrl: `${fake.url}/spec`,
     expireSessions: () => sessions.clear(),
+    reset: seed,
     close: fake.close,
   }) as FakeSeerr;
 }

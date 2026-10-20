@@ -27,8 +27,8 @@ export const TARGET_FIELDS = ['/queries/*/datasource/uid', '/queries/*/datasourc
 export const STRICT_FIELDS = ['/queries'];
 
 /** What a call acts on: the stored data source of a non-GET `/datasources/{id}` or `/datasources/uid/{uid}`
- * call, every data source a `POST /ds/query` names (an unreadable one by its uid), or the host a contact
- * point's `settings.url` posts to. */
+ * call, every data source a `POST /ds/query` names (an unreadable one by its uid), the host a contact
+ * point's `settings.url` posts to, or the provider of an SSO settings change. */
 export async function resolveTargets(
   client: HttpJsonClient,
   key: string,
@@ -80,6 +80,12 @@ export async function resolveTargets(
     if (url === undefined || url === null || url === '') return [];
     const host = hostOf(url);
     return [{ kind: 'destination', id: host, name: `${host} (contact point URL)` }];
+  }
+
+  // The provider is the path's `key`, which core masks in the summary as a sensitive key name.
+  if (key.endsWith(' /v1/sso-settings/{key}')) {
+    const provider = stringOr(isPlainObject(p.path) ? p.path.key : undefined);
+    return provider ? [{ kind: 'sso-provider', id: provider, name: `${safe(provider)} (SSO provider)` }] : [];
   }
 
   const byUid = key.includes(' /datasources/uid/{uid}');

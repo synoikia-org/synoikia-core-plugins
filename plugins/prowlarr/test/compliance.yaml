@@ -1,0 +1,835 @@
+# What core's compliance suite needs to certify Prowlarr against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', specBaseUrl: '${fake.specUrl}', apiKey: '${fake.apiKey}' }
+reads:
+  - { fn: request, args: [{ path: /api/v1/search, query: { query: dune, type: search } }], key: GET /api/v1/search }
+  - { fn: request, args: [{ path: /api/v1/indexerstats }], key: GET /api/v1/indexerstats }
+writes:
+  - { fn: request, args: [{ method: POST, path: /api/v1/tag, body: { label: new } }], key: POST /api/v1/tag }
+  - fn: request
+    args:
+      - method: POST
+        path: /api/v1/applications
+        body:
+          name: Radarr
+          implementation: Radarr
+          fields:
+            - { name: prowlarrUrl, value: 'http://prowlarr.lan:9696' }
+            - { name: baseUrl, value: 'http://radarr.lan:7878' }
+            - { name: apiKey, value: new-app-key-141414, privacy: apiKey }
+    key: POST /api/v1/applications
+rejects:
+  - { fn: request, args: [{ path: /api/v1/filesystem }] }
+secrets:
+  - {
+      fn: request,
+      args: [{ path: /api/v1/search, query: { query: dune, type: search } }],
+      key: GET /api/v1/search,
+      values: ['${fake.hostApiKey}', '${fake.trackerPasskey}', '${fake.magnetGuidPasskey}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/config/host }],
+      key: GET /api/v1/config/host,
+      values: ['${fake.hostApiKey}', '${fake.proxyPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/downloadclient }],
+      key: GET /api/v1/downloadclient,
+      values: ['${fake.clientPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/indexer }],
+      key: GET /api/v1/indexer,
+      values:
+        [
+          '${fake.indexerApiKey}',
+          '${fake.trackerPasskey}',
+          '${fake.trackerCookie}',
+          '${fake.cardigannPassword}',
+          '${fake.twoFactor}',
+          '${fake.trackerPid}',
+        ],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/applications }],
+      key: GET /api/v1/applications,
+      values: ['${fake.appApiKey}', new-app-key-141414],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/indexerproxy }],
+      key: GET /api/v1/indexerproxy,
+      values: ['${fake.socksPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/notification }],
+      key: GET /api/v1/notification,
+      values: ['${fake.webhookToken}', '${fake.headerToken}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/history }],
+      key: GET /api/v1/history,
+      values: ['${fake.indexerApiKey}', '${fake.trackerPasskey}', '${fake.grabPasskey}', '${fake.infoPasskey}'],
+    }
+connectionTest: { wrong: { apiKey: wrong } }
+locks:
+  PUT /api/v1/config/host/{id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/v1/config/host/1, body: { id: 1, bindAddress: '*', urlBase: /prowlarr } }],
+      confirm: Home Prowlarr,
+      target: /api/v1/config/host/1,
+    }
+  POST /api/v1/system/shutdown:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/system/shutdown }],
+      confirm: Home Prowlarr,
+      target: /api/v1/system/shutdown,
+    }
+  POST /api/v1/system/restart:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/system/restart }],
+      confirm: Home Prowlarr,
+      target: /api/v1/system/restart,
+    }
+  POST /api/v1/system/backup/restore/{id}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/system/backup/restore/21 }],
+      confirm: prowlarr_backup_v2.6.5.5623_2026.10.15_10.00.00.zip,
+      target: /api/v1/system/backup/restore/21,
+    }
+  PUT /api/v1/indexer/bulk:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/v1/indexer/bulk, body: { ids: [1, 2], tags: [12], applyTags: add } }],
+      confirm: 2 indexers,
+      target: indexer NZBgeek (Newznab),
+    }
+  PUT /api/v1/applications/bulk:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/v1/applications/bulk, body: { ids: [4], syncLevel: fullSync } }],
+      confirm: 1 application,
+      target: applications Sonarr (Sonarr),
+    }
+  POST /api/v1/applications/testall:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/applications/testall }],
+      confirm: Home Prowlarr,
+      target: /api/v1/applications/testall,
+    }
+  PUT /api/v1/config/development/{id}:
+    {
+      fn: request,
+      args:
+        [{ method: PUT, path: /api/v1/config/development/1, body: { id: 1, logIndexerResponse: true, logSql: true } }],
+      confirm: Home Prowlarr,
+      target: /api/v1/config/development/1,
+    }
+  POST /api/v1/command#heavy:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/command, body: { name: ApplicationIndexerSync, forceSync: true } }],
+      confirm: ApplicationIndexerSync,
+      target: /api/v1/command,
+    }
+  POST /api/v1/notification#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification,
+            body:
+              {
+                name: Run it,
+                implementation: CustomScript,
+                enable: true,
+                fields: [{ name: path, value: /tmp/evil.sh, privacy: normal }],
+              },
+          },
+        ],
+      confirm: Run it,
+      target: 'notification Run it (CustomScript), runs /tmp/evil.sh',
+    }
+  PUT /api/v1/notification/{id}#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/notification/9,
+            body:
+              {
+                id: 9,
+                name: Renamed,
+                implementation: CustomScript,
+                enable: true,
+                fields: [{ name: path, value: /tmp/evil.sh, privacy: normal }],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: 'notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh',
+    }
+  POST /api/v1/notification/test#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/test,
+            body:
+              {
+                name: New,
+                implementation: Webhook,
+                enable: true,
+                fields:
+                  [
+                    { name: url, value: https://h.example, privacy: normal },
+                    { name: scriptPath, value: /tmp/evil.sh, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: New,
+      target: 'notification New (Webhook) → https://h.example, runs /tmp/evil.sh',
+    }
+  POST /api/v1/notification/testall#script:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/notification/testall }],
+      confirm: Home Prowlarr,
+      target: /api/v1/notification/testall,
+    }
+  POST /api/v1/notification/action/{name}#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/action/getDevices,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: CustomScript,
+                enable: true,
+                fields: [{ name: path, value: /tmp/evil.sh, privacy: normal }],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: 'notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh',
+    }
+  POST /api/v1/downloadclient/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/test,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: downloadclient qBit (QBittorrent) → https://collector.example:443,
+    }
+  POST /api/v1/downloadclient/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/action/getCategories,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: downloadclient qBit (QBittorrent) → https://collector.example:443,
+    }
+  PUT /api/v1/downloadclient/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/downloadclient/6,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: downloadclient qBit (QBittorrent) → https://collector.example:443,
+    }
+  POST /api/v1/indexer/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexer/test,
+            body:
+              {
+                id: 2,
+                name: PrivateHD,
+                implementation: Cardigann,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: PrivateHD,
+      target: indexer PrivateHD (Cardigann) → https://collector.example:443,
+    }
+  POST /api/v1/indexer/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexer/action/getCategories,
+            body:
+              {
+                id: 2,
+                name: PrivateHD,
+                implementation: Cardigann,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: PrivateHD,
+      target: indexer PrivateHD (Cardigann) → https://collector.example:443,
+    }
+  PUT /api/v1/indexer/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/indexer/2,
+            body:
+              {
+                id: 2,
+                name: PrivateHD,
+                implementation: Cardigann,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: PrivateHD,
+      target: indexer PrivateHD (Cardigann) → https://collector.example:443,
+    }
+  POST /api/v1/indexerproxy/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexerproxy/test,
+            body:
+              {
+                id: 10,
+                name: Socks,
+                implementation: Socks5,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Socks,
+      target: indexerproxy Socks (Socks5) → https://collector.example:443,
+    }
+  POST /api/v1/indexerproxy/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexerproxy/action/getCategories,
+            body:
+              {
+                id: 10,
+                name: Socks,
+                implementation: Socks5,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Socks,
+      target: indexerproxy Socks (Socks5) → https://collector.example:443,
+    }
+  PUT /api/v1/indexerproxy/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/indexerproxy/10,
+            body:
+              {
+                id: 10,
+                name: Socks,
+                implementation: Socks5,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Socks,
+      target: indexerproxy Socks (Socks5) → https://collector.example:443,
+    }
+  POST /api/v1/applications/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/applications/test,
+            body:
+              {
+                id: 4,
+                name: Sonarr,
+                implementation: Sonarr,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Sonarr,
+      target: applications Sonarr (Sonarr) → https://collector.example:443,
+    }
+  POST /api/v1/applications/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/applications/action/getCategories,
+            body:
+              {
+                id: 4,
+                name: Sonarr,
+                implementation: Sonarr,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Sonarr,
+      target: applications Sonarr (Sonarr) → https://collector.example:443,
+    }
+  PUT /api/v1/applications/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/applications/4,
+            body:
+              {
+                id: 4,
+                name: Sonarr,
+                implementation: Sonarr,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Sonarr,
+      target: applications Sonarr (Sonarr) → https://collector.example:443,
+    }
+  POST /api/v1/notification/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/test,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: Discord,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: notification Discord (Discord) → https://collector.example:443,
+    }
+  POST /api/v1/notification/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/action/getCategories,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: Discord,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: notification Discord (Discord) → https://collector.example:443,
+    }
+  PUT /api/v1/notification/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/notification/9,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: Discord,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: notification Discord (Discord) → https://collector.example:443,
+    }
+  POST /api/v1/downloadclient#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient,
+            body:
+              {
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: Drop,
+      target: 'downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w',
+    }
+  PUT /api/v1/downloadclient/{id}#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/downloadclient/6,
+            body:
+              {
+                id: 6,
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: 'downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w',
+    }
+  POST /api/v1/downloadclient/test#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/test,
+            body:
+              {
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: Drop,
+      target: 'downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w',
+    }
+  POST /api/v1/downloadclient/action/{name}#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/action/getCategories,
+            body:
+              {
+                id: 6,
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: 'downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w',
+    }
+  DELETE /api/v1/indexer/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/indexer/bulk, body: { ids: [1, 2] } }],
+      confirm: 2 indexers,
+      target: indexer NZBgeek (Newznab),
+    }
+  DELETE /api/v1/applications/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/applications/bulk, body: { ids: [4] } }],
+      confirm: 1 application,
+      target: applications Sonarr (Sonarr),
+    }
+  DELETE /api/v1/downloadclient/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/downloadclient/bulk, body: { ids: [6] } }],
+      confirm: 1 download client,
+      target: downloadclient qBit (QBittorrent),
+    }
+calls:
+  search for dune:
+    { fn: request, args: [{ path: /api/v1/search, query: { query: dune, type: search } }], key: GET /api/v1/search }
+  check the health:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/command, body: { name: CheckHealth } }],
+      key: POST /api/v1/command,
+    }
+  delete the first indexer:
+    { fn: request, args: [{ method: DELETE, path: /api/v1/indexer/1 }], key: 'DELETE /api/v1/indexer/{id}' }
+  add a vpn proxy:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexerproxy,
+            body: { name: VPN, implementation: Socks5, tags: [16], fields: [{ name: host, value: vpn.lan }] },
+          },
+        ],
+      key: POST /api/v1/indexerproxy,
+    }
+  add a radarr application:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/applications,
+            body:
+              {
+                name: Radarr,
+                implementation: Radarr,
+                fields:
+                  [
+                    { name: prowlarrUrl, value: 'http://prowlarr.lan:9696' },
+                    { name: baseUrl, value: 'http://radarr.lan:7878' },
+                    { name: apiKey, value: new-app-key-141414, privacy: apiKey },
+                  ],
+              },
+          },
+        ],
+      key: POST /api/v1/applications,
+    }
+  test the stored download client:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/test,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: qbittorrent.lan, privacy: normal },
+                    { name: port, value: 8080, privacy: normal },
+                    { name: useSsl, value: false, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      key: POST /api/v1/downloadclient/test,
+    }
