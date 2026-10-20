@@ -1,3 +1,4 @@
+@id:grafana-adaptive-rules
 Feature: Grafana Adaptive rules and paths
   A human approves each change to the Adaptive rules before it runs. The approval shows what each rule drops or aggregates.
   The plugin refuses a change on rules that changed after the agent read them, and a path that leaves its template.

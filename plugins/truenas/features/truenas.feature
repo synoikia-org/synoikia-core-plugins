@@ -1,3 +1,4 @@
+@id:truenas-writes
 Feature: TrueNAS writes and new credentials
   A human approves each write to TrueNAS. The approval shows the method and its positional params.
   Some locked methods make a new API key, a token, a one-time password or a dataset key.

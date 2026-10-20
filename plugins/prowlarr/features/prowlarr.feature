@@ -1,3 +1,4 @@
+@id:prowlarr-calls
 Feature: Prowlarr calls
   An agent uses Prowlarr to search the indexers, to run commands and to change single items.
   A single-item write needs the approval of a human. The human does not type a literal for it.

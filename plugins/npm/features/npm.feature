@@ -1,3 +1,4 @@
+@id:npm-hosts
 Feature: Nginx Proxy Manager hosts, certificates and 2FA secrets
   An agent lists the proxy hosts at level read, and renews or requests a certificate when a human approves it.
   Raw nginx config in a 404 host needs its own level and the typed domain.
@@ -15,7 +16,7 @@ Feature: Nginx Proxy Manager hosts, certificates and 2FA secrets
     Scenario: The approval of a renewal names the certificate
       Given the group of "renew certificate 1" is at level ask
       When the agent runs "renew certificate 1", and the human approves it
-      Then the approval shows "Nginx Proxy Manager POST /nginx/certificates/1/renew"
+      Then the approval shows "/nginx/certificates/1/renew"
 
     Scenario: The approved renewal returns the certificate
       Given the group of "renew certificate 1" is at level ask

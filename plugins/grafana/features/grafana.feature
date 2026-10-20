@@ -1,3 +1,4 @@
+@id:grafana-approvals
 Feature: Grafana approvals and results
   A human approves each Grafana write before it runs. The approval shows each data source and each destination that the call affects.
   The plugin refuses a body that Grafana can read in a different way than the approval shows it.
@@ -16,10 +17,10 @@ Feature: Grafana approvals and results
 
   Rule: The approval of a write names the operation
 
-    Scenario: The approval of a new annotation names its operation
+    Scenario: The approval of a new annotation shows its text and tags
       Given the operation of "add an annotation" is at level ask
       When the agent runs "add an annotation", and the human approves it
-      Then the approval shows "Grafana POST /annotations"
+      Then the approval shows '/annotations {"text":"deploy","tags":["ci"]}'
 
   Rule: A new credential does not reach the agent
 
@@ -33,14 +34,14 @@ Feature: Grafana approvals and results
       When the agent runs "take a snapshot", and the human types "Main Org."
       Then the agent gets a result that contains "[REDACTED]"
 
-  Rule: The approval of a data source change shows the new URL
+  Rule: The approval of a data source change shows the new address
 
-    Scenario: The approval shows the new URL of a data source that the call names by id
+    Scenario: The approval shows the new address of a data source that the call names by id
       Given the operation of "move a data source by id" is at level ask
       When the agent runs "move a data source by id", and the human types "Prometheus"
       Then the approval shows "http://elsewhere.example.net:9090"
 
-    Scenario: The approval shows the new URL of a data source that the call names by uid
+    Scenario: The approval shows the new address of a data source that the call names by uid
       Given the operation of "move a data source by uid" is at level ask
       When the agent runs "move a data source by uid", and the human types "Prometheus"
       Then the approval shows "http://elsewhere.example.net:9090"
@@ -52,9 +53,9 @@ Feature: Grafana approvals and results
       When the agent runs "query with a Datasource key", and the human approves it
       Then core refuses the call with the code "INVALID_PARAMS"
 
-    Scenario: A data source with a URL key is refused
-      Given the operation of "add a data source with a URL key" is at level ask
-      When the agent runs "add a data source with a URL key", and the human types "Main Org."
+    Scenario: A data source with an upper-case url key is refused
+      Given the operation of "add a data source with an upper-case url key" is at level ask
+      When the agent runs "add a data source with an upper-case url key", and the human types "Main Org."
       Then core refuses the call with the code "INVALID_PARAMS"
 
     Scenario: A contact point with a long-s settings key is refused
@@ -62,12 +63,12 @@ Feature: Grafana approvals and results
       When the agent runs "add a contact point with a long-s settings key", and the human types "Main Org."
       Then core refuses the call with the code "INVALID_PARAMS"
 
-  Rule: The approval of a contact point shows only the host of its URL
+  Rule: The approval of a contact point shows only the host of its address
 
-    Scenario: The approval shows the host of a URL that the body sends as Settings.URL
-      Given the operation of "add a contact point with Settings.URL" is at level ask
-      When the agent runs "add a contact point with Settings.URL", and the human types "Main Org."
-      Then the approval shows "hooks.slack.com (contact point URL)"
+    Scenario: The approval shows the host of an address that the body sends in upper-case settings keys
+      Given the operation of "add a contact point with upper-case settings keys" is at level ask
+      When the agent runs "add a contact point with upper-case settings keys", and the human types "Main Org."
+      Then the approval shows "on hooks.slack.com"
 
   Rule: The approval of an SSO settings change names the provider
 

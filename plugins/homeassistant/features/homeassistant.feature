@@ -1,3 +1,4 @@
+@id:homeassistant-targets
 Feature: Home Assistant targets and guides
   The agent can name an area in place of entities. The plugin finds the entities in the area, and the
   approval names each of them. Before the agent writes an automation, a script or a scene, it must read

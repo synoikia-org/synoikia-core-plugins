@@ -1,3 +1,4 @@
+@id:backstage-catalog
 Feature: Backstage catalog and scaffolder calls
   An agent reads the Backstage catalog page by page and validates entities at level read.
   A human approves each refresh and each dry-run of a template.

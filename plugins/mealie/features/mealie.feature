@@ -1,3 +1,4 @@
+@id:mealie-recipes
 Feature: Mealie recipes, single deletes and new tokens
   An agent finds and reads recipes at level read, and imports a recipe when a human approves it.
   A delete of one item needs an approval but no typed literal.
@@ -15,12 +16,12 @@ Feature: Mealie recipes, single deletes and new tokens
       When the agent runs "read the pasta recipe"
       Then the agent gets a result that contains "Pasta Fagioli"
 
-  Rule: A human approves each import from a URL
+  Rule: A human approves each import from a web address
 
-    Scenario: The approval shows the URL of the import
+    Scenario: The approval shows the web address of the import
       Given the group of "import the ramen recipe" is at level ask
       When the agent runs "import the ramen recipe", and the human approves it
-      Then the approval shows "Mealie POST /api/recipes/create/url {\"url\":\"https://x.example/ramen\"}"
+      Then the approval shows '/recipes/create/url {"url":"https://x.example/ramen"}'
 
     Scenario: The approved import gives the slug of the new recipe
       Given the group of "import the ramen recipe" is at level ask

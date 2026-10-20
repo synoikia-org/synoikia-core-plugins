@@ -1,3 +1,4 @@
+@id:lidarr-calls
 Feature: Lidarr calls
   An agent uses Lidarr to find artists, to start searches and to change single items.
   A single-item write needs the approval of a human. The human does not type a literal for it.

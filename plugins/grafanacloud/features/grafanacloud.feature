@@ -1,3 +1,4 @@
+@id:grafanacloud-approvals
 Feature: Grafana Cloud approvals and results
   A human approves each Grafana Cloud write before it runs. The approval shows the privileges that a call gives, the code that it installs and the data that it removes.
   The plugin refuses a body that grafana.com can read in a different way than the approval shows it.

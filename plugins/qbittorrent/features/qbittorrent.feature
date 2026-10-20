@@ -1,7 +1,8 @@
-Feature: qBittorrent approvals and masked URLs
+@id:qbittorrent-approvals
+Feature: qBittorrent approvals and masked tracker addresses
   A human approves each write to qBittorrent. The approval names the torrents, categories, tags, feeds and rules
-  that the write changes, and the places where it puts data. Tracker URLs can hold a passkey, so the agent sees
-  only the origin of each URL.
+  that the write changes, and the places where it puts data. A tracker address can hold a passkey.
+  The agent sees only the origin of each tracker address.
 
   Rule: A regular write shows what it changes and asks for no typed literal
     Scenario: A human stops one torrent
@@ -19,8 +20,10 @@ Feature: qBittorrent approvals and masked URLs
       | torrents.delete | on torrent "Ubuntu 24.04 Desktop": remove, keep the downloaded files |
       | torrents.delete (two torrents) | 2 torrents: "Ubuntu 24.04 Desktop", "Big Buck Bunny" |
       | torrents.delete (all) | on all 3 torrents |
-      | torrents.add | into "/downloads" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet "Fedora 42"; magnet trackers, sources, peers and DHT nodes: https://private.example |
-      | torrents.add (automatic management) | into "/downloads/tv/shows" (automatic management, category "tv/shows"; savepath "/elsewhere" is ignored) |
+      | torrents.add | into "/downloads" (the default save path) on qBittorrent at 127.0.0.1: 1 source(s): magnet "Fedora 42" |
+      | torrents.add | magnet trackers, sources, peers and DHT nodes: https://private.example |
+      | torrents.add (automatic management) | into "/downloads/tv/shows" (automatic management, category "tv/shows" |
+      | torrents.add (automatic management) | savepath "/elsewhere" is ignored) |
       | torrents.setLocation | to "/archive" for torrent |
       | torrents.setSavePath | to "/media/films" for torrent |
       | torrents.editCategory | on category "linux": save path "/srv/linux" |
@@ -50,7 +53,8 @@ Feature: qBittorrent approvals and masked URLs
       Examples:
         | call | literal | shows |
       | torrents.delete#with-files (all) | all 3 torrents | on all 3 torrents: remove, deleting the downloaded files |
-      | search.start (all plugins) | 127.0.0.1 | with plugins "example"; including disabled: "legacy" |
+      | search.start (all plugins) | 127.0.0.1 | with plugins "example" |
+      | search.start (all plugins) | 127.0.0.1 | including disabled: "legacy" |
 
   Rule: Core refuses a locked delete that nobody confirms
     Scenario: No human is there to type the literal
@@ -63,8 +67,8 @@ Feature: qBittorrent approvals and masked URLs
       When the agent runs "delete a torrent that qBittorrent does not have", and the human types "127.0.0.1"
       Then core refuses the call with the code "PLUGIN_ERROR"
 
-  Rule: The agent sees only the origin of a tracker URL
-    Scenario: A private tracker URL is masked
+  Rule: The agent sees only the origin of a tracker address
+    Scenario: A private tracker address is masked
       Given the group of "list the trackers of the Debian torrent" is at level read
       When the agent runs "list the trackers of the Debian torrent"
       Then the agent gets a result that contains "https://private.example/<masked:"

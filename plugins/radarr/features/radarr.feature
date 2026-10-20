@@ -1,3 +1,4 @@
+@id:radarr-calls
 Feature: Radarr calls
   An agent uses Radarr to find movies, to start searches and to change single items.
   A single-item write needs the approval of a human. The human does not type a literal for it.

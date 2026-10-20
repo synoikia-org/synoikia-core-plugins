@@ -1,3 +1,4 @@
+@id:profilarr-calls
 Feature: Profilarr calls
   An agent uses Profilarr to read its status and its arr instances, and to make backups.
   A backup needs the approval of a human. The human does not type a literal for it.
@@ -29,4 +30,4 @@ Feature: Profilarr calls
     Scenario: The approval of a backup names the operation
       Given the operation of "create a backup" is at level ask
       When the agent runs "create a backup", and the human approves it
-      Then the approval shows "Profilarr POST /backups"
+      Then the approval shows "/backups (write)"

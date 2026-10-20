@@ -1,13 +1,14 @@
+@id:plex-approvals
 Feature: Plex approvals
   A human approves each Plex write before it runs. A change to one item needs only an approval. A refresh of a library or an item needs the typed name of the item.
   The plugin refuses to write a masked value back to Plex.
 
   Rule: A human approves a write to one item without a typed literal
 
-    Scenario: The approval of a watched mark names the operation
+    Scenario: The approval of a watched mark names the operation and the item
       Given the operation of "mark Inception watched" is at level ask
       When the agent runs "mark Inception watched", and the human approves it
-      Then the approval shows "Plex PUT /:/scrobble"
+      Then the approval shows "/:/scrobble?key=101"
 
     Scenario: The delete of one item runs after a plain approval
       Given the operation of "delete Inception" is at level ask

@@ -1,3 +1,4 @@
+@id:jenkins-builds
 Feature: Jenkins builds, logs and job paths
   An agent reads the builds and the console logs of Jenkins jobs at level read.
   A human types the job name to start a build with parameters.
@@ -17,11 +18,17 @@ Feature: Jenkins builds, logs and job paths
 
   Rule: A build with parameters needs the typed job name
 
-    Scenario: The approval shows the job and the parameters
+    Scenario: The approval names the job
       Given the group of "trigger deploy on the release branch" is at level ask
       And the operation of "trigger deploy on the release branch" is at level ask
       When the agent runs "trigger deploy on the release branch", and the human types "infra/deploy app"
-      Then the approval shows "on infra/deploy app: POST /job/infra/job/deploy%20app/buildWithParameters with BRANCH=\"release\""
+      Then the approval shows "on infra/deploy app:"
+
+    Scenario: The approval shows the job path and the parameters
+      Given the group of "trigger deploy on the release branch" is at level ask
+      And the operation of "trigger deploy on the release branch" is at level ask
+      When the agent runs "trigger deploy on the release branch", and the human types "infra/deploy app"
+      Then the approval shows "/job/infra/job/deploy%20app/buildWithParameters with BRANCH=\"release\""
 
     Scenario: A password parameter is refused
       Given the group of "trigger deploy with a password parameter" is at level ask
@@ -45,9 +52,9 @@ Feature: Jenkins builds, logs and job paths
       When the agent runs "read a job with a dot folder name"
       Then core refuses the call with the code "INVALID_PARAMS"
 
-    Scenario: A tree that names the git remote URLs is refused
-      Given the group of "read build 41 with the git remote URLs" is at level read
-      When the agent runs "read build 41 with the git remote URLs"
+    Scenario: A tree that names the git remote addresses is refused
+      Given the group of "read build 41 with the git remote addresses" is at level read
+      When the agent runs "read build 41 with the git remote addresses"
       Then core refuses the call with the code "INVALID_PARAMS"
 
     Scenario: A depth above 2 is refused
