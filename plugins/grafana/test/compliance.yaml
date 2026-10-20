@@ -32,7 +32,8 @@ secrets:
       key: GET /v1/provisioning/contact-points,
       values: ['${fake.slackUrl}'],
     }
-  # The new token and the snapshot delete key come back from lock cases; the sent values are in lock case bodies.
+  # The new token and the snapshot delete key come back from lock cases; the sent values are in lock case bodies
+  # and named calls.
   - {
       fn: request,
       args: [{ path: /org/invites }],
@@ -53,6 +54,7 @@ secrets:
           reset-password-131313,
           old-password-141414,
           new-password-151515,
+          services/EXAMPLE,
         ],
     }
 connectionTest: { wrong: { token: wrong } }

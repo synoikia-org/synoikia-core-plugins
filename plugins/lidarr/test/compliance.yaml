@@ -10,6 +10,15 @@ reads:
   - { fn: request, args: [{ path: /api/v1/calendar }], key: GET /api/v1/calendar }
 writes:
   - { fn: request, args: [{ method: POST, path: /api/v1/tag, body: { label: new } }], key: POST /api/v1/tag }
+  - fn: request
+    args:
+      - method: POST
+        path: /api/v1/notification
+        body:
+          name: Hook
+          implementation: Webhook
+          fields: [{ name: url, value: 'https://hooks.example.com/t/new-hook-token-121212' }]
+    key: POST /api/v1/notification
 rejects:
   - { fn: request, args: [{ path: /api/v1/filesystem }] }
 secrets:
@@ -41,7 +50,7 @@ secrets:
       fn: request,
       args: [{ path: /api/v1/notification }],
       key: GET /api/v1/notification,
-      values: ['${fake.webhookToken}', '${fake.headerToken}'],
+      values: ['${fake.webhookToken}', '${fake.headerToken}', new-hook-token-121212],
     }
   - {
       fn: request,

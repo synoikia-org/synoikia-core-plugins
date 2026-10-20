@@ -22,6 +22,17 @@ secrets:
   - { fn: call, args: [ssh.config], key: ssh.config, values: ['${fake.sshHostKey}'] }
   - { fn: call, args: [kerberos.keytab.query], key: kerberos.keytab.query, values: ['${fake.keytab}'] }
   - { fn: call, args: [user.query], key: user.query, values: ['${fake.unixHash}', '${fake.smbHash}'] }
+  # Job records embed other methods' results: the seeded key export must stay masked in every shape.
+  - { fn: call, args: [core.get_jobs], key: core.get_jobs, values: ['${fake.datasetKey}'] }
+  - { fn: call, args: [core.get_jobs, [], { get: true }], key: core.get_jobs, values: ['${fake.datasetKey}'] }
+  - fn: call
+    args: [core.get_jobs, [], { select: [[result, r]] }]
+    key: core.get_jobs
+    values: ['${fake.datasetKey}']
+  - fn: call
+    args: [core.get_jobs, [[method, '=', pool.dataset.export_key]]]
+    key: core.get_jobs
+    values: ['${fake.datasetKey}']
   # The other values are secrets that the lock cases and sample writes carry or get back.
   - fn: call
     args: [cloudsync.credentials.query]
@@ -133,3 +144,5 @@ calls:
   generate a one-time password:
     { fn: call, args: [auth.generate_onetime_password], key: auth.generate_onetime_password }
   export the key of tank/media: { fn: call, args: [pool.dataset.export_key, tank/media], key: pool.dataset.export_key }
+  list the dataset key exports:
+    { fn: call, args: [core.get_jobs, [[method, '=', pool.dataset.export_key]]], key: core.get_jobs }

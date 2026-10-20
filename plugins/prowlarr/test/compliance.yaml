@@ -6,6 +6,18 @@ reads:
   - { fn: request, args: [{ path: /api/v1/indexerstats }], key: GET /api/v1/indexerstats }
 writes:
   - { fn: request, args: [{ method: POST, path: /api/v1/tag, body: { label: new } }], key: POST /api/v1/tag }
+  - fn: request
+    args:
+      - method: POST
+        path: /api/v1/applications
+        body:
+          name: Radarr
+          implementation: Radarr
+          fields:
+            - { name: prowlarrUrl, value: 'http://prowlarr.lan:9696' }
+            - { name: baseUrl, value: 'http://radarr.lan:7878' }
+            - { name: apiKey, value: new-app-key-141414, privacy: apiKey }
+    key: POST /api/v1/applications
 rejects:
   - { fn: request, args: [{ path: /api/v1/filesystem }] }
 secrets:
@@ -45,7 +57,7 @@ secrets:
       fn: request,
       args: [{ path: /api/v1/applications }],
       key: GET /api/v1/applications,
-      values: ['${fake.appApiKey}'],
+      values: ['${fake.appApiKey}', new-app-key-141414],
     }
   - {
       fn: request,

@@ -180,7 +180,7 @@ export interface FakeTrueNas {
   version: string;
   /** Close every open connection (the client must reconnect). */
   drop(): void;
-  /** Restores the seeded datasets and forgets the jobs. */
+  /** Restores the seeded datasets and jobs. */
   reset(): void;
   close(): Promise<void>;
 }
@@ -195,9 +195,21 @@ export async function startFakeTrueNas(opts: { jobDelayMs?: number } = {}): Prom
   seed();
   const jobs = new Map<
     number,
-    { id: number; method: string; state: string; result?: unknown; error?: string | null }
+    { id: number; method: string; arguments?: unknown[]; state: string; result?: unknown; error?: string | null }
   >();
   let nextJob = 1;
+  // A finished key export, so every core.get_jobs read has a dataset key to mask.
+  const seedJobs = () => {
+    jobs.clear();
+    jobs.set(900, {
+      id: 900,
+      method: 'pool.dataset.export_key',
+      arguments: ['tank/media'],
+      state: 'SUCCESS',
+      result: SECRETS.datasetKey,
+    });
+  };
+  seedJobs();
   const calls: { method: string; params: unknown[] }[] = [];
   const denied = new Set<string>();
   const state = { version: 'TrueNAS-25.04.2' };
@@ -358,7 +370,7 @@ export async function startFakeTrueNas(opts: { jobDelayMs?: number } = {}): Prom
     },
     reset: () => {
       seed();
-      jobs.clear();
+      seedJobs();
     },
     close: () =>
       new Promise<void>((resolve) => {
