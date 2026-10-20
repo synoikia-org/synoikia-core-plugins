@@ -50,18 +50,35 @@ Feature: Grafana approvals and results
 
     Scenario: A query with a Datasource key is refused
       Given the operation of "query with a Datasource key" is at level ask
-      When the agent runs "query with a Datasource key", and the human approves it
+      When the agent runs "query with a Datasource key"
       Then core refuses the call with the code "INVALID_PARAMS"
 
     Scenario: A data source with an upper-case url key is refused
       Given the operation of "add a data source with an upper-case url key" is at level ask
-      When the agent runs "add a data source with an upper-case url key", and the human types "Main Org."
+      When the agent runs "add a data source with an upper-case url key"
       Then core refuses the call with the code "INVALID_PARAMS"
 
     Scenario: A contact point with a long-s settings key is refused
       Given the operation of "add a contact point with a long-s settings key" is at level ask
-      When the agent runs "add a contact point with a long-s settings key", and the human types "Main Org."
+      When the agent runs "add a contact point with a long-s settings key"
       Then core refuses the call with the code "INVALID_PARAMS"
+
+  Rule: The plugin refuses a body key that Grafana reads as a different field before a human sees it
+
+    Scenario: A query with a Datasource key asks for no approval
+      Given the operation of "query with a Datasource key" is at level ask
+      When the agent runs "query with a Datasource key", and the human approves it
+      Then no approval was asked
+
+    Scenario: A data source with an upper-case url key asks for no approval
+      Given the operation of "add a data source with an upper-case url key" is at level ask
+      When the agent runs "add a data source with an upper-case url key", and the human types "Main Org."
+      Then no approval was asked
+
+    Scenario: A contact point with a long-s settings key asks for no approval
+      Given the operation of "add a contact point with a long-s settings key" is at level ask
+      When the agent runs "add a contact point with a long-s settings key", and the human types "Main Org."
+      Then no approval was asked
 
   Rule: The approval of a contact point shows only the host of its address
 

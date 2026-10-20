@@ -22,3 +22,14 @@ Feature: TrueNAS writes and new credentials
         | generate a session token     | nas01      |
         | generate a one-time password | nas01      |
         | export the key of tank/media | tank/media |
+
+  Rule: The job list shows a key export but hides the key
+    Scenario: The job list names the key export
+      Given the operation of "list the dataset key exports" is at level read
+      When the agent runs "list the dataset key exports"
+      Then the agent gets a result that contains "pool.dataset.export_key"
+
+    Scenario: The job list hides the exported key
+      Given the operation of "list the dataset key exports" is at level read
+      When the agent runs "list the dataset key exports"
+      Then the agent gets a result that contains "[REDACTED]"
