@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@synoikia/core": "^0.17.1",
-    "@synoikia/create-plugin": "^0.6.0",
+    "@synoikia/core": "^0.17.2",
+    "@synoikia/create-plugin": "^0.6.1",
     "@types/node": "^22.19.0",
     "eslint": "^10.11.0",
     "prettier": "^3.6.2",
@@ -39,8 +39,21 @@
         "plugins/*/src/**",
         "plugins/*/test/compliance.yaml",
         "**/package.json",
-        ".github/workflows/**"
+        ".github/workflows/**",
+        "plugins/*/test/fake*.ts",
+        "plugins/*/features/**",
+        "plugins/*/vitest.config.ts",
+        "plugins/*/instructions.md",
+        "plugins/*/guides/**",
+        "minisign.pub",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml"
       ]
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "source-map-js": ">=1.2.2"
     }
   }
 }

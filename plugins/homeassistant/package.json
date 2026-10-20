@@ -15,8 +15,8 @@
     "ws": "^8.22.0"
   },
   "devDependencies": {
-    "@synoikia/core": "^0.17.1",
-    "@synoikia/create-plugin": "^0.6.0",
+    "@synoikia/core": "^0.17.2",
+    "@synoikia/create-plugin": "^0.6.1",
     "@types/ws": "^8.18.1",
     "quickpickle": "1.11.2",
     "yaml": "^2.9.1"
