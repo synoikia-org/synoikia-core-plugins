@@ -1,0 +1,304 @@
+# What core's compliance suite needs to certify qBittorrent against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', username: '${fake.username}', password: '${fake.password}' }
+reads:
+  - { fn: call, args: [torrents.tags], key: torrents.tags }
+  - { fn: call, args: [torrents.info, { filter: downloading }], key: torrents.info }
+  - { fn: call, args: [torrents.trackers, { hash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb }], key: torrents.trackers }
+writes:
+  - { fn: call, args: [torrents.createTags, { tags: contract }], key: torrents.createTags }
+rejects:
+  - { fn: call, args: [auth.login] }
+  - { fn: call, args: [app.setCookies] }
+  - { fn: call, args: [app.cookies] }
+  - { fn: call, args: [torrents.export] }
+  - { fn: call, args: [app.getDirectoryContent] }
+  - { fn: call, args: [app.rotateAPIKey] }
+secrets:
+  - fn: call
+    args: [app.preferences]
+    key: app.preferences
+    values:
+      - '${fake.apiKey}'
+      - '${fake.proxyPassword}'
+      - '${fake.mailPassword}'
+      - '${fake.dyndnsPassword}'
+      - '${fake.autorunKey}'
+      - '${fake.listKey}'
+      - '${fake.extraPasskey}'
+  - { fn: call, args: [torrents.info], key: torrents.info, values: ['${fake.passkey}', '${fake.privatePasskey}'] }
+  - { fn: call, args: [sync.maindata], key: sync.maindata, values: ['${fake.passkey}', '${fake.privatePasskey}'] }
+  - fn: call
+    args: [torrents.trackers, { hash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb }]
+    key: torrents.trackers
+    values: ['${fake.privatePasskey}']
+  - fn: call
+    args: [torrents.webseeds, { hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa }]
+    key: torrents.webseeds
+    values: ['${fake.webSeedKey}']
+  - { fn: call, args: [rss.items, { withData: true }], key: rss.items, values: ['${fake.feedKey}'] }
+  - { fn: call, args: [rss.rules], key: rss.rules, values: ['${fake.feedKey}', '${fake.sslKey}'] }
+  - { fn: call, args: [search.results, { id: 7 }], key: search.results, values: ['${fake.searchKey}'] }
+  # The other values are secrets that the calls of this profile carry: they stay out of approvals and the audit log.
+  - fn: call
+    args: [log.main]
+    key: log.main
+    values:
+      - '${fake.privatePasskey}'
+      - EXAMPLEPASSKEY0004
+      - EXAMPLE-new-proxy-password
+      - EXAMPLE-new-feed-key
+      - EXAMPLE-new-tracker-key
+connectionTest: { wrong: { password: wrong } }
+locks:
+  torrents.delete#with-files:
+    {
+      fn: call,
+      args: [torrents.delete, { hashes: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, deleteFiles: true }],
+      confirm: Debian 12 Netinst,
+      target: 'on torrent "Debian 12 Netinst": remove, deleting the downloaded files',
+    }
+  app.setPreferences:
+    {
+      fn: call,
+      args:
+        [
+          app.setPreferences,
+          {
+            json:
+              { web_ui_port: 8081, autorun_program: /scripts/run.sh "%N", proxy_password: EXAMPLE-new-proxy-password },
+          },
+        ],
+      confirm: 127.0.0.1,
+      target: 'web_ui_port=8081 (changes WebUI access), autorun_program="/scripts/run.sh \"%N\"" (runs a program), proxy_password=[REDACTED]',
+    }
+  app.shutdown: { fn: call, args: [app.shutdown], confirm: 127.0.0.1, target: shut qBittorrent down }
+  search.start:
+    {
+      fn: call,
+      args: [search.start, { pattern: ubuntu, plugins: enabled, category: all }],
+      confirm: 127.0.0.1,
+      target: search "ubuntu" in category "all" with plugins "example" (runs,
+    }
+  search.installPlugin:
+    {
+      fn: call,
+      args: [search.installPlugin, { sources: https://plugins.example/nova/example.py }],
+      confirm: 127.0.0.1,
+      target: install search plugins from https://plugins.example,
+    }
+  search.uninstallPlugin:
+    {
+      fn: call,
+      args: [search.uninstallPlugin, { names: example }],
+      confirm: example,
+      target: 'on plugin "example": uninstall',
+    }
+  search.enablePlugin:
+    {
+      fn: call,
+      args: [search.enablePlugin, { names: example, enable: false }],
+      confirm: example,
+      target: 'on plugin "example": disable',
+    }
+  search.updatePlugins:
+    { fn: call, args: [search.updatePlugins], confirm: 127.0.0.1, target: update every search plugin }
+calls:
+  torrents.delete:
+    {
+      fn: call,
+      args: [torrents.delete, { hashes: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, deleteFiles: false }],
+      key: torrents.delete,
+    }
+  torrents.delete (two torrents):
+    {
+      fn: call,
+      args:
+        [
+          torrents.delete,
+          {
+            hashes: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|cccccccccccccccccccccccccccccccccccccccc,
+            deleteFiles: false,
+          },
+        ],
+      key: torrents.delete,
+    }
+  torrents.delete (all):
+    { fn: call, args: [torrents.delete, { hashes: all, deleteFiles: false }], key: torrents.delete }
+  torrents.add:
+    {
+      fn: call,
+      args:
+        [
+          torrents.add,
+          {
+            urls: magnet:?xt=urn:btih:dddddddddddddddddddddddddddddddddddddddd&dn=Fedora%2042&tr=https%3A%2F%2Fprivate.example%2FEXAMPLEPASSKEY0004%2Fannounce,
+            category: linux,
+            tags: iso,
+          },
+        ],
+      key: torrents.add,
+    }
+  torrents.add (automatic management):
+    {
+      fn: call,
+      args:
+        [
+          torrents.add,
+          {
+            urls: magnet:?xt=urn:btih:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&dn=Show,
+            category: tv/shows,
+            savepath: /elsewhere,
+            autoTMM: true,
+          },
+        ],
+      key: torrents.add,
+    }
+  torrents.setLocation:
+    {
+      fn: call,
+      args: [torrents.setLocation, { hashes: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, location: /archive }],
+      key: torrents.setLocation,
+    }
+  torrents.setSavePath:
+    {
+      fn: call,
+      args: [torrents.setSavePath, { id: cccccccccccccccccccccccccccccccccccccccc, path: /media/films }],
+      key: torrents.setSavePath,
+    }
+  torrents.editCategory:
+    { fn: call, args: [torrents.editCategory, { category: linux, savePath: /srv/linux }], key: torrents.editCategory }
+  torrents.createCategory (paths):
+    {
+      fn: call,
+      args: [torrents.createCategory, { category: archive, savePath: /srv/archive }],
+      key: torrents.createCategory,
+    }
+  torrents.removeCategories:
+    { fn: call, args: [torrents.removeCategories, { categories: movies }], key: torrents.removeCategories }
+  torrents.deleteTags: { fn: call, args: [torrents.deleteTags, { tags: iso }], key: torrents.deleteTags }
+  torrents.addTrackers:
+    {
+      fn: call,
+      args:
+        [
+          torrents.addTrackers,
+          {
+            hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
+            urls: https://new.example/announce?passkey=EXAMPLEPASSKEY0004,
+          },
+        ],
+      key: torrents.addTrackers,
+    }
+  torrents.editTracker:
+    {
+      fn: call,
+      args:
+        [
+          torrents.editTracker,
+          {
+            hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
+            url: udp://open.example:1337/announce,
+            newUrl: https://other.example/announce?key=EXAMPLE-new-tracker-key,
+          },
+        ],
+      key: torrents.editTracker,
+    }
+  torrents.removeTrackers:
+    {
+      fn: call,
+      args:
+        [
+          torrents.removeTrackers,
+          { hash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, urls: https://private.example/EXAMPLEPASSKEY0002/announce },
+        ],
+      key: torrents.removeTrackers,
+    }
+  torrents.setShareLimits (remove with content):
+    {
+      fn: call,
+      args:
+        [
+          torrents.setShareLimits,
+          {
+            hashes: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
+            ratioLimit: 2,
+            seedingTimeLimit: -2,
+            inactiveSeedingTimeLimit: -2,
+            shareLimitAction: RemoveWithContent,
+          },
+        ],
+      key: torrents.setShareLimits,
+    }
+  torrents.stop (all): { fn: call, args: [torrents.stop, { hashes: all }], key: torrents.stop }
+  torrents.setCategory (all):
+    { fn: call, args: [torrents.setCategory, { hashes: all, category: movies }], key: torrents.setCategory }
+  torrents.setDownloadLimit (all):
+    { fn: call, args: [torrents.setDownloadLimit, { hashes: all, limit: 1000 }], key: torrents.setDownloadLimit }
+  rss.addFeed:
+    {
+      fn: call,
+      args: [rss.addFeed, { url: https://new-feed.example/rss?key=EXAMPLE-new-feed-key, path: New feed }],
+      key: rss.addFeed,
+    }
+  rss.setFeedURL:
+    { fn: call, args: [rss.setFeedURL, { path: Public, url: https://mirror.example/feed.xml }], key: rss.setFeedURL }
+  rss.removeItem: { fn: call, args: [rss.removeItem, { path: Linux ISOs }], key: rss.removeItem }
+  rss.setRule:
+    {
+      fn: call,
+      args:
+        [
+          rss.setRule,
+          {
+            ruleName: Ubuntu,
+            ruleDef:
+              {
+                enabled: true,
+                mustContain: noble,
+                affectedFeeds: [https://public.example/feed.xml],
+                torrentParams: { save_path: /downloads/linux, category: linux },
+              },
+          },
+        ],
+      key: rss.setRule,
+    }
+  rss.setRule (new rule):
+    {
+      fn: call,
+      args:
+        [
+          rss.setRule,
+          {
+            ruleName: Debian,
+            ruleDef:
+              {
+                enabled: true,
+                mustContain: debian,
+                affectedFeeds: [https://feeds.example/rss?apikey=EXAMPLE-feed-key],
+              },
+          },
+        ],
+      key: rss.setRule,
+    }
+  rss.removeRule: { fn: call, args: [rss.removeRule, { ruleName: Ubuntu }], key: rss.removeRule }
+  torrents.delete#with-files (all):
+    { fn: call, args: [torrents.delete, { hashes: all, deleteFiles: true }], key: torrents.delete#with-files }
+  search.start (all plugins):
+    { fn: call, args: [search.start, { pattern: debian, plugins: all, category: all }], key: search.start }
+  stop the Debian torrent:
+    { fn: call, args: [torrents.stop, { hashes: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb }], key: torrents.stop }
+  list the trackers of the Debian torrent:
+    { fn: call, args: [torrents.trackers, { hash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb }], key: torrents.trackers }
+  delete the Ubuntu torrent and its files:
+    {
+      fn: call,
+      args: [torrents.delete, { hashes: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, deleteFiles: true }],
+      key: torrents.delete#with-files,
+    }
+  delete a torrent that qBittorrent does not have:
+    {
+      fn: call,
+      args: [torrents.delete, { hashes: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee, deleteFiles: true }],
+      key: torrents.delete#with-files,
+    }

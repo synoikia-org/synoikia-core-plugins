@@ -1,0 +1,135 @@
+# What core's compliance suite needs to certify TrueNAS against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', apiKey: '${fake.apiKey}' }
+reads:
+  - { fn: call, args: [pool.query, []], key: pool.query }
+  - { fn: call, args: [pool.dataset.query], key: pool.dataset.query }
+writes:
+  - { fn: call, args: [pool.dataset.create, { name: tank/x }], key: pool.dataset.create }
+  - fn: call
+    args: [cloudsync.credentials.create, { name: b2, provider: { type: B2, account: a, key: b2-new-key-secret } }]
+    key: cloudsync.credentials.create
+rejects:
+  - { fn: call, args: [no.such.method] }
+  - { fn: call, args: [auth.login_with_api_key, x] }
+  - { fn: call, args: [core.bulk, pool.dataset.delete, [[tank/media]]] }
+  - { fn: call, args: [core.download, config.save, [], config.db] }
+  - { fn: call, args: [core.debug] }
+secrets:
+  - { fn: call, args: [sharing.smb.query], key: sharing.smb.query, values: ['${fake.smbPassword}'] }
+  - { fn: call, args: [ups.config], key: ups.config, values: ['${fake.upsPassword}'] }
+  - { fn: call, args: [snmp.config], key: snmp.config, values: ['${fake.snmpCommunity}'] }
+  - { fn: call, args: [ssh.config], key: ssh.config, values: ['${fake.sshHostKey}'] }
+  - { fn: call, args: [kerberos.keytab.query], key: kerberos.keytab.query, values: ['${fake.keytab}'] }
+  - { fn: call, args: [user.query], key: user.query, values: ['${fake.unixHash}', '${fake.smbHash}'] }
+  # The other values are secrets that the lock cases and sample writes carry or get back.
+  - fn: call
+    args: [cloudsync.credentials.query]
+    key: cloudsync.credentials.query
+    values:
+      - '${fake.cloudKey}'
+      - b2-new-key-secret
+      - hunter2-local-secret
+      - new-dataset-key-secret
+      - bob-new-password-secret
+      - '${fake.newApiKey}'
+      - '${fake.token}'
+      - '${fake.oneTimePassword}'
+      - '${fake.datasetKey}'
+connectionTest: { wrong: { apiKey: wrong } }
+locks:
+  api_key.create:
+    {
+      fn: call,
+      args: [api_key.create, { name: ci, username: root }],
+      confirm: root,
+      target: 'api_key.create({"name":"ci","username":"root"})',
+    }
+  api_key.delete: { fn: call, args: [api_key.delete, 1], confirm: backup-bot, target: api_key.delete(1) }
+  api_key.get_instance: { fn: call, args: [api_key.get_instance, 1], confirm: nas01, target: api_key.get_instance(1) }
+  api_key.query: { fn: call, args: [api_key.query], confirm: nas01, target: api_key.query() }
+  app.delete: { fn: call, args: [app.delete, plex], confirm: plex, target: app.delete("plex") }
+  auth.generate_onetime_password:
+    { fn: call, args: [auth.generate_onetime_password], confirm: nas01, target: auth.generate_onetime_password() }
+  auth.generate_token: { fn: call, args: [auth.generate_token], confirm: nas01, target: auth.generate_token() }
+  config.reset: { fn: call, args: [config.reset], confirm: nas01, target: config.reset() }
+  disk.wipe: { fn: call, args: [disk.wipe, sda, QUICK], confirm: sda, target: 'disk.wipe("sda","QUICK")' }
+  filesystem.chown#pool-root:
+    {
+      fn: call,
+      args: [filesystem.chown, { path: /mnt/tank, uid: 1000 }],
+      confirm: /mnt/tank,
+      target: at the root of a pool,
+    }
+  filesystem.setacl#pool-root:
+    {
+      fn: call,
+      args: [filesystem.setacl, { path: /mnt/tank, dacl: [] }],
+      confirm: /mnt/tank,
+      target: at the root of a pool,
+    }
+  pool.dataset.change_key:
+    {
+      fn: call,
+      args: [pool.dataset.change_key, tank/media, { key: new-dataset-key-secret }],
+      confirm: tank/media,
+      target: pool.dataset.change_key("tank/media",
+    }
+  pool.dataset.delete:
+    {
+      fn: call,
+      args: [pool.dataset.delete, tank/media, { recursive: true }],
+      confirm: tank/media,
+      target: 'pool.dataset.delete("tank/media",{"recursive":true})',
+    }
+  pool.dataset.export_key:
+    {
+      fn: call,
+      args: [pool.dataset.export_key, tank/media],
+      confirm: tank/media,
+      target: pool.dataset.export_key("tank/media"),
+    }
+  pool.export: { fn: call, args: [pool.export, 1], confirm: tank, target: pool.export(1) }
+  system.reboot: { fn: call, args: [system.reboot], confirm: nas01, target: system.reboot() }
+  system.shutdown: { fn: call, args: [system.shutdown], confirm: nas01, target: system.shutdown() }
+  user.delete: { fn: call, args: [user.delete, 70], confirm: alice, target: user.delete(70) }
+  user.set_password:
+    {
+      fn: call,
+      args: [user.set_password, { username: bob, new_password: bob-new-password-secret }],
+      confirm: bob,
+      target: user.set_password(,
+    }
+  user.setup_local_administrator:
+    {
+      fn: call,
+      args: [user.setup_local_administrator, truenas_admin, hunter2-local-secret],
+      confirm: truenas_admin,
+      target: user.setup_local_administrator("truenas_admin",
+    }
+  audit.config: { fn: call, args: [audit.config], confirm: nas01, target: audit.config() }
+  docker.delete_backup:
+    { fn: call, args: [docker.delete_backup, backup-1], confirm: backup-1, target: docker.delete_backup("backup-1") }
+  interface.network_config_to_be_removed:
+    {
+      fn: call,
+      args: [interface.network_config_to_be_removed],
+      confirm: nas01,
+      target: interface.network_config_to_be_removed(),
+    }
+  user.has_local_administrator_set_up:
+    {
+      fn: call,
+      args: [user.has_local_administrator_set_up],
+      confirm: nas01,
+      target: user.has_local_administrator_set_up(),
+    }
+  user.renew_2fa_secret:
+    { fn: call, args: [user.renew_2fa_secret, alice], confirm: alice, target: user.renew_2fa_secret("alice") }
+calls:
+  create the dataset tank/apps: { fn: call, args: [pool.dataset.create, { name: tank/apps }], key: pool.dataset.create }
+  create an API key for root: { fn: call, args: [api_key.create, { name: ci, username: root }], key: api_key.create }
+  generate a session token: { fn: call, args: [auth.generate_token], key: auth.generate_token }
+  generate a one-time password:
+    { fn: call, args: [auth.generate_onetime_password], key: auth.generate_onetime_password }
+  export the key of tank/media: { fn: call, args: [pool.dataset.export_key, tank/media], key: pool.dataset.export_key }

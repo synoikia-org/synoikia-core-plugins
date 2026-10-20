@@ -1,0 +1,407 @@
+# What core's compliance suite needs to certify Mealie against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', token: '${fake.token}' }
+reads:
+  - { fn: request, args: [{ path: /api/recipes, query: { search: pasta, perPage: 10 } }], key: GET /api/recipes }
+  - { fn: request, args: [{ path: /api/recipes/pasta }], key: 'GET /api/recipes/{slug}' }
+writes:
+  - {
+      fn: request,
+      args: [{ method: POST, path: /api/households/shopping/items, body: { shoppingListId: l-1, note: milk } }],
+      key: POST /api/households/shopping/items,
+    }
+  - {
+      fn: request,
+      args: [{ method: POST, path: /api/recipes/create/url, body: { url: https://x.example/ramen } }],
+      key: POST /api/recipes/create/url,
+    }
+rejects:
+  - { fn: request, args: [{ path: /recipes }] }
+secrets:
+  - { fn: request, args: [{ path: /api/admin/about }], key: GET /api/admin/about, values: ['${fake.dbUrl}'] }
+  - {
+      fn: request,
+      args: [{ path: /api/households/webhooks }],
+      key: GET /api/households/webhooks,
+      values: ['${fake.hookSecret}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/households/invitations }],
+      key: GET /api/households/invitations,
+      values:
+        [
+          '${fake.inviteToken}',
+          '${fake.apiToken}',
+          '${fake.resetToken}',
+          '${fake.newUserPassword}',
+          '${fake.aiKey}',
+          '${fake.oldPassword}',
+          '${fake.newPassword}',
+          '${fake.resetCode}',
+          '${fake.resetPassword}',
+        ],
+    }
+connectionTest: { wrong: { token: wrong } }
+locks:
+  POST /api/admin/users:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/admin/users,
+            body: { username: sam, email: sam@example.com, password: '${fake.newUserPassword}' },
+          },
+        ],
+      confirm: sam,
+      target: /api/admin/users,
+    }
+  PUT /api/admin/users/{item_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/admin/users/u-2, body: { admin: true } }],
+      confirm: alex,
+      target: /api/admin/users/u-2,
+    }
+  DELETE /api/admin/users/{item_id}:
+    { fn: request, args: [{ method: DELETE, path: /api/admin/users/u-2 }], confirm: alex, target: /api/admin/users/u-2 }
+  POST /api/admin/users/unlock:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/users/unlock }],
+      confirm: Home,
+      target: /api/admin/users/unlock,
+    }
+  POST /api/admin/users/password-reset-token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/users/password-reset-token, body: { email: alex@example.com } }],
+      confirm: alex@example.com,
+      target: /api/admin/users/password-reset-token,
+    }
+  POST /api/admin/groups:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/groups, body: { name: Cabin } }],
+      confirm: Cabin,
+      target: /api/admin/groups,
+    }
+  PUT /api/admin/groups/{item_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/admin/groups/g-1, body: { name: Home 2 } }],
+      confirm: Home,
+      target: /api/admin/groups/g-1,
+    }
+  DELETE /api/admin/groups/{item_id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/admin/groups/g-1 }],
+      confirm: Home,
+      target: /api/admin/groups/g-1,
+    }
+  POST /api/admin/households:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/households, body: { groupId: g-1, name: Guests } }],
+      confirm: Guests,
+      target: /api/admin/households,
+    }
+  PUT /api/admin/households/{item_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/admin/households/h-1, body: { name: Fam } }],
+      confirm: Family,
+      target: /api/admin/households/h-1,
+    }
+  DELETE /api/admin/households/{item_id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/admin/households/h-1 }],
+      confirm: Family,
+      target: /api/admin/households/h-1,
+    }
+  POST /api/admin/groups/{group_id}/ai-providers/providers:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/admin/groups/g-1/ai-providers/providers,
+            body: { name: OpenAI, apiKey: '${fake.aiKey}' },
+          },
+        ],
+      confirm: Home,
+      target: /api/admin/groups/g-1/ai-providers/providers,
+    }
+  PUT /api/admin/groups/{group_id}/ai-providers/providers/{provider_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/admin/groups/g-1/ai-providers/providers/p-1, body: { name: OpenAI } }],
+      confirm: Home,
+      target: /api/admin/groups/g-1/ai-providers/providers/p-1,
+    }
+  DELETE /api/admin/groups/{group_id}/ai-providers/providers/{provider_id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/admin/groups/g-1/ai-providers/providers/p-1 }],
+      confirm: Home,
+      target: /api/admin/groups/g-1/ai-providers/providers/p-1,
+    }
+  POST /api/admin/backups/{file_name}/restore:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/backups/mealie_2026.10.14.zip/restore }],
+      confirm: mealie_2026.10.14.zip,
+      target: /api/admin/backups/mealie_2026.10.14.zip/restore,
+    }
+  DELETE /api/admin/backups/{file_name}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/admin/backups/mealie_2026.10.14.zip }],
+      confirm: mealie_2026.10.14.zip,
+      target: /api/admin/backups/mealie_2026.10.14.zip,
+    }
+  POST /api/admin/maintenance/clean/images:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/maintenance/clean/images }],
+      confirm: Home,
+      target: /api/admin/maintenance/clean/images,
+    }
+  POST /api/admin/maintenance/clean/temp:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/maintenance/clean/temp }],
+      confirm: Home,
+      target: /api/admin/maintenance/clean/temp,
+    }
+  POST /api/admin/maintenance/clean/recipe-folders:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/maintenance/clean/recipe-folders }],
+      confirm: Home,
+      target: /api/admin/maintenance/clean/recipe-folders,
+    }
+  POST /api/admin/email:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/email, body: { email: someone@example.com } }],
+      confirm: someone@example.com,
+      target: /api/admin/email,
+    }
+  POST /api/recipes/bulk-actions/delete:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/recipes/bulk-actions/delete, body: { recipes: [pasta] } }],
+      confirm: Home,
+      target: /api/recipes/bulk-actions/delete,
+    }
+  DELETE /api/recipes/bulk-actions/export/purge:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/recipes/bulk-actions/export/purge }],
+      confirm: Home,
+      target: /api/recipes/bulk-actions/export/purge,
+    }
+  POST /api/users/api-tokens:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/users/api-tokens, body: { name: scripts } }],
+      confirm: scripts,
+      target: /api/users/api-tokens,
+    }
+  DELETE /api/users/api-tokens/{token_id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/users/api-tokens/7 }],
+      confirm: admin,
+      target: DELETE /api/users/api-tokens/,
+    }
+  PUT /api/users/password:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/users/password,
+            body: { currentPassword: '${fake.oldPassword}', newPassword: '${fake.newPassword}' },
+          },
+        ],
+      confirm: admin,
+      target: /api/users/password,
+    }
+  POST /api/users/reset-password:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/users/reset-password,
+            body:
+              {
+                token: '${fake.resetCode}',
+                email: alex@example.com,
+                password: '${fake.resetPassword}',
+                passwordConfirm: '${fake.resetPassword}',
+              },
+          },
+        ],
+      confirm: alex@example.com,
+      target: /api/users/reset-password,
+    }
+  PUT /api/users/{item_id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/users/u-2, body: { username: mallory, admin: true } }],
+      confirm: alex,
+      target: /api/users/u-2,
+    }
+  PUT /api/households/permissions:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/households/permissions, body: { userId: u-2, canManage: true } }],
+      confirm: alex,
+      target: /api/households/permissions,
+    }
+  POST /api/households/invitations:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/households/invitations, body: { uses: 1 } }],
+      confirm: Home,
+      target: /api/households/invitations,
+    }
+  POST /api/households/invitations/email:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/households/invitations/email,
+            body: { email: guest@example.com, token: '${fake.inviteToken}' },
+          },
+        ],
+      confirm: guest@example.com,
+      target: /api/households/invitations/email,
+    }
+  POST /api/groups/ai-providers/providers:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/groups/ai-providers/providers,
+            body: { name: OpenAI, baseUrl: https://llm.example/v1, apiKey: '${fake.aiKey}' },
+          },
+        ],
+      confirm: Home,
+      target: https://llm.example/v1,
+    }
+  PUT /api/groups/ai-providers/providers/{provider_id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/groups/ai-providers/providers/p-1,
+            body:
+              {
+                name: OpenAI,
+                baseUrl: https://llm.example/v1,
+                requestHeaders: { Authorization: 'Bearer ${fake.aiKey}' },
+              },
+          },
+        ],
+      confirm: Home,
+      target: https://llm.example/v1,
+    }
+  DELETE /api/groups/ai-providers/providers/{provider_id}:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/groups/ai-providers/providers/p-1 }],
+      confirm: Home,
+      target: /api/groups/ai-providers/providers/p-1,
+    }
+  POST /api/households/webhooks:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/households/webhooks,
+            body: { name: HA, url: https://ha.example/api/webhook/new-hook, enabled: true },
+          },
+        ],
+      confirm: Home,
+      target: https://ha.example/api/webhook/new-hook,
+    }
+  PUT /api/households/webhooks/{item_id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/households/webhooks/w-1,
+            body: { name: HA, url: https://elsewhere.example/collect, enabled: true },
+          },
+        ],
+      confirm: Home,
+      target: https://elsewhere.example/collect,
+    }
+  PUT /api/groups/preferences:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/groups/preferences, body: { privateGroup: false } }],
+      confirm: Home,
+      target: /api/groups/preferences,
+    }
+  PUT /api/households/preferences:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/households/preferences, body: { privateHousehold: false } }],
+      confirm: Home,
+      target: /api/households/preferences,
+    }
+  DELETE /api/households/shopping/items:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/households/shopping/items, query: { ids: [si-1, si-2] } }],
+      confirm: Home,
+      target: /api/households/shopping/items,
+    }
+calls:
+  find pasta recipes:
+    { fn: request, args: [{ path: /api/recipes, query: { search: pasta, perPage: 10 } }], key: GET /api/recipes }
+  read the pasta recipe: { fn: request, args: [{ path: /api/recipes/pasta }], key: 'GET /api/recipes/{slug}' }
+  import the ramen recipe:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/recipes/create/url, body: { url: https://x.example/ramen } }],
+      key: POST /api/recipes/create/url,
+    }
+  delete the comment c-1:
+    { fn: request, args: [{ method: DELETE, path: /api/comments/c-1 }], key: 'DELETE /api/comments/{item_id}' }
+  delete the food f-1:
+    { fn: request, args: [{ method: DELETE, path: /api/foods/f-1 }], key: 'DELETE /api/foods/{item_id}' }
+  create an API token:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/users/api-tokens, body: { name: scripts } }],
+      key: POST /api/users/api-tokens,
+    }
+  create a password reset token for alex:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/admin/users/password-reset-token, body: { email: alex@example.com } }],
+      key: POST /api/admin/users/password-reset-token,
+    }

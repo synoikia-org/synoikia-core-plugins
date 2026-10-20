@@ -1,0 +1,792 @@
+# What core's compliance suite needs to certify Lidarr against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection: { baseUrl: '${fake.url}', specBaseUrl: '${fake.specUrl}', apiKey: '${fake.apiKey}' }
+reads:
+  - {
+      fn: request,
+      args: [{ path: /api/v1/artist/lookup, query: { term: portishead } }],
+      key: GET /api/v1/artist/lookup,
+    }
+  - { fn: request, args: [{ path: /api/v1/calendar }], key: GET /api/v1/calendar }
+writes:
+  - { fn: request, args: [{ method: POST, path: /api/v1/tag, body: { label: new } }], key: POST /api/v1/tag }
+rejects:
+  - { fn: request, args: [{ path: /api/v1/filesystem }] }
+secrets:
+  - {
+      fn: request,
+      args: [{ path: /api/v1/config/host }],
+      key: GET /api/v1/config/host,
+      values: ['${fake.hostApiKey}', '${fake.proxyPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/downloadclient }],
+      key: GET /api/v1/downloadclient,
+      values: ['${fake.clientPassword}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/indexer }],
+      key: GET /api/v1/indexer,
+      values: ['${fake.indexerApiKey}', '${fake.trackerPasskey}', '${fake.trackerCookie}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/importlist }],
+      key: GET /api/v1/importlist,
+      values: ['${fake.listApiKey}', '${fake.spotifyToken}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/notification }],
+      key: GET /api/v1/notification,
+      values: ['${fake.webhookToken}', '${fake.headerToken}'],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/release, query: { albumId: 16 } }],
+      key: GET /api/v1/release,
+      values:
+        [
+          '${fake.releaseApiKey}',
+          '${fake.magnetPasskey}',
+          '${fake.guidPasskey}',
+          '${fake.infoPasskey}',
+          '${fake.magnetGuidPasskey}',
+        ],
+    }
+  - {
+      fn: request,
+      args: [{ path: /api/v1/history }],
+      key: GET /api/v1/history,
+      values: ['${fake.guidPasskey}', '${fake.infoPasskey}', '${fake.grabPasskey}', '${fake.magnetGuidPasskey}'],
+    }
+connectionTest: { wrong: { apiKey: wrong } }
+locks:
+  PUT /api/v1/artist/{id}#move-files:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/artist/2,
+            query: { moveFiles: true },
+            body: { id: 2, artistName: Not Björk, path: /elsewhere/Björk },
+          },
+        ],
+      confirm: Björk,
+      target: Björk at /music/Björk → /elsewhere/Björk,
+    }
+  PUT /api/v1/artist/editor:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/v1/artist/editor, body: { artistIds: [1, 2], monitored: false } }],
+      confirm: 2 artists,
+      target: Radiohead at /music/Radiohead,
+    }
+  DELETE /api/v1/artist/editor:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/artist/editor, body: { artistIds: [2], deleteFiles: false } }],
+      confirm: 1 artist,
+      target: Björk at /music/Björk,
+    }
+  DELETE /api/v1/artist/editor#delete-files:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/artist/editor, body: { artistIds: [1, 2], deleteFiles: true } }],
+      confirm: 2 artists,
+      target: Radiohead at /music/Radiohead,
+    }
+  DELETE /api/v1/trackfile/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/trackfile/bulk, body: { trackFileIds: [13, 17] } }],
+      confirm: 2 track files,
+      target: /music/Radiohead/OK Computer (1997)/01 - Airbag.flac,
+    }
+  PUT /api/v1/config/metadataprovider/{id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/config/metadataprovider/1,
+            body: { id: 1, metadataSource: https://metadata.example/api, writeAudioTags: allFiles },
+          },
+        ],
+      confirm: Home Lidarr,
+      target: /api/v1/config/metadataprovider/1,
+    }
+  PUT /api/v1/config/mediamanagement/{id}:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/config/mediamanagement/1,
+            body: { id: 1, useScriptImport: true, scriptImportPath: /config/import.sh, chmodFolder: '777' },
+          },
+        ],
+      confirm: Home Lidarr,
+      target: 'import script on: /config/import.sh',
+    }
+  PUT /api/v1/config/host/{id}:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /api/v1/config/host/1, body: { id: 1, bindAddress: '*', urlBase: /lidarr } }],
+      confirm: Home Lidarr,
+      target: /api/v1/config/host/1,
+    }
+  POST /api/v1/system/shutdown:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/system/shutdown }],
+      confirm: Home Lidarr,
+      target: /api/v1/system/shutdown,
+    }
+  POST /api/v1/system/restart:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/system/restart }],
+      confirm: Home Lidarr,
+      target: /api/v1/system/restart,
+    }
+  POST /api/v1/system/backup/restore/{id}:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/system/backup/restore/21 }],
+      confirm: lidarr_backup_v3.1.6.5078_2026.10.14_10.00.00.zip,
+      target: /api/v1/system/backup/restore/21,
+    }
+  POST /api/v1/command#heavy:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/command, body: { name: RetagFiles, artistId: 1, files: [13] } }],
+      confirm: RetagFiles,
+      target: /api/v1/command,
+    }
+  POST /api/v1/notification#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification,
+            body:
+              {
+                name: Run it,
+                implementation: CustomScript,
+                enable: true,
+                fields: [{ name: path, value: /tmp/evil.sh, privacy: normal }],
+              },
+          },
+        ],
+      confirm: Run it,
+      target: 'notification Run it (CustomScript), runs /tmp/evil.sh',
+    }
+  PUT /api/v1/notification/{id}#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/notification/9,
+            body:
+              {
+                id: 9,
+                name: Renamed,
+                implementation: CustomScript,
+                enable: true,
+                fields: [{ name: path, value: /tmp/evil.sh, privacy: normal }],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: 'notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh',
+    }
+  POST /api/v1/notification/test#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/test,
+            body:
+              {
+                name: New,
+                implementation: Webhook,
+                enable: true,
+                fields:
+                  [
+                    { name: url, value: https://h.example, privacy: normal },
+                    { name: scriptPath, value: /tmp/evil.sh, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: New,
+      target: 'notification New (Webhook) → https://h.example, runs /tmp/evil.sh',
+    }
+  POST /api/v1/notification/testall#script:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/notification/testall }],
+      confirm: Home Lidarr,
+      target: /api/v1/notification/testall,
+    }
+  POST /api/v1/notification/action/{name}#script:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/action/getDevices,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: CustomScript,
+                enable: true,
+                fields: [{ name: path, value: /tmp/evil.sh, privacy: normal }],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: 'notification Discord (CustomScript) → https://discord.com, runs /tmp/evil.sh',
+    }
+  POST /api/v1/downloadclient/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/test,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: downloadclient qBit (QBittorrent) → https://collector.example:443,
+    }
+  POST /api/v1/downloadclient/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/action/getCategories,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: downloadclient qBit (QBittorrent) → https://collector.example:443,
+    }
+  PUT /api/v1/downloadclient/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/downloadclient/6,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: downloadclient qBit (QBittorrent) → https://collector.example:443,
+    }
+  POST /api/v1/indexer/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexer/test,
+            body:
+              {
+                id: 7,
+                name: NZBgeek,
+                implementation: Newznab,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: NZBgeek,
+      target: indexer NZBgeek (Newznab) → https://collector.example:443,
+    }
+  POST /api/v1/indexer/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/indexer/action/getCategories,
+            body:
+              {
+                id: 7,
+                name: NZBgeek,
+                implementation: Newznab,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: NZBgeek,
+      target: indexer NZBgeek (Newznab) → https://collector.example:443,
+    }
+  PUT /api/v1/indexer/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/indexer/7,
+            body:
+              {
+                id: 7,
+                name: NZBgeek,
+                implementation: Newznab,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: NZBgeek,
+      target: indexer NZBgeek (Newznab) → https://collector.example:443,
+    }
+  POST /api/v1/importlist/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/importlist/test,
+            body:
+              {
+                id: 8,
+                name: Lidarr Lossless,
+                implementation: LidarrImport,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Lidarr Lossless,
+      target: importlist Lidarr Lossless (LidarrImport) → https://collector.example:443,
+    }
+  POST /api/v1/importlist/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/importlist/action/getCategories,
+            body:
+              {
+                id: 8,
+                name: Lidarr Lossless,
+                implementation: LidarrImport,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Lidarr Lossless,
+      target: importlist Lidarr Lossless (LidarrImport) → https://collector.example:443,
+    }
+  PUT /api/v1/importlist/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/importlist/8,
+            body:
+              {
+                id: 8,
+                name: Lidarr Lossless,
+                implementation: LidarrImport,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Lidarr Lossless,
+      target: importlist Lidarr Lossless (LidarrImport) → https://collector.example:443,
+    }
+  POST /api/v1/notification/test#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/test,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: Discord,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: notification Discord (Discord) → https://collector.example:443,
+    }
+  POST /api/v1/notification/action/{name}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification/action/getCategories,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: Discord,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: notification Discord (Discord) → https://collector.example:443,
+    }
+  PUT /api/v1/notification/{id}#stored:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/notification/9,
+            body:
+              {
+                id: 9,
+                name: Discord,
+                implementation: Discord,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: collector.example, privacy: normal },
+                    { name: port, value: 443, privacy: normal },
+                    { name: useSsl, value: true, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      confirm: Discord,
+      target: notification Discord (Discord) → https://collector.example:443,
+    }
+  POST /api/v1/downloadclient#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient,
+            body:
+              {
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: Drop,
+      target: 'downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w',
+    }
+  PUT /api/v1/downloadclient/{id}#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: PUT,
+            path: /api/v1/downloadclient/6,
+            body:
+              {
+                id: 6,
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: 'downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w',
+    }
+  POST /api/v1/downloadclient/test#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/test,
+            body:
+              {
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: Drop,
+      target: 'downloadclient Drop (TorrentBlackhole), writes to /tmp/drop, /tmp/w',
+    }
+  POST /api/v1/downloadclient/action/{name}#folder:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/action/getCategories,
+            body:
+              {
+                id: 6,
+                name: Drop,
+                implementation: TorrentBlackhole,
+                enable: true,
+                fields:
+                  [
+                    { name: torrentFolder, value: /tmp/drop, privacy: normal },
+                    { name: watchFolder, value: /tmp/w, privacy: normal },
+                  ],
+              },
+          },
+        ],
+      confirm: qBit,
+      target: 'downloadclient qBit (TorrentBlackhole) → http://qbittorrent.lan:8080, writes to /tmp/drop, /tmp/w',
+    }
+  DELETE /api/v1/queue/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/queue/bulk, body: { ids: [41] } }],
+      confirm: 1 item,
+      target: /api/v1/queue/bulk,
+    }
+  DELETE /api/v1/blocklist/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/blocklist/bulk, body: { ids: [61] } }],
+      confirm: 1 item,
+      target: /api/v1/blocklist/bulk,
+    }
+  DELETE /api/v1/customformat/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/customformat/bulk, body: { ids: [11] } }],
+      confirm: 1 item,
+      target: /api/v1/customformat/bulk,
+    }
+  DELETE /api/v1/downloadclient/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/downloadclient/bulk, body: { ids: [6] } }],
+      confirm: 1 item,
+      target: /api/v1/downloadclient/bulk,
+    }
+  DELETE /api/v1/importlist/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/importlist/bulk, body: { ids: [8, 19] } }],
+      confirm: 2 items,
+      target: /api/v1/importlist/bulk,
+    }
+  DELETE /api/v1/indexer/bulk:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/indexer/bulk, body: { ids: [7, 15] } }],
+      confirm: 2 items,
+      target: /api/v1/indexer/bulk,
+    }
+calls:
+  look up portishead:
+    {
+      fn: request,
+      args: [{ path: /api/v1/artist/lookup, query: { term: portishead } }],
+      key: GET /api/v1/artist/lookup,
+    }
+  search for ok computer:
+    {
+      fn: request,
+      args: [{ method: POST, path: /api/v1/command, body: { name: AlbumSearch, albumIds: [16] } }],
+      key: POST /api/v1/command,
+    }
+  delete radiohead with the files:
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /api/v1/artist/1, query: { deleteFiles: true } }],
+      key: 'DELETE /api/v1/artist/{id}',
+    }
+  test the stored download client:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/downloadclient/test,
+            body:
+              {
+                id: 6,
+                name: qBit,
+                implementation: QBittorrent,
+                enable: true,
+                fields:
+                  [
+                    { name: host, value: qbittorrent.lan, privacy: normal },
+                    { name: port, value: 8080, privacy: normal },
+                    { name: useSsl, value: false, privacy: normal },
+                    { name: password, value: '********', privacy: password },
+                  ],
+              },
+          },
+        ],
+      key: POST /api/v1/downloadclient/test,
+    }
+  add a webhook:
+    {
+      fn: request,
+      args:
+        [
+          {
+            method: POST,
+            path: /api/v1/notification,
+            body:
+              {
+                name: Hook,
+                implementation: Webhook,
+                fields: [{ name: url, value: 'https://hooks.example.com/t/new-hook-token-121212' }],
+              },
+          },
+        ],
+      key: POST /api/v1/notification,
+    }

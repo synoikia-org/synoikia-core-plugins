@@ -6,6 +6,22 @@ import type WebSocket from 'ws';
 
 export const FAKE_API_KEY = '1-fake-truenas-api-key-abcdef';
 
+/** Secrets the fake's answers hold: they must never reach the agent, an approval or the audit log. */
+export const SECRETS = {
+  smbPassword: 'share-secret-123',
+  upsPassword: 'ups-secret-456',
+  snmpCommunity: 'snmp-secret-789',
+  sshHostKey: 'ssh-secret-key',
+  keytab: 'keytab-secret-b64',
+  unixHash: '$6$alice-unix-hash',
+  smbHash: 'ALICE-NT-HASH',
+  cloudKey: 'b2-application-key-secret',
+  newApiKey: '4-fresh-api-key-secret',
+  token: 'fresh-session-token-secret',
+  oneTimePassword: 'one-time-password-secret',
+  datasetKey: 'a1b2c3d4e5f6-dataset-key-secret',
+} as const;
+
 interface MethodInfo {
   description?: string;
   accepts?: unknown[];
@@ -141,6 +157,18 @@ export const METHODS: Record<string, MethodInfo> = {
   'snmp.config': { description: 'SNMP settings.' },
   'ssh.config': { description: 'SSH settings.' },
   'vm.get_console': { description: 'An oddly named method.' },
+  // Methods plugin.yaml locks that the tests otherwise never call.
+  'audit.config': { description: 'Audit settings.' },
+  'docker.delete_backup': {
+    description: 'Delete a Docker backup.',
+    accepts: [{ type: 'string', title: 'backup_name' }],
+  },
+  'interface.network_config_to_be_removed': { description: 'Network configuration that will be removed.' },
+  'user.has_local_administrator_set_up': { description: 'Whether a local administrator is set up.' },
+  'user.renew_2fa_secret': {
+    description: 'Renew the 2FA secret of a user.',
+    accepts: [{ type: 'string', title: 'username' }],
+  },
 };
 
 export interface FakeTrueNas {
@@ -152,14 +180,19 @@ export interface FakeTrueNas {
   version: string;
   /** Close every open connection (the client must reconnect). */
   drop(): void;
+  /** Restores the seeded datasets and forgets the jobs. */
+  reset(): void;
   close(): Promise<void>;
 }
 
 export async function startFakeTrueNas(opts: { jobDelayMs?: number } = {}): Promise<FakeTrueNas> {
-  const datasets = new Map<string, { id: string; name: string; quota?: number }>([
-    ['tank', { id: 'tank', name: 'tank' }],
-    ['tank/media', { id: 'tank/media', name: 'tank/media' }],
-  ]);
+  const datasets = new Map<string, { id: string; name: string; quota?: number }>();
+  const seed = () => {
+    datasets.clear();
+    datasets.set('tank', { id: 'tank', name: 'tank' });
+    datasets.set('tank/media', { id: 'tank/media', name: 'tank/media' });
+  };
+  seed();
   const jobs = new Map<
     number,
     { id: number; method: string; state: string; result?: unknown; error?: string | null }
@@ -227,32 +260,32 @@ export async function startFakeTrueNas(opts: { jobDelayMs?: number } = {}): Prom
     'disk.query': () => [{ name: 'sda', serial: 'S1' }],
     'user.query': () => [
       { id: 1, username: 'root' },
-      { id: 70, username: 'alice', unixhash: '$6$alice-unix-hash', smbhash: 'ALICE-NT-HASH' },
+      { id: 70, username: 'alice', unixhash: SECRETS.unixHash, smbhash: SECRETS.smbHash },
     ],
     'user.get_instance': ([id]) => ({ id, username: id === 70 ? 'alice' : 'root' }),
     'api_key.get_instance': ([id]) => ({ id, name: 'backup-bot' }),
-    'api_key.create': ([opts]) => ({ id: 4, name: (opts as { name?: string })?.name, key: '4-fresh-api-key-secret' }),
-    'auth.generate_token': () => 'fresh-session-token-secret',
-    'auth.generate_onetime_password': () => 'one-time-password-secret',
+    'api_key.create': ([opts]) => ({ id: 4, name: (opts as { name?: string })?.name, key: SECRETS.newApiKey }),
+    'auth.generate_token': () => SECRETS.token,
+    'auth.generate_onetime_password': () => SECRETS.oneTimePassword,
     'cloudsync.credentials.query': () => [
-      { id: 1, name: 'b2', provider: { type: 'B2', account: 'acct-1', key: 'b2-application-key-secret' } },
+      { id: 1, name: 'b2', provider: { type: 'B2', account: 'acct-1', key: SECRETS.cloudKey } },
     ],
     'cloudsync.credentials.create': ([opts]) => ({ id: 2, ...(opts as object) }),
     'user.setup_local_administrator': ([username]) => ({ username, configured: true }),
-    'pool.dataset.export_key': () => job('pool.dataset.export_key', () => 'a1b2c3d4e5f6-dataset-key-secret'),
+    'pool.dataset.export_key': () => job('pool.dataset.export_key', () => SECRETS.datasetKey),
     'sharing.smb.query': () => [
-      { id: 1, name: 'media', path: '/mnt/tank/media', auxsmbconf: '', password: 'share-secret-123' },
+      { id: 1, name: 'media', path: '/mnt/tank/media', auxsmbconf: '', password: SECRETS.smbPassword },
     ],
     // Secret-bearing reads (review of PR #8): each field name must come back redacted.
-    'ups.config': () => ({ id: 1, monuser: 'upsmon', monpwd: 'ups-secret-456' }),
-    'snmp.config': () => ({ id: 1, community: 'snmp-secret-789', v3: false }),
+    'ups.config': () => ({ id: 1, monuser: 'upsmon', monpwd: SECRETS.upsPassword }),
+    'snmp.config': () => ({ id: 1, community: SECRETS.snmpCommunity, v3: false }),
     'ssh.config': () => ({
       id: 1,
       tcpport: 22,
-      host_ed25519_key: 'ssh-secret-key',
+      host_ed25519_key: SECRETS.sshHostKey,
       host_ed25519_key_pub: 'ssh-ed25519 AAAA',
     }),
-    'kerberos.keytab.query': () => [{ id: 1, name: 'AD_MACHINE_ACCOUNT', file: 'keytab-secret-b64' }],
+    'kerberos.keytab.query': () => [{ id: 1, name: 'AD_MACHINE_ACCOUNT', file: SECRETS.keytab }],
     'core.get_jobs': ([filters, options]) => {
       const [field, , value] = ((filters as unknown[][] | undefined) ?? [])[0] ?? [];
       const found =
@@ -322,6 +355,10 @@ export async function startFakeTrueNas(opts: { jobDelayMs?: number } = {}): Prom
     },
     drop: () => {
       for (const s of sockets) s.terminate();
+    },
+    reset: () => {
+      seed();
+      jobs.clear();
     },
     close: () =>
       new Promise<void>((resolve) => {

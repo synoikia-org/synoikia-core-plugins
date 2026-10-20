@@ -1,0 +1,132 @@
+# What core's compliance suite needs to certify Seerr against the fake: docs/plugin-authoring.md in core.
+fake: test/fake.ts
+connection:
+  {
+    baseUrl: '${fake.url}',
+    authMethod: local,
+    email: '${fake.email}',
+    password: '${fake.password}',
+    specBaseUrl: '${fake.specUrl}',
+  }
+reads:
+  - { fn: request, args: [{ path: /movie/603 }], key: 'GET /movie/{movieId}' }
+  - { fn: request, args: [{ method: GET, path: /request }], key: GET /request }
+writes:
+  - {
+      fn: request,
+      args: [{ method: POST, path: /request, body: { mediaType: movie, mediaId: 2 } }],
+      key: POST /request,
+    }
+rejects:
+  - { fn: request, args: [{ method: GET, path: /nope }] }
+  - { fn: request, args: [{ method: GET, path: /user/../settings/main }] }
+secrets:
+  - { fn: request, args: [{ path: /settings/main }], key: GET /settings/main, values: ['${fake.mainApiKey}'] }
+  - fn: request
+    args: [{ path: /settings/notifications/telegram }]
+    key: GET /settings/notifications/telegram
+    values: ['${fake.telegramBot}']
+  - fn: request
+    args: [{ path: /settings/notifications/webhook }]
+    key: GET /settings/notifications/webhook
+    values: ['${fake.webhookPath}', '${fake.webhookAuth}']
+  - { fn: request, args: [{ path: /settings/radarr }], key: GET /settings/radarr, values: ['${fake.radarrApiKey}'] }
+connectionTest: { wrong: { password: wrong } }
+locks:
+  'DELETE /user/{userId}':
+    { fn: request, args: [{ method: DELETE, path: /user/14 }], confirm: alex@example.com, target: /user/14 }
+  PUT /user:
+    {
+      fn: request,
+      args: [{ method: PUT, path: /user, body: { ids: [14], permissions: 2 } }],
+      confirm: Home Seerr,
+      target: PUT /user,
+    }
+  'DELETE /settings/radarr/{radarrId}':
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /settings/radarr/0 }],
+      confirm: Radarr 4K,
+      target: /settings/radarr/0,
+    }
+  'DELETE /settings/sonarr/{sonarrId}':
+    { fn: request, args: [{ method: DELETE, path: /settings/sonarr/0 }], confirm: Sonarr, target: /settings/sonarr/0 }
+  POST /settings/initialize:
+    {
+      fn: request,
+      args: [{ method: POST, path: /settings/initialize }],
+      confirm: Home Seerr,
+      target: /settings/initialize,
+    }
+  POST /settings/main/regenerate:
+    {
+      fn: request,
+      args: [{ method: POST, path: /settings/main/regenerate }],
+      confirm: Home Seerr,
+      target: /settings/main/regenerate,
+    }
+  'DELETE /settings/discover/{sliderId}':
+    {
+      fn: request,
+      args: [{ method: DELETE, path: /settings/discover/3 }],
+      confirm: Trending,
+      target: /settings/discover/3,
+    }
+  GET /settings/discover/reset:
+    {
+      fn: request,
+      args: [{ method: GET, path: /settings/discover/reset }],
+      confirm: Home Seerr,
+      target: /settings/discover/reset,
+    }
+  GET /settings/plex/library:
+    {
+      fn: request,
+      args: [{ method: GET, path: /settings/plex/library }],
+      confirm: Home Seerr,
+      target: 'GET /settings/plex/library (saves the enabled-library list: libraries not listed in `enable` are disabled)',
+    }
+  GET /settings/jellyfin/library:
+    {
+      fn: request,
+      args: [{ method: GET, path: /settings/jellyfin/library, query: { enable: '1' } }],
+      confirm: Home Seerr,
+      target: '(saves the enabled-library list: libraries not listed in `enable` are disabled)',
+    }
+  'POST /request/{requestId}/{status}#on-behalf':
+    {
+      fn: request,
+      args: [{ method: POST, path: /request/7/approve }],
+      confirm: Alex,
+      target: "POST /request/7/approve (another user's request)",
+    }
+  'POST /settings/plex/sync#start':
+    {
+      fn: request,
+      args: [{ method: POST, path: /settings/plex/sync, body: { start: true } }],
+      confirm: Home Seerr,
+      target: '/settings/plex/sync {"start":true} (starts a full library scan or another heavy job)',
+    }
+  'POST /settings/jellyfin/sync#start':
+    {
+      fn: request,
+      args: [{ method: POST, path: /settings/jellyfin/sync, body: { start: true } }],
+      confirm: Home Seerr,
+      target: '/settings/jellyfin/sync {"start":true} (starts a full library scan or another heavy job)',
+    }
+  'POST /settings/jobs/{jobId}/run#start':
+    {
+      fn: request,
+      args: [{ method: POST, path: /settings/jobs/plex-full-scan/run }],
+      confirm: plex-full-scan,
+      target: '/settings/jobs/plex-full-scan/run (starts a full library scan or another heavy job)',
+    }
+calls:
+  request The Matrix:
+    {
+      fn: request,
+      args: [{ method: POST, path: /request, body: { mediaType: movie, mediaId: 550 } }],
+      key: POST /request,
+    }
+  approve the request of the plugin user:
+    { fn: request, args: [{ method: POST, path: /request/8/approve }], key: 'POST /request/{requestId}/{status}' }
