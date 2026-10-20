@@ -94,7 +94,7 @@ calls:
       args: [builds.log, { path: { job: infra/deploy app, number: 41 }, query: { lines: 1 } }],
       key: builds.log,
     }
-  read build 41 with the git remote URLs:
+  read build 41 with the git remote addresses:
     {
       fn: call,
       args: [builds.get, { path: { job: infra/deploy app, number: 41 }, query: { tree: 'actions[remoteUrls]' } }],
