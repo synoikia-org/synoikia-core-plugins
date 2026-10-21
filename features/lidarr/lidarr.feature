@@ -22,19 +22,19 @@ Feature: Lidarr calls
       When the agent runs "delete radiohead with the files", and the human approves it
       Then the agent gets a result that contains "{}"
 
-    Scenario: The human approves a test of the stored download client
+    Scenario: The human approves a test of the stored Lidarr download client
       Given the operation of "test the stored download client" is at level ask
       When the agent runs "test the stored download client", and the human approves it
       Then the agent gets a result that contains "{}"
 
-    Scenario: The human approves a new webhook
+    Scenario: The human approves a new Lidarr webhook
       Given the operation of "add a webhook" is at level ask
       When the agent runs "add a webhook", and the human approves it
       Then the agent gets a result that contains "Hook"
 
   Rule: The approval of a provider write shows where the data goes
 
-    Scenario: The approval of a new webhook shows its host
+    Scenario: The approval of a new Lidarr webhook shows its host
       Given the operation of "add a webhook" is at level ask
       When the agent runs "add a webhook", and the human approves it
       Then the approval shows "→ https://hooks.example.com"

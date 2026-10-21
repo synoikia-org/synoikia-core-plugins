@@ -13,7 +13,7 @@ The plugins for [Synoikia](https://github.com/via-justa/synoikia-core), publishe
 | `plugins/<id>/src/`             | `index.ts` calls `runPlugin()`; `plugin.ts` uses `definePlugin` for discovery and the decisions that need logic                               |
 | `plugins/<id>/guides/`          | Markdown guides bundled at build time (Home Assistant); their hash versions attestation keys, so Prettier skips them                          |
 | `plugins/<id>/test/`            | `compliance.yaml` (the compliance profile), `fake.ts` that starts the fake upstream `fake-<id>.ts`, and unit tests in `unit/`                 |
-| `plugins/<id>/features/`        | `<id>.feature`: plugin-specific behavior, written with the compliance suite's steps on the profile's named calls                              |
+| `features/<id>/`                | `<id>.feature`: plugin-specific behavior, written with the compliance suite's steps on the profile's named calls                              |
 | `plugins/<id>/RUNBOOK.md`       | Manual checklist against a real instance                                                                                                      |
 | `docs/designs/<id>.md`          | The original per-server design. Where it disagrees with core's ADRs, core wins                                                                |
 | `.github/workflows/release.yml` | Packs, signs, indexes, verifies and publishes releases with `synoikia-plugin repo` (CI only)                                                  |

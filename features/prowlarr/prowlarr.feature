@@ -28,7 +28,7 @@ Feature: Prowlarr calls
       When the agent runs "delete the first indexer", and the human approves it
       Then the agent gets a result that contains "{}"
 
-    Scenario: The human approves a test of the stored download client
+    Scenario: The human approves a test of the stored Prowlarr download client
       Given the operation of "test the stored download client" is at level ask
       When the agent runs "test the stored download client", and the human approves it
       Then the agent gets a result that contains "{}"

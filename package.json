@@ -38,7 +38,6 @@
       "docs/**/*.md",
       "plugins/*/*.md",
       "features/**/*.feature",
-      "plugins/*/features/**/*.feature",
       ".claude/**/*.md"
     ]
   },

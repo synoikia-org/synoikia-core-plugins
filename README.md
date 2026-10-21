@@ -37,12 +37,13 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 
 ## Layout
 
-| Path                 | What                                                                                                                                |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `instructions.md`, `src/`, `test/`, `features/`, bundled to `dist/index.js` |
-| `docs/`              | The original per-plugin designs                                                                                                     |
-| `tsconfig.base.json` | Shared compiler options. Each plugin's `tsconfig.json` extends it                                                                   |
-| `vitest.shared.ts`   | Shared Vitest config. Each plugin's `vitest.config.ts` re-exports it                                                                |
+| Path                 | What                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `instructions.md`, `src/`, `test/`, bundled to `dist/index.js` |
+| `docs/`              | The original per-plugin designs                                                                                        |
+| `features/<id>/`     | The plugin-specific feature files                                                                                      |
+| `tsconfig.base.json` | Shared compiler options. Each plugin's `tsconfig.json` extends it                                                      |
+| `vitest.shared.ts`   | Shared Vitest config. Each plugin's `vitest.config.ts` re-exports it                                                   |
 
 Plugins build against Synoikia's published npm packages, the same way a community plugin would:
 
@@ -78,7 +79,7 @@ pnpm new          # asks for an id, a name, an archetype (openapi-rest, static-r
 - Describe the upstream's operations in `plugin.yaml`: locks, split twins, classification overrides, `sensitiveParams`, `sensitiveResult`, confirmation literals (reference: [Synoikia's plugin authoring guide](https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md)).
 - Keep code in `src/` for what needs logic: discovery, a split predicate, a custom confirmation source.
 - Extend the fake upstream and `test/compliance.yaml`. Add a lock case for each locked operation.
-- Write plugin-specific behavior in `features/<id>.feature`, and pure logic tests in `test/unit/`.
+- Write plugin-specific behavior in `features/<id>/<id>.feature` at the root of the repository, and pure logic tests in `test/unit/`. The plugin's `vitest.config.ts` gives the path: `complianceConfig({ pluginDir, features: ['../../features/<id>/*.feature'] })`.
 
 Each plugin's `test` script runs `synoikia-plugin check` (manifest, `plugin.yaml`, versions) and `synoikia-plugin build` (the self-contained bundle, `plugin.yaml` validated and inlined). Then it runs the unit tests, core's compliance suite and the plugin's features. Under the permission model the child can read nothing outside its own package directory, so everything it needs is in `dist/index.js`. A release ships only `manifest.json`, `package.json` and `dist/`.
 
