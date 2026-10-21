@@ -1,6 +1,6 @@
 # Prowlarr
 
-Exposes a Prowlarr instance's v1 REST API (118 operations: indexers, search, history, stats, applications, app profiles, indexer proxies, download clients, notifications, commands, settings and system) through Synoikia's `search` and `execute` tools. Prowlarr release builds don't serve their spec, so the catalog comes from `src/Prowlarr.Api.V1/openapi.json` in Prowlarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/prowlarr.md`](../../docs/designs/prowlarr.md).
+Exposes a Prowlarr instance's v1 REST API through Synoikia's `search` and `execute` tools. Its 118 operations cover indexers, search, history, stats, applications, app profiles, indexer proxies, download clients, notifications, commands, settings and system. Prowlarr release builds don't serve their spec. So the catalog comes from `src/Prowlarr.Api.V1/openapi.json` in Prowlarr's repository, at the tag of the installed version, else `develop`. Security decisions: [`docs/adrs/0002-servarr-apps.md`](../../docs/adrs/0002-servarr-apps.md).
 
 The sandbox calls `prowlarr.request({ method, path, query, body })` with the full `/api/v1` path:
 

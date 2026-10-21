@@ -1,6 +1,6 @@
 # Sonarr
 
-Exposes a Sonarr v4 instance's REST API (`/api/v3`, 224 operations: series, episodes, episode files, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Sonarr release builds don't serve their spec, so the catalog comes from `src/Sonarr.Api.V3/openapi.json` in Sonarr's repository at the tag of the installed version (`main`, the v4 release branch, if there is none). Design: [`docs/designs/sonarr.md`](../../docs/designs/sonarr.md).
+Exposes a Sonarr v4 instance's REST API (`/api/v3`) through Synoikia's `search` and `execute` tools. Its 224 operations cover series, episodes, episode files, lookups, queue, history, calendar, wanted, commands, profiles and custom formats. They also cover download clients, indexers, import lists, notifications, settings and system. Sonarr release builds don't serve their spec. So the catalog comes from `src/Sonarr.Api.V3/openapi.json` in Sonarr's repository, at the tag of the installed version. Without a tag it is `main`, the v4 release branch. Security decisions: [`docs/adrs/0002-servarr-apps.md`](../../docs/adrs/0002-servarr-apps.md).
 
 The sandbox calls `sonarr.request({ method, path, query, body })` with the full `/api/v3` path:
 

@@ -16,7 +16,7 @@ import { SeerrClient } from './client.js';
 import type { SeerrAuth } from './client.js';
 import { DEFAULT_SPEC_BASE_URL, fetchSpec } from './spec.js';
 
-/** Seerr handlers (design §3.3–§3.4): `seerr.request({ method, path, query, body })`, keyed by verb plus
+/** Seerr handlers (core ADR-0011): `seerr.request({ method, path, query, body })`, keyed by verb plus
  * OpenAPI path template; locks and literals are in plugin.yaml. */
 
 export interface SeerrParams {

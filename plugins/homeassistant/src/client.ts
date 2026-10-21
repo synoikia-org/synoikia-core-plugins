@@ -34,7 +34,7 @@ export const wsUrl = (baseUrl: string): string => joinApiPath(baseUrl, '/api/web
 /** `https://ha.lan:8123/` → `https://ha.lan:8123/api` */
 export const restBase = (baseUrl: string): string => joinApiPath(baseUrl, '/api');
 
-/** Maps a Home Assistant error to the plugin error codes core understands (HA §4). */
+/** Maps a Home Assistant error to the plugin error codes core understands (ADR-0013). */
 export function toPluginError(label: string, err: { code?: string; status?: number; message?: string }): PluginError {
   const message = clip(err.message?.trim() || err.code || (err.status ? `HTTP ${err.status}` : 'Unknown error'));
   const data = err.status ? { status: err.status } : err.code ? { code: err.code } : undefined;

@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# qBittorrent 5.x WebUI API v2 serves no spec: a fixed set of operations (docs/designs/qbittorrent.md).
+# qBittorrent 5.x WebUI API v2 serves no spec: a fixed set of operations (ADR-0009).
 # Params are flat, as qBittorrent names them; a GET sends them as the query, a POST as the form body.
 
 defaults:

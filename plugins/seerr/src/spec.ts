@@ -1,7 +1,7 @@
 import { fetchSpec as fetchText } from '@synoikia/plugin-sdk';
 import { settings } from './catalog.js';
 
-/** Seerr has no introspection (SR §2.2): the spec is fetched from the release tag matching `/status`'s
+/** Seerr has no introspection (ADR-0011): the spec is fetched from the release tag matching `/status`'s
  * version, else a branch, from a configurable mirror; no credentials sent. */
 
 export const DEFAULT_SPEC_BASE_URL = settings.plugin.spec.baseUrl;

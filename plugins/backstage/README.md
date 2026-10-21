@@ -1,6 +1,6 @@
 # Backstage
 
-Exposes a Backstage backend's REST APIs (41 operations: the software catalog, the scaffolder, search, notifications and the events bus) through Synoikia's `search` and `execute` tools. The catalog comes from the OpenAPI spec each backend plugin serves at `/api/<plugin>/openapi.json`, merged, so a Backstage upgrade needs no change here. Design: [`docs/designs/backstage.md`](../../docs/designs/backstage.md).
+Exposes a Backstage backend's REST APIs (41 operations: the software catalog, the scaffolder, search, notifications and the events bus) through Synoikia's `search` and `execute` tools. The catalog comes from the OpenAPI spec each backend plugin serves at `/api/<plugin>/openapi.json`, merged, so a Backstage upgrade needs no change here. Design: [`docs/adrs/0004-backstage.md`](../../docs/adrs/0004-backstage.md).
 
 The sandbox calls `backstage.request({ method, path, query, body })` with the full path:
 

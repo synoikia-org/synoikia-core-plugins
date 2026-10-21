@@ -1,6 +1,6 @@
 # Mealie
 
-Exposes a Mealie instance's REST API (about 235 operations: recipes, meal plans, shopping lists, organizers, households, groups, admin) through Synoikia's `search` and `execute` tools. The catalog comes from the OpenAPI spec the instance serves at `/openapi.json`, so a Mealie upgrade needs no change here. Design: [`docs/designs/mealie.md`](../../docs/designs/mealie.md).
+Exposes a Mealie instance's REST API (about 235 operations: recipes, meal plans, shopping lists, organizers, households, groups, admin) through Synoikia's `search` and `execute` tools. The catalog comes from the OpenAPI spec the instance serves at `/openapi.json`, so a Mealie upgrade needs no change here. Design: [`docs/adrs/0005-mealie.md`](../../docs/adrs/0005-mealie.md).
 
 The sandbox calls `mealie.request({ method, path, query, body })` with the full path, `/api/` included:
 

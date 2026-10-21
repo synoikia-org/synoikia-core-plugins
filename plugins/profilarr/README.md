@@ -1,6 +1,6 @@
 # Profilarr
 
-Exposes a Profilarr v2 instance's REST API (17 operations: arr instances, configuration databases and their sync, jobs, backups, announcements, health and status) through Synoikia's `search` and `execute` tools. The catalog comes from the OpenAPI spec the instance serves at `/api/v1/openapi.json`, so a Profilarr upgrade needs no change here. Design: [`docs/designs/profilarr.md`](../../docs/designs/profilarr.md).
+Exposes a Profilarr v2 instance's REST API through Synoikia's `search` and `execute` tools. Its 17 operations cover arr instances, configuration databases and their sync, jobs, backups, announcements, health and status. The catalog comes from the OpenAPI spec that the instance serves at `/api/v1/openapi.json`, so a Profilarr upgrade needs no change here. Security decisions: [`docs/adrs/0007-profilarr.md`](../../docs/adrs/0007-profilarr.md).
 
 The sandbox calls `profilarr.request({ method, path, query, body })` with a path under `/api/v1` (the prefix is optional):
 

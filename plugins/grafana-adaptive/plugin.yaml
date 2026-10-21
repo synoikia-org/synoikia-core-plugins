@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
 # Adaptive Metrics, Logs and Traces serve no API spec: operations confirmed from grafana.com docs and Grafana's own
-# clients (docs/designs/grafana-adaptive.md). A key's first part names the service whose URL it is sent to.
+# clients (ADR-0003). A key's first part names the service whose URL it is sent to.
 
 defaults:
   # Locked operations without their own literal confirm against the service's instance (tenant) id.

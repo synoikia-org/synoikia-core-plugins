@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Rules on top of Seerr's OpenAPI catalog (SR §2.2–§3.4): GET reads, other verbs write, action-like GETs
+# Rules on top of Seerr's OpenAPI catalog (ADR-0011): GET reads, other verbs write, action-like GETs
 # are writes until a rule settles them.
 
 defaults:
@@ -39,8 +39,8 @@ rules:
     reason: verb:GET
     needsReview: false
 
-  # Locked twins picked per call: `#on-behalf` decides another user's request (SR §3.4); `#start` starts a
-  # full library scan or any job not in `plugin.cheapJobs` (SR §2.3).
+  # Locked twins picked per call: `#on-behalf` decides another user's request (ADR-0011); `#start` starts a
+  # full library scan or any job not in `plugin.cheapJobs` (ADR-0011).
   - match: 'POST /request/{requestId}/{status}'
     split: on-behalf
   - match: ['POST /settings/plex/sync', 'POST /settings/jellyfin/sync', 'POST /settings/jobs/{jobId}/run']
@@ -63,7 +63,7 @@ rules:
     description: 'Starting a full library scan: locked.'
     summaryNote: '(starts a full library scan or another heavy job)'
 
-  # The literal an approver types: the thing the operation affects (SR §3.4).
+  # The literal an approver types: the thing the operation affects (ADR-0011).
   - match: 'DELETE /user/{userId}'
     confirm:
       lookup: { op: 'GET /user/{userId}', args: [{ userId: { $param: /path/userId } }], field: [email, displayName] }
@@ -90,7 +90,7 @@ rules:
     matchProfile: media-request
 
 plugin:
-  # The spec, from the tag matching `/status`'s version, else `develop` (SR §2.2); the base URL is a
+  # The spec, from the tag matching `/status`'s version, else `develop` (ADR-0011); the base URL is a
   # connection field, so a mirror works offline.
   spec:
     baseUrl: https://raw.githubusercontent.com/seerr-team/seerr
@@ -98,10 +98,10 @@ plugin:
     fallbackRef: develop
     maxBytes: 5242880
     timeoutMs: 20000
-  # Words that make a GET a write flagged for review (SR §2.3); the SDK's path check is off, every GET
+  # Words that make a GET a write flagged for review (ADR-0011); the SDK's path check is off, every GET
   # having been reviewed against this list (test/catalog.test.ts).
   actionWords: ['reset\w*', 'regenerat\w*', 'sync\w*', 'flush\w*', run, runs, 'cancel\w*', 'invok\w*']
-  # Guard against an empty or truncated spec replacing a real catalog (SR §5).
+  # Guard against an empty or truncated spec replacing a real catalog (ADR-0011).
   minOperations: 50
   # Scheduled jobs cheap to run on demand; any other job, a future one included, takes the locked `#start`.
   cheapJobs:

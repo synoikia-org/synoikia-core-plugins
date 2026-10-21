@@ -1,7 +1,7 @@
 import { ErrorCodes, isPlainObject, PluginError, REDACTED } from '@synoikia/plugin-sdk';
 import type { RestParams } from '@synoikia/plugin-sdk';
 
-// Runs before splits, literals and targets read the query; the checks and their reasons are in docs/designs/plex.md.
+// Runs before splits, literals and targets read the query; the checks and their reasons are in ADR-0010.
 
 const MAX_DEPTH = 16;
 

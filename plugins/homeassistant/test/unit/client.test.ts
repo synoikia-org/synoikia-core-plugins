@@ -31,7 +31,7 @@ describe('URLs', () => {
   });
 });
 
-describe('error mapping (HA §4)', () => {
+describe('error mapping (ADR-0013)', () => {
   it.each([
     [{ code: 'unauthorized', message: 'Unauthorized' }, ErrorCodes.UpstreamDenied],
     [{ status: 401 }, ErrorCodes.UpstreamDenied],

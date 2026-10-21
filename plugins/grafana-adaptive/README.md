@@ -1,6 +1,6 @@
 # Grafana Adaptive Telemetry
 
-Grafana Cloud Adaptive Metrics, Adaptive Logs and Adaptive Traces for Synoikia: aggregation rules and recommendations, log drop rules and exemptions, trace sampling policies and recommendations. The three APIs serve no spec, so the operations are declared in `plugin.yaml`. Design: [`docs/designs/grafana-adaptive.md`](../../docs/designs/grafana-adaptive.md).
+Grafana Cloud Adaptive Metrics, Adaptive Logs and Adaptive Traces for Synoikia: aggregation rules and recommendations, log drop rules and exemptions, trace sampling policies and recommendations. The three APIs serve no spec, so the operations are declared in `plugin.yaml`. Design: [`docs/adrs/0003-grafana-plugins.md`](../../docs/adrs/0003-grafana-plugins.md).
 
 The sandbox calls `grafanaAdaptive.call(key, { path, query, body, ifMatch })`. Each key's first part (`metrics`, `logs`, `traces`) names the stack endpoint it is sent to. Every call goes through Synoikia's permission gate, approvals, redaction and audit log; this plugin only describes the Adaptive APIs.
 

@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
 # Rules on top of the OpenAPI specs each backend plugin serves at /api/<plugin>/openapi.json, merged
-# (docs/designs/backstage.md): keys are the full served paths (`GET /api/catalog/entities`); GET reads, other
+# (ADR-0004): keys are the full served paths (`GET /api/catalog/entities`); GET reads, other
 # verbs write, anything unlisted stays a write.
 
 defaults:

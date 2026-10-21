@@ -1,6 +1,6 @@
 # Lidarr
 
-Exposes a Lidarr instance's v1 REST API (225 operations: artists, albums, tracks, track files, lookups, queue, history, calendar, wanted, commands, quality and metadata profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Lidarr release builds don't serve their spec, so the catalog comes from `src/Lidarr.Api.V1/openapi.json` in Lidarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/lidarr.md`](../../docs/designs/lidarr.md).
+Exposes a Lidarr instance's v1 REST API through Synoikia's `search` and `execute` tools. Its 225 operations cover artists, albums, tracks, track files, lookups, queue, history, calendar, wanted, commands, and quality and metadata profiles. They also cover custom formats, download clients, indexers, import lists, notifications, settings and system. Lidarr release builds don't serve their spec. So the catalog comes from `src/Lidarr.Api.V1/openapi.json` in Lidarr's repository, at the tag of the installed version, else `develop`. Security decisions: [`docs/adrs/0002-servarr-apps.md`](../../docs/adrs/0002-servarr-apps.md).
 
 The sandbox calls `lidarr.request({ method, path, query, body })` with the full `/api/v1` path:
 

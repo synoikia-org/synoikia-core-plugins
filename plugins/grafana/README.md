@@ -1,6 +1,6 @@
 # Grafana
 
-Exposes the Grafana 12+ HTTP API (310 operations: dashboards, folders, search, data sources and queries, annotations, alerting provisioning, users, teams, orgs, service accounts, access control, playlists, library panels, snapshots and more) of a self-hosted Grafana or a Grafana Cloud stack through Synoikia's `search` and `execute` tools. The catalog comes from the spec the instance serves at `/public/openapi3.json`, so a Grafana upgrade needs no change here; Grafana 11 and older are refused. Design: [`docs/designs/grafana.md`](../../docs/designs/grafana.md).
+Exposes the Grafana 12+ HTTP API of a self-hosted Grafana or a Grafana Cloud stack through Synoikia's `search` and `execute` tools. Its 310 operations cover dashboards, folders, search, data sources and queries, annotations, alerting provisioning, users, teams and orgs. They also cover service accounts, access control, playlists, library panels and snapshots. The catalog comes from the spec that the instance serves at `/public/openapi3.json`, so a Grafana upgrade needs no change here. Grafana 11 and older are refused. Security decisions: [`docs/adrs/0003-grafana-plugins.md`](../../docs/adrs/0003-grafana-plugins.md).
 
 The sandbox calls `grafana.request({ method, path, query, body })` with a path under `/api` (the prefix is optional):
 

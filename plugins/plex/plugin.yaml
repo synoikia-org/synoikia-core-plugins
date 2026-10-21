@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Rules on top of the community Plex Media Server spec (docs/designs/plex.md): keys are the spec's PMS paths
+# Rules on top of the community Plex Media Server spec (ADR-0010): keys are the spec's PMS paths
 # (`GET /library/sections/{sectionId}/all`); GET reads, other verbs write, anything unlisted is a write.
 
 defaults:

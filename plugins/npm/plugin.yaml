@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Rules on top of the OpenAPI spec the instance serves at /api/schema (docs/designs/npm.md): keys are the spec's
+# Rules on top of the OpenAPI spec the instance serves at /api/schema (ADR-0006): keys are the spec's
 # paths under /api (`GET /nginx/proxy-hosts/{hostID}`); GET reads, other verbs write, anything unlisted is a write.
 
 defaults:

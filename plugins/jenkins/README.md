@@ -1,6 +1,6 @@
 # Jenkins
 
-Jenkins 2.x for Synoikia: jobs, builds, console logs, test reports, the queue and nodes, from a fixed set of remote access API operations declared in `plugin.yaml` (Jenkins serves no API spec). Design: [`docs/designs/jenkins.md`](../../docs/designs/jenkins.md).
+Jenkins 2.x for Synoikia: jobs, builds, console logs, test reports, the queue and nodes. Jenkins serves no API spec, so `plugin.yaml` declares a fixed set of remote access API operations. Security decisions: [`docs/adrs/0008-jenkins.md`](../../docs/adrs/0008-jenkins.md).
 
 The sandbox calls `jenkins.call(key, { path, query })`, with jobs by full name (`folder/job`). Every call goes through Synoikia's permission gate, approvals, redaction and audit log; this plugin only describes Jenkins's API.
 

@@ -1,6 +1,6 @@
 # Radarr
 
-Exposes a Radarr instance's v3 REST API (227 operations: movies, lookups, queue, history, calendar, wanted, commands, profiles, custom formats, download clients, indexers, import lists, notifications, settings and system) through Synoikia's `search` and `execute` tools. Radarr release builds don't serve their spec, so the catalog comes from `src/Radarr.Api.V3/openapi.json` in Radarr's repository at the tag of the installed version (`develop` if there is none). Design: [`docs/designs/radarr.md`](../../docs/designs/radarr.md).
+Exposes a Radarr instance's v3 REST API through Synoikia's `search` and `execute` tools. Its 227 operations cover movies, lookups, queue, history, calendar, wanted, commands, profiles and custom formats. They also cover download clients, indexers, import lists, notifications, settings and system. Radarr release builds don't serve their spec. So the catalog comes from `src/Radarr.Api.V3/openapi.json` in Radarr's repository, at the tag of the installed version, else `develop`. Security decisions: [`docs/adrs/0002-servarr-apps.md`](../../docs/adrs/0002-servarr-apps.md).
 
 The sandbox calls `radarr.request({ method, path, query, body })` with the full `/api/v3` path:
 

@@ -1,6 +1,6 @@
 # Plex
 
-Exposes a Plex Media Server's HTTP API (303 operations: libraries, items, search, hubs, sessions and history, playlists, play queues, collections, scrobbling, preferences, butler, updater, Live TV and DVR) through Synoikia's `search` and `execute` tools. PMS doesn't serve a spec, so the catalog comes from the community spec [`LukeHagar/plex-api-spec`](https://github.com/LukeHagar/plex-api-spec) at a commit pinned in `plugin.yaml`, cut to the operations the server itself answers. plex.tv account and sharing APIs are out of scope. Design: [`docs/designs/plex.md`](../../docs/designs/plex.md).
+Exposes a Plex Media Server's HTTP API through Synoikia's `search` and `execute` tools. Its 303 operations cover libraries, items, search, hubs, sessions and history, playlists, play queues, collections and scrobbling. They also cover preferences, butler, updater, Live TV and DVR. PMS doesn't serve a spec. So the catalog comes from the community spec [`LukeHagar/plex-api-spec`](https://github.com/LukeHagar/plex-api-spec) at a commit pinned in `plugin.yaml`. It is cut to the operations that the server itself answers. plex.tv account and sharing APIs are out of scope. Security decisions: [`docs/adrs/0010-plex.md`](../../docs/adrs/0010-plex.md).
 
 The sandbox calls `plex.request({ method, path, query, body })`; arguments go in `query`:
 

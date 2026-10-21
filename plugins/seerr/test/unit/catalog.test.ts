@@ -20,7 +20,7 @@ import { SPEC_TEXT } from '../fake-seerr.js';
 const catalog = buildCatalog(SPEC_TEXT);
 const op = (key: string) => catalog.operations.find((o) => o.key === key);
 
-describe('classify (SR §2.3, §7 phase 1)', () => {
+describe('classify (ADR-0011)', () => {
   it.each([
     ['GET /request', 'read', 'verb:GET'],
     ['POST /request', 'write', 'verb:POST'],
@@ -31,7 +31,7 @@ describe('classify (SR §2.3, §7 phase 1)', () => {
     expect(classify(key)).toMatchObject({ classification, reason, locked: false });
   });
 
-  it('locks the SR §3.4 list regardless of verb, including the GET that resets', () => {
+  it('locks the ADR-0011 list regardless of verb, including the GET that resets', () => {
     for (const key of LOCKED) expect(classify(key)).toMatchObject({ classification: 'write', locked: true });
     expect(classify('GET /settings/discover/reset', 'Reset all discover sliders')).toMatchObject({
       classification: 'write',
@@ -63,7 +63,7 @@ describe('library GETs that write (Seerr 3.x)', () => {
   });
 });
 
-describe('GET-as-action regression (SR §9)', () => {
+describe('GET-as-action regression (ADR-0011)', () => {
   const spec = parseSpec(SPEC_TEXT) as {
     paths: Record<string, Record<string, OpenApiOperation> & { parameters?: unknown[] }>;
   };

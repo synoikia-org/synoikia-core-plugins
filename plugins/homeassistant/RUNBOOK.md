@@ -1,6 +1,6 @@
 # Home Assistant plugin: live checklist
 
-The plugin is tested against a fake Home Assistant. This checklist confirms it against a real instance, the step Synoikia design §13 phase 19 needs before it is called done. It takes about 20 minutes.
+The plugin is tested against a fake Home Assistant. This checklist confirms it against a real instance, before a release. It takes about 20 minutes.
 
 **Before you start**
 
