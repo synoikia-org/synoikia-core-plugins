@@ -47,7 +47,8 @@
         "plugins/*/guides/**",
         "minisign.pub",
         "pnpm-workspace.yaml",
-        "pnpm-lock.yaml"
+        "pnpm-lock.yaml",
+        ".claude/**"
       ]
     }
   },
