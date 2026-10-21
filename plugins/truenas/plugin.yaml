@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Rules on top of the `core.get_methods` catalog (TN §2.2–§3.4), failing closed: excluded methods don't
+# Rules on top of the `core.get_methods` catalog (ADR-0012), failing closed: excluded methods don't
 # exist, a lock always wins, and anything unclassified is a write.
 
 defaults:
@@ -21,7 +21,7 @@ exclude:
 include: [core.get_jobs, core.get_methods, core.ping, core.job_abort]
 
 rules:
-  # Destructive or irreversible: always a human with a typed confirmation (TN §3.4).
+  # Destructive or irreversible: always a human with a typed confirmation (ADR-0012).
   - match:
       - system.reboot
       - system.shutdown
@@ -153,7 +153,7 @@ rules:
   - match: app.upgrade
     matchProfile: app-name-in
 
-  # Wizard-style guidance the old 52-tool server baked into its prompts (TN §6), now on demand.
+  # Wizard-style guidance the old 52-tool server baked into its prompts (ADR-0012), now on demand.
   - match: pool.dataset.create
     guidance: >-
       Name is "<pool>/<path>". Common options: type FILESYSTEM (default) or VOLUME (needs volsize), share_type
@@ -170,7 +170,7 @@ rules:
       app schema (catalog.get_app_details). Storage usually maps host paths under an existing dataset.
 
 plugin:
-  # Naming conventions src/catalog.ts reads when a method's roles don't settle it (TN §2.3).
+  # Naming conventions src/catalog.ts reads when a method's roles don't settle it (ADR-0012).
   readLast: [query, get_instance, config, status, choices, info]
   readVerbs: [list, listdir, get, search]
   writeLast: [create, update, delete]

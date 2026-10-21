@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Rules on top of the OpenAPI spec the instance serves at /openapi.json (docs/designs/mealie.md): keys are the
+# Rules on top of the OpenAPI spec the instance serves at /openapi.json (ADR-0005): keys are the
 # spec's own paths (`GET /api/recipes/{slug}`); GET reads, other verbs write, anything unlisted stays a write.
 
 defaults:

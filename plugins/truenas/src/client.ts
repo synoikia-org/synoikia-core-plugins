@@ -28,7 +28,7 @@ const DENIED_ERRNAMES = new Set(['EACCES', 'EPERM', 'ENOTAUTHENTICATED']);
 /** `https://nas.lan/` → `wss://nas.lan/api/current` (a path in the base URL is kept). */
 export const apiUrl = (baseUrl: string): string => joinApiPath(baseUrl, '/api/current', { websocket: true });
 
-/** Maps a TrueNAS error to the plugin error codes core understands (TN §4). */
+/** Maps a TrueNAS error to the plugin error codes core understands (ADR-0012). */
 export function toPluginError(method: string, err: RpcError): PluginError {
   const reason = err.data?.reason?.trim() || err.message || 'Unknown TrueNAS error';
   const errname = err.data?.errname;

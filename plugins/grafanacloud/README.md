@@ -1,6 +1,6 @@
 # Grafana Cloud
 
-Exposes the grafana.com Cloud API (54 operations: stacks, organizations and members, Cloud access policies and tokens, stack regions, plugins on stacks, and service accounts in a stack's Grafana) through Synoikia's `search` and `execute` tools. The catalog comes from the spec grafana.com publishes at `/api/openapi.json`, with the copy in `grafana/grafana-com-public-clients` on GitHub as the fallback. A stack's own Grafana API is the `grafana` plugin. Design: [`docs/designs/grafanacloud.md`](../../docs/designs/grafanacloud.md).
+Exposes the grafana.com Cloud API through Synoikia's `search` and `execute` tools. Its 54 operations cover stacks, organizations and members, Cloud access policies and tokens, stack regions, plugins on stacks, and service accounts in a stack's Grafana. The catalog comes from the spec that grafana.com publishes at `/api/openapi.json`. The copy in `grafana/grafana-com-public-clients` on GitHub is the fallback. A stack's own Grafana API is the `grafana` plugin. Security decisions: [`docs/adrs/0003-grafana-plugins.md`](../../docs/adrs/0003-grafana-plugins.md).
 
 The sandbox calls `grafanacloud.request({ method, path, query, body })` with a path under `/api` (the prefix is optional):
 

@@ -41,7 +41,7 @@ const ANY: EntityFilter = [];
 const ids = (target: Parameters<typeof resolveTarget>[1], filter: EntityFilter = only('light')) =>
   resolveTarget(view, target, filter).map((t) => t.id);
 
-describe('the registry view (HA §2.4)', () => {
+describe('the registry view (ADR-0013)', () => {
   it('joins areas through devices, names entities, and keeps state-only entities', () => {
     expect(view.entities.get('light.reading_lamp')).toMatchObject({
       name: 'Reading Lamp',
@@ -70,7 +70,7 @@ describe('the registry view (HA §2.4)', () => {
   });
 });
 
-describe('target resolution (HA §7 phase 4)', () => {
+describe('target resolution (ADR-0013)', () => {
   it('expands areas, devices, floors and labels to concrete entities', () => {
     expect(ids({ area_id: ['living_room'] })).toEqual(['light.ceiling', 'light.reading_lamp']);
     expect(ids({ device_id: ['dev_lamp'] })).toEqual(['light.moved', 'light.reading_lamp']);

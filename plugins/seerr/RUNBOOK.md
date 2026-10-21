@@ -1,6 +1,6 @@
 # Seerr plugin: live checklist
 
-The plugin is tested against a fake Seerr. This checklist confirms it against a real instance, the step Synoikia design §13 phase 18 needs before it is called done. It takes about 15 minutes.
+The plugin is tested against a fake Seerr. This checklist confirms it against a real instance, before a release. It takes about 15 minutes.
 
 **Before you start**
 

@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Rules on top of the OpenAPI spec the instance serves at /api/v1/openapi.json (docs/designs/profilarr.md): keys
+# Rules on top of the OpenAPI spec the instance serves at /api/v1/openapi.json (ADR-0007): keys
 # are the spec's own paths under /api/v1 (`GET /databases/{id}`); GET reads, other verbs write.
 
 defaults:

@@ -3,7 +3,7 @@ import type { OperationDescriptor } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 import type { EntityFilter } from './registry.js';
 
-/** The Home Assistant catalog (HA §2.2–§2.3): every `domain.service` plus plugin.yaml's fixed commands;
+/** The Home Assistant catalog (ADR-0013): every `domain.service` plus plugin.yaml's fixed commands;
  * nothing else is reachable. Every service is a write, whatever its name; plugin.yaml's locks win. */
 
 export interface ServiceField {
@@ -89,7 +89,7 @@ export type ConfigObject = (typeof CONFIG_OBJECTS)[number];
 export interface FixedCommand {
   group: string;
   classification: 'read' | 'write';
-  /** `config` writes go through `prepareWrite` (patch + config_hash, HA §2.8). */
+  /** `config` writes go through `prepareWrite` (patch + config_hash, ADR-0013). */
   kind: string;
   summary: string;
   locked?: boolean;

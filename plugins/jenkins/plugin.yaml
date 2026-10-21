@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Jenkins 2.x serves no API spec: a fixed set of operations over its remote access API (docs/designs/jenkins.md).
+# Jenkins 2.x serves no API spec: a fixed set of operations over its remote access API (ADR-0008).
 # `{job}` is a full name (`folder/job`), sent as `/job/folder/job/job`; `{folder}` is optional.
 
 defaults:

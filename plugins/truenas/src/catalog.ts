@@ -2,7 +2,7 @@ import { compileRules, isPlainObject, parsePluginSettings, toGroup } from '@syno
 import type { OperationDescriptor, OperationDraft } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 
-/** Turns `core.get_methods` into the catalog (TN §2.2–§2.3), failing closed: plugin.yaml's locks win,
+/** Turns `core.get_methods` into the catalog (ADR-0012), failing closed: plugin.yaml's locks win,
  * then TrueNAS's declared roles and naming; anything ambiguous is a write. */
 
 export interface MethodInfo {
@@ -46,7 +46,7 @@ export const LOCKED = new Set(
 
 export const isLocked = (method: string) => policy.isLocked(method);
 
-/** Risk-dependent methods get a second key (design §3.4): ACL or owner changes at a pool root are locked. */
+/** Risk-dependent methods get a second key (core ADR-0012): ACL or owner changes at a pool root are locked. */
 export const POOL_ROOT = 'pool-root';
 export const POOL_ROOT_SUFFIX = `#${POOL_ROOT}`;
 

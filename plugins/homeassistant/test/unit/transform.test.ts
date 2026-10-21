@@ -9,7 +9,7 @@ const automation = {
   actions: [{ action: 'light.turn_on', target: { area_id: 'kitchen' } }],
 };
 
-describe('config transforms (HA §2.8, §7 phase 6)', () => {
+describe('config transforms (ADR-0013)', () => {
   it('hashes content, not key order', () => {
     expect(configHash({ a: 1, b: [1, { c: 2 }] })).toBe(configHash({ b: [1, { c: 2 }], a: 1 }));
     expect(configHash(automation)).not.toBe(configHash({ ...automation, alias: 'x' }));

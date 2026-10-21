@@ -9,7 +9,7 @@ import { SERVICES } from '../fake-ha.js';
 const catalog = buildCatalog(SERVICES as Services);
 const op = (key: string) => catalog.operations.find((o) => o.key === key);
 
-describe('classification (HA §2.3, §7 phase 1)', () => {
+describe('classification (ADR-0013)', () => {
   it('classifies every service as a write, however harmless its name', () => {
     const services = catalog.operations.filter((o) => o.kind === 'service');
     expect(services.length).toBeGreaterThan(15);

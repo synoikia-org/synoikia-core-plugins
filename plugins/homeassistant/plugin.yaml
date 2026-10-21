@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./node_modules/@synoikia/plugin-sdk/plugin-settings.schema.json
-# Every `domain.service` plus the fixed commands below, no raw passthrough (HA §2.2–§3.4); every service
+# Every `domain.service` plus the fixed commands below, no raw passthrough (ADR-0013); every service
 # is a write, whatever its name, and these rules lock and split on top.
 
 defaults:
@@ -10,7 +10,7 @@ defaults:
 instanceName: { op: get_config, field: location_name, fallback: Home Assistant }
 
 rules:
-  # Physical-safety or system-integrity critical: always a human with a typed confirmation (HA §3.4).
+  # Physical-safety or system-integrity critical: always a human with a typed confirmation (ADR-0013).
   - match:
       - lock.unlock
       - lock.open
@@ -25,7 +25,7 @@ rules:
     locked: true
     reason: locked:physical-or-system
 
-  # Locked twins taken when any resolved target is sensitive, by device class and domain (design §3.4):
+  # Locked twins taken when any resolved target is sensitive, by device class and domain (core ADR-0012):
   # `#garage` opens a garage cover; `#protected` touches a lock, alarm or garage door (unknown counts).
   - match: [cover.open_cover, cover.toggle, cover.set_cover_position]
     split: garage

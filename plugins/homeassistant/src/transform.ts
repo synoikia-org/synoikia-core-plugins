@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { ErrorCodes, PluginError } from '@synoikia/plugin-sdk';
 
-/** Surgical config edits with optimistic locking (HA §2.8): a JSON Patch plus the `config_hash` read,
+/** Surgical config edits with optimistic locking (ADR-0013): a JSON Patch plus the `config_hash` read,
  * refused if the object changed; core gets a field-level diff for the approval. */
 
 export interface PatchOp {

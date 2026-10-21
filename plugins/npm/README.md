@@ -1,6 +1,6 @@
 # Nginx Proxy Manager
 
-Exposes a Nginx Proxy Manager instance's REST API (about 60 operations: proxy, redirection and 404 hosts, streams, certificates, access lists, users, settings, logs) through Synoikia's `search` and `execute` tools. The catalog comes from the OpenAPI spec the instance serves at `/api/schema`, so an upgrade needs no change here. Design: [`docs/designs/npm.md`](../../docs/designs/npm.md).
+Exposes a Nginx Proxy Manager instance's REST API through Synoikia's `search` and `execute` tools. Its 60 or so operations cover proxy, redirection and 404 hosts, streams, certificates, access lists, users, settings and logs. The catalog comes from the OpenAPI spec that the instance serves at `/api/schema`, so an upgrade needs no change here. Security decisions: [`docs/adrs/0006-nginx-proxy-manager.md`](../../docs/adrs/0006-nginx-proxy-manager.md).
 
 The sandbox calls `npm.request({ method, path, query, body })` with the path under `/api`:
 

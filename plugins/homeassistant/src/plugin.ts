@@ -25,7 +25,7 @@ import { buildView, normalizeServiceParams, resolveTarget, toRegistryEntries } f
 import type { RawRegistry, RegistryView, Target } from './registry.js';
 import { applyPatch, configHash, diff, validatePatch } from './transform.js';
 
-/** Home Assistant handlers (design §3.3–§3.4): `ha.call(operation, params)` on services or plugin.yaml
+/** Home Assistant handlers (core ADR-0011): `ha.call(operation, params)` on services or plugin.yaml
  * commands; targets resolve to concrete entities, acting on exactly those the approver saw. */
 
 const {
@@ -153,7 +153,7 @@ export function createHomeAssistantPlugin(): PluginHandlers {
           return !e || isSensitiveTarget(split, e);
         });
 
-      /** Whether a split service touches something sensitive (design §3.4 target-conditional keys). */
+      /** Whether a split service touches something sensitive (core ADR-0012, target-conditional keys). */
       const sensitive = async (key: string, split: SplitSuffix, params: Record<string, unknown>) => {
         const v = await loadView();
         if (key === 'scene.apply') return sensitiveIds(v, split, sceneEntities(params)).length > 0;

@@ -12,7 +12,7 @@ import { buildCatalog, needsPoolRootKey, POOL_ROOT, POOL_ROOT_SUFFIX, policy, se
 import type { MethodInfo } from './catalog.js';
 import { TrueNasClient } from './client.js';
 
-/** TrueNAS handlers (design §3.3–§3.4): `truenas.call(method, ...params)`, params positional as TrueNAS
+/** TrueNAS handlers (core ADR-0011): `truenas.call(method, ...params)`, params positional as TrueNAS
  * takes them; locks, literals and secrets are in plugin.yaml. */
 
 const MAX_SUMMARY_PARAMS = 400;

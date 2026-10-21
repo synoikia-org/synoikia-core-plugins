@@ -4,7 +4,7 @@ import common from '../guides/common.md';
 import scene from '../guides/scene.md';
 import script from '../guides/script.md';
 
-/** Best-practice guides behind attestation (HA §3.6), bundled from `guides/*.md`; the version is a
+/** Best-practice guides behind attestation (ADR-0013), bundled from `guides/*.md`; the version is a
  * content hash, so editing a guide invalidates its keys. */
 
 const compose = (text: string) => `${text.trimEnd()}\n\n${common.trim()}`;

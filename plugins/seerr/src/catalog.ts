@@ -16,7 +16,7 @@ import {
 import type { OpenApiCatalog, OpenApiOperation } from '@synoikia/plugin-sdk';
 import raw from '../plugin.yaml';
 
-/** Seerr's catalog (SR §2.2–§2.3): the SDK's OpenAPI catalog over `seerr-api.yml` with plugin.yaml's
+/** Seerr's catalog (ADR-0011): the SDK's OpenAPI catalog over `seerr-api.yml` with plugin.yaml's
  * rules on top; GET reads, other verbs write, action-shaped GETs are writes until reviewed. */
 
 export interface SeerrSettings {

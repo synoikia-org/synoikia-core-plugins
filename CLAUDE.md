@@ -15,7 +15,7 @@ The plugins for [Synoikia](https://github.com/via-justa/synoikia-core), publishe
 | `plugins/<id>/test/`            | `compliance.yaml` (the compliance profile), `fake.ts` that starts the fake upstream `fake-<id>.ts`, and unit tests in `unit/`                 |
 | `features/<id>/`                | `<id>.feature`: plugin-specific behavior, written with the compliance suite's steps on the profile's named calls                              |
 | `plugins/<id>/RUNBOOK.md`       | Manual checklist against a real instance                                                                                                      |
-| `docs/designs/<id>.md`          | The original per-server design. Where it disagrees with core's ADRs, core wins                                                                |
+| `docs/adrs/`                    | The security decisions of each plugin family, on top of core's ADRs                                                                           |
 | `.github/workflows/release.yml` | Packs, signs, indexes, verifies and publishes releases with `synoikia-plugin repo` (CI only)                                                  |
 
 ## Commands

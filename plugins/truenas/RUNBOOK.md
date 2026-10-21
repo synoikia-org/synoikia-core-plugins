@@ -1,6 +1,6 @@
 # TrueNAS plugin: live checklist
 
-The plugin is tested against a fake TrueNAS. This checklist confirms it against a real system (TrueNAS 25.04+), the step Synoikia design §13 phase 17 calls "then staging". It takes about 15 minutes.
+The plugin is tested against a fake TrueNAS. This checklist confirms it against a real system (TrueNAS 25.04+), before a release. It takes about 15 minutes.
 
 **Before you start**
 

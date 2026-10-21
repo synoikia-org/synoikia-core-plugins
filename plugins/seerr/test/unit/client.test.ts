@@ -110,7 +110,7 @@ describe('SeerrClient', () => {
   });
 });
 
-describe('fetchSpec (SR §2.2, §7 phase 3)', () => {
+describe('fetchSpec (ADR-0011)', () => {
   it('maps a release version to its tag', () => {
     expect(tagFor('3.4.1')).toBe('v3.4.1');
     expect(tagFor('v2.7.0')).toBe('v2.7.0');

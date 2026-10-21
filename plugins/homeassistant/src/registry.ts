@@ -1,7 +1,7 @@
 import { ErrorCodes, PluginError } from '@synoikia/plugin-sdk';
 import type { RegistryEntry, ResolvedTarget } from '@synoikia/plugin-sdk';
 
-/** The registry view (HA §2.4): areas, floors, devices, labels and entities joined so a target expands
+/** The registry view (ADR-0013): areas, floors, devices, labels and entities joined so a target expands
  * to concrete entities; pure, and failing closed on unknown ids. */
 
 export interface RawRegistry {
@@ -179,7 +179,7 @@ const passes = (e: EntityView, filter: EntityFilter) =>
     (f) => (!f.domain?.length || f.domain.includes(e.domain)) && (!f.integration || f.integration === e.platform),
   );
 
-/** Expands a `target` to the concrete entities it covers (HA §3.1), limited to those the service acts on;
+/** Expands a `target` to the concrete entities it covers (ADR-0013), limited to those the service acts on;
  * entities named directly are kept as given. */
 export function resolveTarget(view: RegistryView, target: Target | undefined, filter: EntityFilter): ResolvedTarget[] {
   if (!target) return [];

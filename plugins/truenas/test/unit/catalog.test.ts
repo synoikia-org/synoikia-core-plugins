@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { buildCatalog, classify, groupOf, LOCKED, needsPoolRootKey } from '../../src/catalog.js';
 import { METHODS } from '../fake-truenas.js';
 
-describe('classify (TN §2.3, §9)', () => {
+describe('classify (ADR-0012)', () => {
   it.each([
     ['pool.query', 'read'],
     ['pool.dataset.get_instance', 'read'],

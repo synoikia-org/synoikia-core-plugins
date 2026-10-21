@@ -2,7 +2,7 @@ import { startFakeHttp } from '@synoikia/core/testing';
 import type { FakeHttp, FakeRequest, FakeResponse } from '@synoikia/core/testing';
 
 /** Fake Adaptive Metrics, Logs and Traces, each on its own port as on a Grafana Cloud stack, each checking HTTP Basic
- * with its own instance id and the one access policy token. Shapes follow Grafana's clients (docs/designs). */
+ * with its own instance id and the one access policy token. Shapes follow Grafana's clients (ADR-0003). */
 
 export const TOKEN = 'test-token-EXAMPLE';
 export const IDS = { metrics: '100001', logs: '200002', traces: '300003' } as const;

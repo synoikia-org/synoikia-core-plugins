@@ -1,6 +1,6 @@
 # qBittorrent
 
-qBittorrent 5.x for Synoikia: torrents, categories, tags, transfer limits, logs, RSS and search, from a fixed set of WebUI API v2 operations declared in `plugin.yaml` (qBittorrent serves no API spec). Design: [`docs/designs/qbittorrent.md`](../../docs/designs/qbittorrent.md).
+qBittorrent 5.x for Synoikia: torrents, categories, tags, transfer limits, logs, RSS and search. qBittorrent serves no API spec. So `plugin.yaml` declares a fixed set of WebUI API v2 operations. Security decisions: [`docs/adrs/0009-qbittorrent.md`](../../docs/adrs/0009-qbittorrent.md).
 
 The sandbox calls `qbittorrent.call(key, params)` with flat params, named as qBittorrent names them (`torrents.setCategory`, `{ hashes, category }`). A read sends them as the query, a write as a form (`torrents.add` as multipart). Every call goes through Synoikia's permission gate, approvals, redaction and audit log; this plugin only describes qBittorrent's API.
 

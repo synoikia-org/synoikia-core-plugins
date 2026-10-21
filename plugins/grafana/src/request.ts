@@ -1,7 +1,7 @@
 import { ErrorCodes, isPlainObject, PluginError } from '@synoikia/plugin-sdk';
 import type { RestParams } from '@synoikia/plugin-sdk';
 
-// Grafana's encoding/json binds keys case-insensitively, last match wins, folding ſ and K (docs/designs/grafana.md).
+// Grafana's encoding/json binds keys case-insensitively, last match wins, folding ſ and K (ADR-0003).
 
 export interface ReadTree {
   keys: Map<string, { key: string; node: ReadTree }>;
