@@ -15,15 +15,16 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "synoikia-plugin check",
-    "workflow": "synoikia-plugin workflow",
-    "hooks:install": "synoikia-plugin workflow hooks install"
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@novibe-org/gherkin-lint-plus": "1.1.0",
     "@synoikia/core": "^0.17.2",
-    "@synoikia/create-plugin": "^0.6.1",
+    "@synoikia/create-plugin": "^0.8.0",
     "@types/node": "^22.19.0",
     "eslint": "^10.11.0",
+    "madr-lint": "0.4.2",
     "prettier": "^3.6.2",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.1",
@@ -32,24 +33,14 @@
   "synoikia": {
     "repository": "via-justa/synoikia-core-plugins",
     "name": "Synoikia plugins",
-    "workflow": {
-      "securityPaths": [
-        "plugins/*/manifest.json",
-        "plugins/*/plugin.yaml",
-        "plugins/*/src/**",
-        "plugins/*/test/compliance.yaml",
-        "**/package.json",
-        ".github/workflows/**",
-        "plugins/*/test/fake*.ts",
-        "plugins/*/features/**",
-        "plugins/*/vitest.config.ts",
-        "plugins/*/instructions.md",
-        "plugins/*/guides/**",
-        "minisign.pub",
-        "pnpm-workspace.yaml",
-        "pnpm-lock.yaml"
-      ]
-    }
+    "prose": [
+      "*.md",
+      "docs/**/*.md",
+      "plugins/*/*.md",
+      "features/**/*.feature",
+      "plugins/*/features/**/*.feature",
+      ".claude/**/*.md"
+    ]
   },
   "pnpm": {
     "overrides": {

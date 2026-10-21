@@ -40,7 +40,7 @@ Each plugin version is a GitHub release, `<id>-v<version>`, holding `<id>-<versi
 | Path                 | What                                                                                                                                |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `plugins/<id>`       | One package per plugin: `manifest.json`, `plugin.yaml`, `instructions.md`, `src/`, `test/`, `features/`, bundled to `dist/index.js` |
-| `docs/`              | The original per-plugin designs, and `docs/workflow.md` (the rules for every change)                                                |
+| `docs/`              | The original per-plugin designs                                                                                                     |
 | `tsconfig.base.json` | Shared compiler options. Each plugin's `tsconfig.json` extends it                                                                   |
 | `vitest.shared.ts`   | Shared Vitest config. Each plugin's `vitest.config.ts` re-exports it                                                                |
 
@@ -65,7 +65,7 @@ pnpm build       # every plugin bundle
 
 Work on one plugin with `pnpm --filter ./plugins/<id> test`. The run must end with "<Name> <version> is fit for production." and no failed test.
 
-Every change follows `docs/workflow.md`: spec first, test first, one slice for each pull request. Install the git hooks once per clone with `pnpm hooks:install`. Run `pnpm workflow pre-push` for the same checks by hand. The `Workflow` CI job runs them on each pull request.
+[NoVibe](https://github.com/novibe-org/novibe) runs every change: spec first, then the design, then the code, one slice for each pull request. Install its git hooks once per clone with `pnpm hooks:install`. The `Workflow` CI job runs the same guards on each pull request.
 
 ## Adding a plugin
 
@@ -107,4 +107,4 @@ A version that is already released is skipped, so re-running the workflow is saf
 
 `.github/workflows/ci.yml` runs lint, format check, typecheck and every plugin's tests. It needs no secrets.
 
-`.github/workflows/workflow.yml` (the `Workflow` job) checks each pull request against `docs/workflow.md`: branch, features, prose, commit phases and the `Security audit:` line.
+`.github/workflows/workflow.yml` (the `Workflow` job) runs NoVibe's guards on each pull request: branch, comments, feature files, ADRs and commit phases. It also runs Synoikia's prose check from core, and gitleaks. `.github/workflows/security-audit.yml` checks that the description has a `Security audit:` line.

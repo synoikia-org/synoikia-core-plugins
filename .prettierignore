@@ -8,3 +8,4 @@ docs/mockups
 plugins/*/guides
 # The pinned Plex spec is checked by its SHA-256; keep it byte-for-byte.
 plugins/plex/test/fixtures/plex-api-spec.pinned.yaml
+.madr-lint/cache

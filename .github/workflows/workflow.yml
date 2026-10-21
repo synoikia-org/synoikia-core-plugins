@@ -1,9 +1,8 @@
-# Written by `synoikia-plugin workflow sync`. Edit the template in via-justa/synoikia-core instead.
 name: Workflow
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    types: [opened, edited, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -11,9 +10,6 @@ permissions:
 jobs:
   workflow:
     runs-on: ubuntu-latest
-    env:
-      BACKFILL: ${{ contains(github.event.pull_request.labels.*.name, 'backfill') && '--backfill' || '' }}
-      BASE: ${{ github.event.pull_request.base.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,11 +22,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm workflow check-branch
-      - run: pnpm workflow check-features --base "$BASE" $BACKFILL
-      - run: pnpm workflow check-prose --base "$BASE" --pr-body
-      - run: pnpm workflow check-security-line --base "$BASE"
-      - run: pnpm workflow check-phases --base "$BASE" --red-green $BACKFILL
+      # NoVibe's guards, as the pre-push hook runs them. git.sh needs a branch and gh, so it runs only locally.
+      - run: for guard in branch code gherkin likec4 madr phases; do sh ".githooks/pre-push.d/$guard.sh" </dev/null || exit 1; done
+      - uses: via-justa/synoikia-core/.github/actions/prose@9a38e2ef8bf63a9b115286312d142d4e17281fc7
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
 
   gitleaks:
     runs-on: ubuntu-latest
