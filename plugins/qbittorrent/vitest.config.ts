@@ -6,4 +6,7 @@ import shared from '../../vitest.shared.ts';
 const pluginDir = import.meta.dirname;
 const unit = { extends: true, test: { name: 'unit', include: ['test/unit/**/*.test.ts'] } };
 
-export default mergeConfig(mergeConfig(shared, complianceConfig({ pluginDir })), { test: { projects: [unit] } });
+export default mergeConfig(
+  mergeConfig(shared, complianceConfig({ pluginDir, features: ['../../features/qbittorrent/*.feature'] })),
+  { test: { projects: [unit] } },
+);
