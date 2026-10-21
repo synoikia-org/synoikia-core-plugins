@@ -1,6 +1,6 @@
 # TrueNAS plugin
 
-Exposes a TrueNAS SCALE system's whole JSON-RPC API through the two MCP tools, `search` and `execute`, behind core's permission gate. The catalog comes from the live system (`core.get_methods`), so a TrueNAS upgrade needs no change here. Security decisions: [`docs/adrs/0012-truenas.md`](../../docs/adrs/0012-truenas.md), on top of the plugin contract of [core ADR-0011](https://github.com/via-justa/synoikia-core/blob/main/docs/adrs/0011-plugin-contract.md).
+Exposes a TrueNAS SCALE system's whole JSON-RPC API through the two MCP tools, `search` and `execute`, behind core's permission gate. The catalog comes from the live system (`core.get_methods`), so a TrueNAS upgrade needs no change here. Security decisions: [`docs/adrs/0012-truenas.md`](../../docs/adrs/0012-truenas.md), on top of the plugin contract of [core ADR-0011](https://github.com/synoikia-org/synoikia-core/blob/main/docs/adrs/0011-plugin-contract.md).
 
 ## Requirements
 
