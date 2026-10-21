@@ -1,12 +1,12 @@
 # synoikia-core-plugins
 
-The plugins for [Synoikia](https://github.com/via-justa/synoikia-core), the self-hosted MCP control plane, published as a **signed plugin repository**. Synoikia comes with this repository pre-configured and its key pinned, so its plugins can be installed from the Plugins page.
+The plugins for [Synoikia](https://github.com/synoikia-org/synoikia-core), the self-hosted MCP control plane, published as a **signed plugin repository**. Synoikia comes with this repository pre-configured and its key pinned, so its plugins can be installed from the Plugins page.
 
 ## Plugin repository
 
 |                       |                                                                                                                                |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Index                 | `https://github.com/via-justa/synoikia-core-plugins/releases/download/index/index.json`                                        |
+| Index                 | `https://github.com/synoikia-org/synoikia-core-plugins/releases/download/index/index.json`                                     |
 | Public key (minisign) | `RWSDbQe7ylyyieEU0Yh/bxR53m+N/0VrVMru5WCzv1/Yvt5td92t/21e` (key id `89B25CCABB076D83`, also in [`minisign.pub`](minisign.pub)) |
 
 If you removed it, add it back on Synoikia's Plugins → Repositories page as a **signed** repository with that URL, and confirm the public key above. Every install is checked against it: the tarball's sha256 and its minisign signature.
@@ -76,14 +76,14 @@ pnpm new          # asks for an id, a name, an archetype (openapi-rest, static-r
 
 `pnpm new` (`synoikia-plugin new`, also non-interactive with `--id --name --archetype --auth --yes`) writes `plugins/<id>/`. It holds a manifest that follows the secret rules, a `plugin.yaml`, `src/`, `test/compliance.yaml` and a fake upstream. For the OpenAPI, REST and WebSocket kinds, the new plugin passes the compliance suite as generated. Then:
 
-- Describe the upstream's operations in `plugin.yaml`: locks, split twins, classification overrides, `sensitiveParams`, `sensitiveResult`, confirmation literals (reference: [Synoikia's plugin authoring guide](https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md)).
+- Describe the upstream's operations in `plugin.yaml`: locks, split twins, classification overrides, `sensitiveParams`, `sensitiveResult`, confirmation literals (reference: [Synoikia's plugin authoring guide](https://github.com/synoikia-org/synoikia-core/blob/main/docs/plugin-authoring.md)).
 - Keep code in `src/` for what needs logic: discovery, a split predicate, a custom confirmation source.
 - Extend the fake upstream and `test/compliance.yaml`. Add a lock case for each locked operation.
 - Write plugin-specific behavior in `features/<id>/<id>.feature` at the root of the repository, and pure logic tests in `test/unit/`. The plugin's `vitest.config.ts` gives the path: `complianceConfig({ pluginDir, features: ['../../features/<id>/*.feature'] })`.
 
 Each plugin's `test` script runs `synoikia-plugin check` (manifest, `plugin.yaml`, versions) and `synoikia-plugin build` (the self-contained bundle, `plugin.yaml` validated and inlined). Then it runs the unit tests, core's compliance suite and the plugin's features. Under the permission model the child can read nothing outside its own package directory, so everything it needs is in `dist/index.js`. A release ships only `manifest.json`, `package.json` and `dist/`.
 
-`test/compliance.yaml` is the profile that core's compliance suite certifies the plugin against. It names the reads, writes, rejects, a lock case for each locked operation, the secrets and the connection test. A change there is a security change. Review its diff like a `plugin.yaml` diff. The format is in [Synoikia's plugin authoring guide](https://github.com/via-justa/synoikia-core/blob/main/docs/plugin-authoring.md) › The compliance suite.
+`test/compliance.yaml` is the profile that core's compliance suite certifies the plugin against. It names the reads, writes, rejects, a lock case for each locked operation, the secrets and the connection test. A change there is a security change. Review its diff like a `plugin.yaml` diff. The format is in [Synoikia's plugin authoring guide](https://github.com/synoikia-org/synoikia-core/blob/main/docs/plugin-authoring.md) › The compliance suite.
 
 ## Updating Synoikia
 

@@ -5,7 +5,7 @@ Exposes a Home Assistant instance through the two MCP tools, `search` and `execu
 - every service on the instance (from `get_services`, so a new integration needs no change here);
 - the reads and config objects that aren't services: states, history, logbook, registries, automations, scripts, scenes and dashboards.
 
-Security decisions: [`docs/adrs/0013-home-assistant.md`](../../docs/adrs/0013-home-assistant.md), on top of the plugin contract of [core ADR-0011](https://github.com/via-justa/synoikia-core/blob/main/docs/adrs/0011-plugin-contract.md).
+Security decisions: [`docs/adrs/0013-home-assistant.md`](../../docs/adrs/0013-home-assistant.md), on top of the plugin contract of [core ADR-0011](https://github.com/synoikia-org/synoikia-core/blob/main/docs/adrs/0011-plugin-contract.md).
 
 ## Agent instructions
 
