@@ -57,6 +57,8 @@ A plugin is ready when its `test` run ends with "<Name> <version> is fit for pro
 
 Strict TypeScript with `noUncheckedIndexedAccess` and `verbatimModuleSyntax`: use `import type`, and `.js` extensions on relative imports. Unused variables are allowed only with a `_` prefix. Keep comments minimal: one or two lines, only for what the code can't say (a reason, a constraint, a design § reference). Do not write multi-line comment blocks in code, YAML or workflows. Prettier formats everything, and a hook runs it after each edit. Behavior that crosses the plugin boundary goes in `features/<id>.feature` or `test/compliance.yaml`, with the fake upstream extended to match. Pure logic gets a unit test in `test/unit/`.
 
+Do not add `Co-Authored-By` or `Claude-Session` trailers to commit messages, and no "Generated with Claude Code" line to pull request descriptions.
+
 ## Security review
 
 Before you open a PR that touches a security path, run the `security-reviewer` subagent (`.claude/agents/security-reviewer.md`) on the diff. Address its findings. The security paths are a plugin's `manifest.json`, `plugin.yaml`, `src/`, dependencies and `test/compliance.yaml`, and `.github/workflows/`. The full list is in `synoikia.workflow.securityPaths` in the root `package.json`.
