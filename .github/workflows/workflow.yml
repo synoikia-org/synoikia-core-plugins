@@ -24,7 +24,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # NoVibe's guards, as the pre-push hook runs them. git.sh needs a branch and gh, so it runs only locally.
       - run: for guard in branch code gherkin likec4 madr phases; do sh ".githooks/pre-push.d/$guard.sh" </dev/null || exit 1; done
-      - uses: via-justa/synoikia-core/.github/actions/prose@9a38e2ef8bf63a9b115286312d142d4e17281fc7
+      - uses: synoikia-org/synoikia-core/.github/actions/prose@9a38e2ef8bf63a9b115286312d142d4e17281fc7
         with:
           base: ${{ github.event.pull_request.base.sha }}
 
@@ -39,3 +39,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

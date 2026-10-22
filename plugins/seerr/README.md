@@ -1,6 +1,6 @@
 # Seerr plugin
 
-Exposes a Seerr instance's whole REST API through the two MCP tools, `search` and `execute`, behind core's permission gate. Its 210 or so operations cover requests, media, users, settings, notifications and discover sliders. Seerr has no introspection endpoint. So the catalog comes from its OpenAPI spec, `seerr-api.yml`, fetched for the release that the instance runs. A Seerr upgrade needs no change here. Security decisions: [`docs/adrs/0011-seerr.md`](../../docs/adrs/0011-seerr.md), on top of the plugin contract of [core ADR-0011](https://github.com/via-justa/synoikia-core/blob/main/docs/adrs/0011-plugin-contract.md).
+Exposes a Seerr instance's whole REST API through the two MCP tools, `search` and `execute`, behind core's permission gate. Its 210 or so operations cover requests, media, users, settings, notifications and discover sliders. Seerr has no introspection endpoint. So the catalog comes from its OpenAPI spec, `seerr-api.yml`, fetched for the release that the instance runs. A Seerr upgrade needs no change here. Security decisions: [`docs/adrs/0011-seerr.md`](../../docs/adrs/0011-seerr.md), on top of the plugin contract of [core ADR-0011](https://github.com/synoikia-org/synoikia-core/blob/main/docs/adrs/0011-plugin-contract.md).
 
 ## Agent instructions
 
