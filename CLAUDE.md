@@ -2,7 +2,7 @@
 
 The plugins for [Synoikia](https://github.com/synoikia-org/synoikia-core), published as a signed plugin repository that every Synoikia install has pre-configured. Repository format, adding a plugin and releasing are covered in `README.md`.
 
-[NoVibe](https://github.com/novibe-org/novibe) runs the workflow: its `novibe` plugin and its git hooks in `.githooks/`. The plugin skills, rules, agent and hooks come from the `synoikia-plugin-dev` plugin of the [Synoikia dev kit](https://github.com/synoikia-org/synoikia-dev-kit). `.claude/settings.json` enables both plugins, and a session start hook says when they are not loaded. This repository needs them. `.claude/guard-paths.json` lists the files that the path guard protects.
+[NoVibe](https://github.com/novibe-org/novibe) runs the workflow: its `novibe` plugin and its git hooks in `.githooks/`. The plugin skills, rules, agent and hooks come from the `synoikia-plugin-dev` plugin of the [Synoikia dev kit](https://github.com/synoikia-org/synoikia-dev-kit). Cloudflare's `security-audit` skill comes from the `security-audit` plugin of the dev kit. `.claude/settings.json` enables the three plugins, and a session start hook says when they are not loaded. This repository needs them. `.claude/guard-paths.json` lists the files that the path guard protects.
 
 ## Layout
 
